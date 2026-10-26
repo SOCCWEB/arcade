@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stickgirl Candy Adventure — SOCC Arcade</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap');
+        
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #87CEEB; /* Sky blue */
+            font-family: 'Fredoka One', cursive;
+            user-select: none;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        canvas {
+            display: block;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border-radius: 10px;
+            /* Maximize canvas while keeping aspect ratio roughly 16:9 */
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            pointer-events: none;
+            color: white;
+            text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+            font-size: 24px;
+            letter-spacing: 1px;
+        }
+
+        #game-over-screen {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            z-index: 10;
+        }
+
+        .candy-btn {
+            background: linear-gradient(to bottom, #ff6b81, #ff4757);
+            border: 4px solid #fff;
+            border-radius: 30px;
+            padding: 15px 30px;
+            font-family: 'Fredoka One', cursive;
+            font-size: 24px;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4);
+            transition: transform 0.1s;
+        }
+
+        .candy-btn:active {
+            transform: scale(0.95);
+        }
+
+        #controls-hint {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+            color: white;
+            text-shadow: 1px 1px 0 #000;
+            pointer-events: none;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="ui-layer">
+        <div id="score-display">SCORE: 0</div>
+        <div id="lives-display">LIVES: ❤️❤️❤️</div>
+    </div>
+
+    <canvas id="gameCanvas" width="1000" height="600"></canvas>
+
+    <div id="controls-hint">Move: Arrow Keys / WASD | Jump: Space / UP</div>
+
+    <div id="game-over-screen">
+        <h1 id="game-over-title" class="text-6xl mb-4" style="text-shadow: 4px 4px 0 #000;">GAME OVER</h1>
+        <p id="final-score" class="text-3xl mb-8" style="text-shadow: 2px 2px 0 #000;">Score: 0</p>
+        <button class="candy-btn" onclick="resetGame()">PLAY AGAIN</button>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreDisplay = document.getElementById('score-display');
+    const livesDisplay = document.getElementById('lives-display');
+    const gameOverScreen = document.getElementById('game-over-screen');
+    const gameOverTitle = document.getElementById('game-over-title');
+    const finalScore = document.getElementById('final-score');
+
+    // --- GAME STATE ---
+    let gameState = 'playing'; // playing, gameover, win
+    let score = 0;
+    let lives = 3;
+    let cameraX = 0;
+    let animationId;
+
+    // --- PLAYER CONFIG ---
+    const player = {
+        x: 100,
+        y: 300,
+        width: 40,
+        height: 70,
+        vx: 0,
+        vy: 0,
+        speed: 9,
+        jumpForce: -14,
+        gravity: 0.6,
+        grounded: false,
+        jumps: 0,
+        maxJumps: 2,
+        facingRight: true,
+        invulnerableTimer: 0
+    };
+
+    let lasers = []; // Array to hold laser beams
+
+    // --- INPUT HANDLING ---
+    const keys = {
+        left: false,
+        right: false,
+        jump: false
+    };
+
+    window.addEventListener('keydown', (e) => {
+        if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = true;
+        if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = true;
+        if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space') {
+            // Double jump logic
+            if (player.jumps < player.maxJumps) {
+                player.vy = player.jumpForce;
+                player.grounded = false;
+                player.jumps++;
+            }
+            keys.jump = true;
+        }
+    });
+
+    window.addEventListener('keyup', (e) => {
+        if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = false;
+        if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = false;
+        if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space') keys.jump = false;
+    });
+
+    // Mouse click for Laser Eyes
+    canvas.addEventListener('mousedown', (e) => {
+        if (gameState !== 'playing') return;
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const mouseX = (e.clientX - rect.left) * scaleX + cameraX;
+        const mouseY = (e.clientY - rect.top) * scaleY;
+        
+        const startX = player.x + player.width / 2;
+        const startY = player.y - player.height / 2 + 10; // Eye level
+        const angle = Math.atan2(mouseY - startY, mouseX - startX);
+        
+        lasers.push({
+            x: startX,
+            y: startY,
+            vx: Math.cos(angle) * 15,
+            vy: Math.sin(angle) * 15,
+            life: 60 // Bullet lives for 60 frames
+        });
+    });
+
+    // --- LEVEL DESIGN ---
+    let platforms = [];
+    let candies = [];
+    let enemies = [];
+    let decorations = [];
+
+    function buildLevel() {
+        platforms = [];
+        candies = [];
+        enemies = [];
+        decorations = [];
+
+        // Floor (Cookie ground)
+        for(let i=0; i<10; i++) {
+            platforms.push({ x: i * 800, y: 530, w: 800, h: 100, type: 'cookie' });
+        }
+        // Pitfall gap
+        platforms[3].y = 1000; // Drop this section
+
+        // Waffle platforms
+        platforms.push({ x: 400, y: 400, w: 150, h: 30, type: 'waffle' });
+        platforms.push({ x: 650, y: 300, w: 150, h: 30, type: 'waffle' });
+        
+        // Ice Cream Cone platforms
+        platforms.push({ x: 900, y: 350, w: 100, h: 200, type: 'cone' });
+        platforms.push({ x: 1300, y: 400, w: 100, h: 150, type: 'cone' });
+        platforms.push({ x: 1600, y: 250, w: 150, h: 30, type: 'waffle' });
+
+        // More platforms over the pit
+        platforms.push({ x: 2300, y: 350, w: 150, h: 30, type: 'waffle' });
+        platforms.push({ x: 2600, y: 250, w: 150, h: 30, type: 'waffle' });
+        
+        // Castle platform
+        platforms.push({ x: 3000, y: 450, w: 800, h: 150, type: 'cookie' });
+
+        // Candies
+        const addCandyGroup = (startX, y, count) => {
+            for(let i=0; i<count; i++) {
+                candies.push({ x: startX + i * 50, y: y, collected: false, type: i%2===0?'lollipop':'gummy' });
+            }
+        };
+        addCandyGroup(420, 340, 3);
+        addCandyGroup(670, 240, 3);
+        addCandyGroup(1100, 480, 5);
+        addCandyGroup(1620, 190, 4);
+        addCandyGroup(2320, 290, 3);
+        addCandyGroup(2620, 190, 3);
+
+        // Enemies (Monster Trucks & King Candy Boss)
+        enemies.push({ type: 'truck', x: 1100, y: 470, w: 80, h: 60, vx: -2, startX: 1000, endX: 1250 });
+        enemies.push({ type: 'truck', x: 1800, y: 470, w: 80, h: 60, vx: 3, startX: 1700, endX: 2200 });
+        enemies.push({ type: 'truck', x: 3200, y: 390, w: 80, h: 60, vx: -2.5, startX: 3050, endX: 3400 });
+        enemies.push({ type: 'kingcandy', x: 3400, y: 310, w: 140, h: 140, vx: 0, hp: 5 }); // King Candy Boss
+
+        // Decorations (Background hills, lollipops)
+        decorations.push({ x: 300, y: 400, type: 'lollitree', color: '#ff7979' });
+        decorations.push({ x: 800, y: 300, type: 'cottoncandy', color: '#ffb8b8' });
+        decorations.push({ x: 1400, y: 350, type: 'lollitree', color: '#badc58' });
+        decorations.push({ x: 2000, y: 400, type: 'cottoncandy', color: '#c7ecee' });
+        // Castle bg behind king candy
+        decorations.push({ x: 3450, y: 250, type: 'castlebg' }); 
+    }
+
+    // --- DRAWING FUNCTIONS ---
+
+    function drawStickgirl(x, y, w, h, facingRight) {
+        ctx.save();
+        ctx.translate(x + w/2, y + h/2);
+        if (!facingRight) ctx.scale(-1, 1); // Flip horizontally
+        
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#000';
+        ctx.lineCap = 'round';
+
+        // Head
+        ctx.beginPath();
+        ctx.arc(0, -h/2 + 12, 10, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffeaa7'; // skin color
+        ctx.fill();
+        ctx.stroke();
+
+        // Face
+        ctx.fillStyle = '#000';
+        ctx.beginPath(); ctx.arc(3, -h/2 + 10, 2, 0, Math.PI*2); ctx.fill(); // eye
+        ctx.beginPath(); ctx.arc(8, -h/2 + 14, 3, 0.2, Math.PI*0.8); ctx.stroke(); // smile
+
+        // Pigtails
+        ctx.strokeStyle = '#553c1e'; // brown hair
+        ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(-8, -h/2 + 5); ctx.quadraticCurveTo(-20, -h/2 + 10, -15, -h/2 + 20); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(6, -h/2 + 2); ctx.quadraticCurveTo(15, -h/2 - 5, 20, -h/2 + 5); ctx.stroke();
+
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 3;
+
+        // Body/Dress (Pink Triangle)
+        ctx.beginPath();
+        ctx.moveTo(0, -h/2 + 22); // neck
+        ctx.lineTo(-12, h/2 - 15); // bottom left
+        ctx.lineTo(12, h/2 - 15); // bottom right
+        ctx.closePath();
+        ctx.fillStyle = '#ff9ff3'; // pink dress
+        ctx.fill();
+        ctx.stroke();
+
+        // Arms (animated based on velocity)
+        let armSwing = Math.sin(Date.now() / 100) * (Math.abs(player.vx) > 0.5 ? 10 : 0);
+        if (!player.grounded) armSwing = -15; // arms up when jumping
+
+        ctx.beginPath();
+        ctx.moveTo(0, -h/2 + 25);
+        ctx.lineTo(-15, -h/2 + 35 + armSwing);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(0, -h/2 + 25);
+        ctx.lineTo(15, -h/2 + 35 - armSwing);
+        ctx.stroke();
+
+        // Legs
+        let legSwing = Math.sin(Date.now() / 100) * (Math.abs(player.vx) > 0.5 ? 15 : 0);
+        if (!player.grounded) { legSwing = 10; } // legs split jumping
+
+        // Left leg & boot
+        ctx.beginPath();
+        ctx.moveTo(-5, h/2 - 15);
+        ctx.lineTo(-5 - legSwing, h/2);
+        ctx.stroke();
+        ctx.fillStyle = '#f368e0'; // magenta boots
+        ctx.fillRect(-10 - legSwing, h/2 - 5, 10, 10);
+
+        // Right leg & boot
+        ctx.beginPath();
+        ctx.moveTo(5, h/2 - 15);
+        ctx.lineTo(5 + legSwing, h/2);
+        ctx.stroke();
+        ctx.fillRect(5 + legSwing, h/2 - 5, 10, 10);
+
+        ctx.restore();
+    }
+
+    function drawPlatform(p) {
+        ctx.save();
+        if (p.type === 'cookie') {
+            // Cookie body
+            ctx.fillStyle = '#d2b48c'; // tan
+            ctx.fillRect(p.x, p.y, p.w, p.h);
+            ctx.strokeStyle = '#a0522d';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(p.x, p.y, p.w, p.h);
+            // Choc chips
+            ctx.fillStyle = '#3e2723';
+            for(let i=0; i<p.w/40; i++) {
+                ctx.beginPath();
+                ctx.arc(p.x + 20 + i*40, p.y + 20 + (i%2)*20, 4, 0, Math.PI*2);
+                ctx.fill();
+            }
+            // Pink frosting top
+            ctx.fillStyle = '#ff9ff3';
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            for(let i=0; i<=p.w; i+=20) {
+                ctx.quadraticCurveTo(p.x + i + 10, p.y + 15, p.x + i + 20, p.y);
+            }
+            ctx.lineTo(p.x + p.w, p.y + 10);
+            ctx.lineTo(p.x, p.y + 10);
+            ctx.fill();
+
+        } else if (p.type === 'waffle') {
+            ctx.fillStyle = '#fbc531';
+            ctx.fillRect(p.x, p.y, p.w, p.h);
+            ctx.strokeStyle = '#e1b12c';
+            ctx.lineWidth = 2;
+            for(let i=10; i<p.w; i+=20) {
+                ctx.beginPath(); ctx.moveTo(p.x+i, p.y); ctx.lineTo(p.x+i, p.y+p.h); ctx.stroke();
+            }
+            for(let i=10; i<p.h; i+=10) {
+                ctx.beginPath(); ctx.moveTo(p.x, p.y+i); ctx.lineTo(p.x+p.w, p.y+i); ctx.stroke();
+            }
+            ctx.strokeRect(p.x, p.y, p.w, p.h);
+
+        } else if (p.type === 'cone') {
+            // Cone shape
+            ctx.fillStyle = '#e1b12c';
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p.x + p.w, p.y);
+            ctx.lineTo(p.x + p.w/2, p.y + p.h);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            // Criss cross pattern
+            ctx.strokeStyle = '#c23616';
+            ctx.lineWidth = 1;
+            ctx.save();
+            ctx.clip(); // clip to cone triangle
+            for(let i=-p.h; i<p.h; i+=15) {
+                ctx.beginPath(); ctx.moveTo(p.x, p.y+i); ctx.lineTo(p.x+p.w, p.y+i+p.w); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(p.x+p.w, p.y+i); ctx.lineTo(p.x, p.y+i+p.w); ctx.stroke();
+            }
+            ctx.restore();
+            // Ice cream top
+            ctx.fillStyle = '#ff9ff3';
+            ctx.beginPath();
+            ctx.arc(p.x + p.w/2, p.y, p.w/2 + 10, 0, Math.PI*2);
+            ctx.fill();
+            // Sprinkles
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(p.x + p.w/2 - 10, p.y - 20, 5, 2);
+            ctx.fillStyle = '#00d2d3';
+            ctx.fillRect(p.x + p.w/2 + 5, p.y - 10, 2, 5);
+        }
+        ctx.restore();
+    }
+
+    function drawCandy(c) {
+        if (c.collected) return;
+        ctx.save();
+        ctx.translate(c.x + 15, c.y + 15 + Math.sin(Date.now()/200)*5); // hover effect
+        
+        if (c.type === 'lollipop') {
+            ctx.fillStyle = '#fff'; // stick
+            ctx.fillRect(-2, 0, 4, 25);
+            ctx.beginPath(); // candy
+            ctx.arc(0, 0, 12, 0, Math.PI*2);
+            ctx.fillStyle = '#ff6b6b';
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 3;
+            ctx.beginPath(); // swirl
+            ctx.arc(0, 0, 6, 0, Math.PI);
+            ctx.stroke();
+        } else {
+            // Gummy bear
+            ctx.fillStyle = '#1dd1a1';
+            ctx.beginPath();
+            ctx.arc(0, 5, 10, 0, Math.PI*2); // body
+            ctx.arc(0, -5, 8, 0, Math.PI*2); // head
+            ctx.arc(-6, -10, 4, 0, Math.PI*2); // ear
+            ctx.arc(6, -10, 4, 0, Math.PI*2); // ear
+            ctx.fill();
+        }
+        ctx.restore();
+    }
+
+    function drawEnemy(e) {
+        ctx.save();
+        ctx.translate(e.x + e.w/2, e.y + e.h/2);
+        
+        if (e.type === 'truck') {
+            if (e.vx > 0) ctx.scale(-1, 1);
+
+            // Monster truck body
+            ctx.fillStyle = '#5f27cd';
+            ctx.fillRect(-e.w/2, -e.h/2 + 10, e.w, e.h - 20);
+            // Cabin
+            ctx.fillStyle = '#ff9ff3';
+            ctx.fillRect(-e.w/4, -e.h/2 - 10, e.w/2, 20);
+            
+            // Spikes on top
+            ctx.fillStyle = '#ff6b6b';
+            ctx.beginPath(); ctx.moveTo(-15, -e.h/2 - 10); ctx.lineTo(-10, -e.h/2 - 25); ctx.lineTo(-5, -e.h/2 - 10); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(5, -e.h/2 - 10); ctx.lineTo(10, -e.h/2 - 25); ctx.lineTo(15, -e.h/2 - 10); ctx.fill();
+
+            // Eyes / Mouth (Monster Face)
+            ctx.fillStyle = '#fff';
+            ctx.beginPath(); ctx.arc(-15, -5, 5, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#000';
+            ctx.beginPath(); ctx.arc(-16, -5, 2, 0, Math.PI*2); ctx.fill(); // pupil looking forward
+            // teeth
+            ctx.fillStyle = '#fff';
+            ctx.beginPath(); ctx.moveTo(-25, 10); ctx.lineTo(-15, 10); ctx.lineTo(-20, 15); ctx.fill();
+
+            // Wheels
+            ctx.fillStyle = '#222';
+            let rotation = (Date.now() / 100) * (e.vx > 0 ? 1 : -1);
+            
+            // Left wheel
+            ctx.save();
+            ctx.translate(-e.w/2 + 15, e.h/2 - 5);
+            ctx.rotate(rotation);
+            ctx.beginPath(); ctx.arc(0, 0, 15, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI*2); ctx.fill();
+            ctx.strokeStyle = '#ff9ff3'; ctx.lineWidth=2;
+            ctx.beginPath(); ctx.moveTo(-15,0); ctx.lineTo(15,0); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0,-15); ctx.lineTo(0,15); ctx.stroke();
+            ctx.restore();
+
+            // Right wheel
+            ctx.save();
+            ctx.translate(e.w/2 - 15, e.h/2 - 5);
+            ctx.rotate(rotation);
+            ctx.beginPath(); ctx.arc(0, 0, 15, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI*2); ctx.fill();
+            ctx.strokeStyle = '#ff9ff3'; ctx.lineWidth=2;
+            ctx.beginPath(); ctx.moveTo(-15,0); ctx.lineTo(15,0); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0,-15); ctx.lineTo(0,15); ctx.stroke();
+            ctx.restore();
+
+        } else if (e.type === 'kingcandy') {
+            // King Candy Character
+            ctx.fillStyle = (e.hp < 5 && Math.floor(Date.now() / 100) % 2 === 0) ? '#ff0000' : '#5c3a21'; // flash red if hit
+            ctx.beginPath();
+            ctx.arc(0, 0, e.w/2, 0, Math.PI*2);
+            ctx.fill();
+            // Crown
+            ctx.fillStyle = '#f1c40f';
+            ctx.beginPath();
+            ctx.moveTo(-40, -60);
+            ctx.lineTo(-50, -110);
+            ctx.lineTo(-15, -80);
+            ctx.lineTo(0, -120);
+            ctx.lineTo(15, -80);
+            ctx.lineTo(50, -110);
+            ctx.lineTo(40, -60);
+            ctx.fill();
+            // Angry Face
+            ctx.fillStyle = '#fff';
+            ctx.beginPath(); ctx.arc(-25, -10, 10, 0, Math.PI*2); ctx.arc(25, -10, 10, 0, Math.PI*2); ctx.fill(); // eyes
+            ctx.fillStyle = '#000';
+            ctx.beginPath(); ctx.arc(-25, -10, 4, 0, Math.PI*2); ctx.arc(25, -10, 4, 0, Math.PI*2); ctx.fill(); // pupils
+            ctx.strokeStyle = '#000'; ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.moveTo(-40, -25); ctx.lineTo(-15, -15); ctx.stroke(); // angry brow
+            ctx.beginPath(); ctx.moveTo(40, -25); ctx.lineTo(15, -15); ctx.stroke(); // angry brow
+            ctx.beginPath(); ctx.arc(0, 20, 15, Math.PI, Math.PI*2); ctx.stroke(); // frown
+        }
+
+        ctx.restore();
+    }
+
+    function drawDecorations(d) {
+        ctx.save();
+        if (d.type === 'lollitree') {
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(d.x - 5, d.y, 10, 150); // Trunk
+            ctx.fillStyle = d.color;
+            ctx.beginPath();
+            ctx.arc(d.x, d.y, 60, 0, Math.PI*2);
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 10;
+            ctx.beginPath();
+            ctx.arc(d.x, d.y, 30, 0, Math.PI*1.5);
+            ctx.stroke();
+        } else if (d.type === 'cottoncandy') {
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(d.x - 5, d.y, 10, 150); // Trunk
+            ctx.fillStyle = d.color;
+            ctx.beginPath();
+            ctx.arc(d.x, d.y, 50, 0, Math.PI*2);
+            ctx.arc(d.x - 30, d.y + 20, 40, 0, Math.PI*2);
+            ctx.arc(d.x + 30, d.y + 20, 40, 0, Math.PI*2);
+            ctx.arc(d.x, d.y - 30, 40, 0, Math.PI*2);
+            ctx.fill();
+        } else if (d.type === 'castlebg') {
+            // Castle bg
+            ctx.fillStyle = '#e1b12c'; // gold/cookie
+            ctx.fillRect(d.x - 150, d.y, 300, 200);
+            ctx.fillStyle = '#c23616';
+            ctx.fillRect(d.x - 150, d.y, 300, 20); // roof trim
+        }
+        ctx.restore();
+    }
+
+    // --- GAME LOGIC ---
+
+    function update() {
+        if (gameState !== 'playing') return;
+
+        // Player movement
+        if (keys.left) {
+            player.vx -= 1.0;
+            player.facingRight = false;
+        } else if (keys.right) {
+            player.vx += 1.0;
+            player.facingRight = true;
+        } else {
+            player.vx *= 0.8; // friction
+        }
+
+        // Limit speed
+        if (player.vx > player.speed) player.vx = player.speed;
+        if (player.vx < -player.speed) player.vx = -player.speed;
+
+        // Apply gravity
+        player.vy += player.gravity;
+
+        // Apply velocity
+        player.x += player.vx;
+        player.y += player.vy;
+
+        // Level Bounds
+        if (player.x < 0) { player.x = 0; player.vx = 0; }
+
+        // --- COLLISIONS ---
+        player.grounded = false;
+
+        // Platform collisions
+        for (let p of platforms) {
+            // AABB Collision logic
+            if (player.x < p.x + p.w &&
+                player.x + player.width > p.x &&
+                player.y < p.y + p.h &&
+                player.y + player.height > p.y) {
+                
+                // Determine direction of collision
+                let overlapX = (player.width/2 + p.w/2) - Math.abs((player.x + player.width/2) - (p.x + p.w/2));
+                let overlapY = (player.height/2 + p.h/2) - Math.abs((player.y + player.height/2) - (p.y + p.h/2));
+
+                if (overlapX >= overlapY) {
+                    if (player.y + player.height/2 < p.y + p.h/2) {
+                        // Top collision (landing)
+                        player.y = p.y - player.height;
+                        player.vy = 0;
+                        player.grounded = true;
+                        player.jumps = 0; // Reset double jump
+                    } else {
+                        // Bottom collision (hitting head)
+                        player.y = p.y + p.h;
+                        player.vy = 0;
+                    }
+                } else {
+                    if (player.x + player.width/2 < p.x + p.w/2) {
+                        // Left collision
+                        player.x = p.x - player.width;
+                        player.vx = 0;
+                    } else {
+                        // Right collision
+                        player.x = p.x + p.w;
+                        player.vx = 0;
+                    }
+                }
+            }
+        }
+
+        // Pitfall (Death)
+        if (player.y > canvas.height + 200) {
+            loseLife();
+        }
+
+        // Candy Collection
+        for (let c of candies) {
+            if (!c.collected && 
+                player.x < c.x + 30 && player.x + player.width > c.x &&
+                player.y < c.y + 30 && player.y + player.height > c.y) {
+                c.collected = true;
+                score += 100;
+                updateUI();
+            }
+        }
+
+        // Enemy Update & Collision
+        for (let i = enemies.length - 1; i >= 0; i--) {
+            let e = enemies[i];
+            
+            // Move enemy
+            if (e.vx !== 0) {
+                e.x += e.vx;
+                if (e.x < e.startX || e.x > e.endX) {
+                    e.vx *= -1; // reverse direction
+                }
+            }
+
+            // Player hit enemy
+            if (player.invulnerableTimer <= 0 &&
+                player.x < e.x + e.w - 10 && player.x + player.width > e.x + 10 &&
+                player.y < e.y + e.h - 10 && player.y + player.height > e.y + 10) {
+                
+                // Basic bounce off or damage logic
+                if (player.vy > 0 && player.y + player.height < e.y + e.h/2) {
+                    // Jumped on enemy
+                    player.vy = player.jumpForce * 0.8; 
+                    
+                    if (e.type === 'kingcandy') {
+                        e.hp--;
+                        if (e.hp <= 0) {
+                            enemies.splice(i, 1);
+                            score += 1000;
+                            gameState = 'win';
+                            showEndScreen("YOU WIN! Candy Kingdom is Safe!");
+                        }
+                    } else {
+                        score += 50;
+                        enemies.splice(i, 1);
+                    }
+                    updateUI();
+                } else {
+                    loseLife();
+                }
+            }
+        }
+
+        // Laser Update
+        for (let i = lasers.length - 1; i >= 0; i--) {
+            let l = lasers[i];
+            l.x += l.vx;
+            l.y += l.vy;
+            l.life--;
+            
+            let hit = false;
+            // Check collision with enemies
+            for (let j = enemies.length - 1; j >= 0; j--) {
+                let e = enemies[j];
+                if (l.x > e.x && l.x < e.x + e.w && l.y > e.y && l.y < e.y + e.h) {
+                    hit = true;
+                    if (e.type === 'kingcandy') {
+                        e.hp--;
+                        if (e.hp <= 0) {
+                            enemies.splice(j, 1);
+                            score += 1000;
+                            gameState = 'win';
+                            showEndScreen("YOU DEFEATED KING CANDY!");
+                        }
+                    } else {
+                        enemies.splice(j, 1);
+                        score += 200;
+                    }
+                    updateUI();
+                    break;
+                }
+            }
+            if (hit || l.life <= 0) {
+                lasers.splice(i, 1);
+            }
+        }
+
+        // Update timers
+        if (player.invulnerableTimer > 0) player.invulnerableTimer--;
+
+        // Camera follow
+        let targetCameraX = player.x - canvas.width / 3;
+        if (targetCameraX < 0) targetCameraX = 0;
+        // smooth camera
+        cameraX += (targetCameraX - cameraX) * 0.1;
+    }
+
+    function loseLife() {
+        lives--;
+        updateUI();
+        if (lives <= 0) {
+            gameState = 'gameover';
+            showEndScreen("GAME OVER");
+        } else {
+            // Reset player position nearby
+            player.y = 100;
+            player.vy = 0;
+            player.vx = 0;
+            player.invulnerableTimer = 100; // ~1.5 seconds at 60fps
+            // Find a safe x coordinate backward
+            player.x = Math.max(100, player.x - 300);
+        }
+    }
+
+    function updateUI() {
+        scoreDisplay.innerText = `SCORE: ${score}`;
+        let hearts = '';
+        for(let i=0; i<3; i++) {
+            hearts += i < lives ? '❤️' : '🖤';
+        }
+        livesDisplay.innerText = `LIVES: ${hearts}`;
+    }
+
+    function showEndScreen(msg) {
+        gameOverScreen.style.display = 'flex';
+        gameOverTitle.innerText = msg;
+        finalScore.innerText = `Final Score: ${score}`;
+    }
+
+    function resetGame() {
+        score = 0;
+        lives = 3;
+        player.x = 100;
+        player.y = 300;
+        player.vx = 0;
+        player.vy = 0;
+        player.jumps = 0;
+        lasers = []; // Reset lasers
+        cameraX = 0;
+        gameState = 'playing';
+        gameOverScreen.style.display = 'none';
+        buildLevel();
+        updateUI();
+    }
+
+    // --- MAIN LOOP ---
+
+    function drawBackground() {
+        // Simple gradient sky
+        let gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        gradient.addColorStop(0, "#87CEEB"); // Sky blue
+        gradient.addColorStop(1, "#f8a5c2"); // Pinkish horizon
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw rolling hills in background (parallax effect)
+        ctx.save();
+        ctx.fillStyle = '#a8e6cf'; // light green hill
+        ctx.beginPath();
+        ctx.arc(canvas.width/2 - (cameraX*0.2)%canvas.width, canvas.height, 400, Math.PI, 0);
+        ctx.fill();
+        ctx.fillStyle = '#ffb8b8'; // pink hill
+        ctx.beginPath();
+        ctx.arc(canvas.width - (cameraX*0.3)%canvas.width, canvas.height, 350, Math.PI, 0);
+        ctx.fill();
+        ctx.restore();
+    }
+
+    function gameLoop() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        drawBackground();
+
+        update();
+
+        // Apply Camera Transformation
+        ctx.save();
+        ctx.translate(-cameraX, 0);
+
+        // Draw World
+        for (let d of decorations) drawDecorations(d);
+        for (let p of platforms) drawPlatform(p);
+        for (let c of candies) drawCandy(c);
+        for (let e of enemies) drawEnemy(e);
+
+        // Draw Lasers
+        for (let l of lasers) {
+            ctx.strokeStyle = '#ff0055';
+            ctx.lineWidth = 5;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(l.x, l.y);
+            ctx.lineTo(l.x - l.vx * 1.5, l.y - l.vy * 1.5); // trailing beam
+            ctx.stroke();
+            // Inner glow
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(l.x, l.y);
+            ctx.lineTo(l.x - l.vx * 1.5, l.y - l.vy * 1.5);
+            ctx.stroke();
+        }
+
+        // Draw Player (with flicker if invulnerable)
+        if (player.invulnerableTimer === 0 || Math.floor(Date.now() / 100) % 2 === 0) {
+            drawStickgirl(player.x, player.y, player.width, player.height, player.facingRight);
+        }
+
+        ctx.restore();
+
+        animationId = requestAnimationFrame(gameLoop);
+    }
+
+    // Initialize
+    window.onload = () => {
+        buildLevel();
+        updateUI();
+        gameLoop();
+    };
+
+</script>
+</body>
+</html>

@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bobby - 2D Platformer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000033; /* Darker sky for asteroids */
+            font-family: 'Inter', sans-serif;
+            touch-action: none;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #1a1a4a, #4a69bd); /* Gradient sky */
+        }
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .ui-box {
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 20px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 2px black;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+        #message-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            display: none;
+            pointer-events: auto;
+            border: 4px solid #fff;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+        }
+        button {
+            background: #ff4757;
+            color: white;
+            border: 2px solid #fff;
+            padding: 12px 24px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-weight: bold;
+            transition: transform 0.1s;
+        }
+        button:hover {
+            transform: scale(1.05);
+            background: #ff6b81;
+        }
+        #boss-health-container {
+            display: none;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        #boss-health-bar {
+            width: 100%;
+            height: 24px;
+            background: #333;
+            border: 3px solid #ffd700; /* Gold border for king */
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 0 10px #ffd700;
+        }
+        #boss-health-fill {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #ff4757, #ff6b81);
+            transition: width 0.2s;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="ui-layer">
+        <div>
+            <div class="ui-box" id="health-ui">Hearts: ❤️ 10 / 10</div><br>
+            <div class="ui-box" id="charges-ui">Charges: ⚡ 0</div><br>
+            <div class="ui-box" id="inventory-ui">Inventory: [Empty]</div><br>
+            <div class="ui-box text-sm font-normal">
+                WASD/Arrows to move & jump.<br>
+                'E' to Mine/Pickup block.<br>
+                'T' to Throw Block from Inventory.<br>
+                'Q' Slam Drop (3 ⚡)<br>
+                'F' Laser (5 ⚡)
+            </div>
+        </div>
+        <div id="boss-health-container">
+            <div class="ui-box" style="margin-bottom: 5px; color: #ffd700;">King Pirate Turtle</div>
+            <div id="boss-health-bar">
+                <div id="boss-health-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="message-overlay">
+        <h1 id="message-title" class="text-5xl font-bold mb-4 text-yellow-400">Game Over</h1>
+        <p id="message-text" class="text-2xl mb-6">You ran out of hearts.</p>
+        <button onclick="resetGame()">Play Again</button>
+    </div>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // UI Elements
+    const healthUI = document.getElementById('health-ui');
+    const chargesUI = document.getElementById('charges-ui');
+    const inventoryUI = document.getElementById('inventory-ui');
+    const bossHealthContainer = document.getElementById('boss-health-container');
+    const bossHealthFill = document.getElementById('boss-health-fill');
+    const messageOverlay = document.getElementById('message-overlay');
+    const messageTitle = document.getElementById('message-title');
+    const messageText = document.getElementById('message-text');
+
+    let w, h;
+    function resize() {
+        w = canvas.width = window.innerWidth;
+        h = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Game Constants
+    const TILE_SIZE = 50;
+    const GRAVITY = 0.6;
+    const FRICTION = 0.8;
+    const JUMP_FORCE = -13;
+    const SPEED = 6;
+    const MAX_HEARTS = 10;
+
+    // Tile Types: 0:Empty, 1:Grass/Stone, 2:Dirt, 3:Lava, 4:TNT
+    const COLORS = {
+        1: '#55aa55', // Grass
+        2: '#8b4513', // Dirt
+        3: '#ff4500', // Lava
+        4: '#dc143c'  // TNT
+    };
+
+    let gameState = 'playing'; // playing, gameover, win
+    let camera = { x: 0, y: 0 };
+    let keys = {};
+
+    window.addEventListener('keydown', e => { keys[e.code] = true; handleSinglePress(e.code); });
+    window.addEventListener('keyup', e => keys[e.code] = false);
+
+    // Level map
+    let map = [];
+    const MAP_WIDTH = 80;
+    const MAP_HEIGHT = 15;
+
+    // Entities
+    let player;
+    let charges = [];
+    let enemies = [];
+    let projectiles = [];
+    let boss;
+    let particles = [];
+    let activeEffects = []; 
+    let asteroids = [];
+
+    class Player {
+        constructor(x, y) {
+            this.x = x;
+            this.y = y;
+            this.width = 30;
+            this.height = 50;
+            this.vx = 0;
+            this.vy = 0;
+            this.grounded = false;
+            this.hearts = MAX_HEARTS;
+            this.charges = 0;
+            this.inventory = [];
+            this.facing = 1; // 1 right, -1 left
+            this.invulnTimer = 0;
+            this.slimming = false;
+            this.phase = 1; // Phase changes based on health
+        }
+
+        update() {
+            if (this.invulnTimer > 0) this.invulnTimer--;
+
+            // Phase update
+            this.phase = this.hearts <= 3 ? 2 : 1;
+
+            // Horizontal movement
+            if (keys['ArrowLeft'] || keys['KeyA']) { this.vx -= 1.2; this.facing = -1; }
+            if (keys['ArrowRight'] || keys['KeyD']) { this.vx += 1.2; this.facing = 1; }
+            
+            this.vx *= FRICTION;
+            if (Math.abs(this.vx) < 0.01) this.vx = 0; // Stops float drift
+
+            // Jump
+            if ((keys['ArrowUp'] || keys['KeyW'] || keys['Space']) && this.grounded && !this.slimming) {
+                this.vy = JUMP_FORCE;
+                this.grounded = false;
+                createParticles(this.x + this.width/2, this.y + this.height, '#fff', 5);
+            }
+
+            // Slam mechanics
+            if (this.slimming) {
+                this.vy += GRAVITY * 3; // Fast fall
+                if (this.grounded) {
+                    this.slimming = false;
+                    createParticles(this.x + this.width/2, this.y + this.height, '#fff', 30);
+                    // Damage nearby enemies
+                    enemies.forEach(e => {
+                        if (Math.abs(e.x - this.x) < 150) e.takeDamage(3);
+                    });
+                    if (boss && Math.abs(boss.x - this.x) < 200) boss.takeDamage(3);
+                }
+            } else {
+                this.vy += GRAVITY;
+            }
+
+            // Limits
+            let currentSpeed = this.phase === 2 ? SPEED * 1.2 : SPEED; // Faster when low health
+            if (this.vx > currentSpeed) this.vx = currentSpeed;
+            if (this.vx < -currentSpeed) this.vx = -currentSpeed;
+
+            // X Collision
+            this.x += this.vx;
+            this.checkCollision(true);
+
+            // Y Collision
+            this.y += this.vy;
+            this.grounded = false;
+            this.checkCollision(false);
+
+            // Bounds check
+            if (this.y > MAP_HEIGHT * TILE_SIZE) this.takeDamage(10); // fall off map
+            if (this.x < 0) this.x = 0;
+
+            updateUI();
+        }
+
+        checkCollision(isX) {
+            const inset = 1; // 1 pixel inset to avoid snagging on floors/walls
+            
+            if (isX) {
+                let top = Math.floor((this.y + inset) / TILE_SIZE);
+                let bottom = Math.floor((this.y + this.height - inset) / TILE_SIZE);
+                
+                if (this.vx > 0) {
+                    let right = Math.floor((this.x + this.width) / TILE_SIZE);
+                    for (let r = top; r <= bottom; r++) {
+                        let tile = getTile(right, r);
+                        if (tile !== 0) {
+                            this.x = right * TILE_SIZE - this.width;
+                            this.vx = 0;
+                            this.checkLava(tile);
+                            break;
+                        }
+                    }
+                } else if (this.vx < 0) {
+                    let left = Math.floor(this.x / TILE_SIZE);
+                    for (let r = top; r <= bottom; r++) {
+                        let tile = getTile(left, r);
+                        if (tile !== 0) {
+                            this.x = (left + 1) * TILE_SIZE;
+                            this.vx = 0;
+                            this.checkLava(tile);
+                            break;
+                        }
+                    }
+                }
+            } else {
+                let left = Math.floor((this.x + inset) / TILE_SIZE);
+                let right = Math.floor((this.x + this.width - inset) / TILE_SIZE);
+                
+                if (this.vy > 0) { // falling
+                    let bottom = Math.floor((this.y + this.height) / TILE_SIZE);
+                    for (let c = left; c <= right; c++) {
+                        let tile = getTile(c, bottom);
+                        if (tile !== 0) {
+                            this.y = bottom * TILE_SIZE - this.height;
+                            this.vy = 0;
+                            this.grounded = true;
+                            this.checkLava(tile);
+                            break;
+                        }
+                    }
+                } else if (this.vy < 0) { // jumping up
+                    let top = Math.floor(this.y / TILE_SIZE);
+                    for (let c = left; c <= right; c++) {
+                        let tile = getTile(c, top);
+                        if (tile !== 0) {
+                            this.y = (top + 1) * TILE_SIZE;
+                            this.vy = 0;
+                            this.checkLava(tile);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        checkLava(tileType) {
+            if (tileType === 3) {
+                let hasLava = activeEffects.find(e => e.type === 'lava');
+                if (!hasLava) {
+                    activeEffects.push({ type: 'lava', duration: 180, ticksLeft: 2 });
+                    this.takeDamage(1); 
+                }
+            }
+        }
+
+        takeDamage(amount) {
+            if (this.invulnTimer > 0) return;
+            this.hearts -= amount;
+            this.invulnTimer = 40; 
+            createParticles(this.x + this.width/2, this.y + this.height/2, '#ff0000', 15);
+            if (this.hearts <= 0) {
+                this.hearts = 0;
+                endGame('gameover');
+            }
+            updateUI();
+        }
+
+        draw(ctx) {
+            if (this.invulnTimer > 0 && Math.floor(Date.now() / 100) % 2 === 0) return; // flicker
+
+            ctx.save();
+            ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
+            if (this.facing === -1) ctx.scale(-1, 1);
+
+            // Stickman body
+            ctx.strokeStyle = this.phase === 2 ? '#ff4444' : 'black'; // Red hue if low health
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(0, -10); ctx.lineTo(0, 10); // Body
+            ctx.lineTo(-10, 25); ctx.moveTo(0, 10); ctx.lineTo(10, 25); // Legs
+            ctx.moveTo(0, -5); ctx.lineTo(15, 0); ctx.moveTo(0, -5); ctx.lineTo(-15, 0); // Arms
+            ctx.stroke();
+
+            // Head
+            ctx.beginPath();
+            ctx.arc(0, -15, 12, 0, Math.PI * 2);
+            ctx.fillStyle = 'white';
+            ctx.fill();
+            ctx.stroke();
+
+            // Face Details
+            ctx.fillStyle = 'black';
+            if (this.phase === 1) {
+                // Normal face
+                ctx.beginPath(); ctx.arc(4, -18, 2, 0, Math.PI*2); ctx.fill(); // Right eye
+                ctx.beginPath(); ctx.arc(-2, -18, 2, 0, Math.PI*2); ctx.fill(); // Left eye
+                ctx.beginPath(); ctx.arc(2, -12, 4, 0, Math.PI); ctx.stroke(); // Smile
+            } else {
+                // Low health / Phase 2 face (angry/hurt)
+                ctx.beginPath(); ctx.arc(4, -18, 2, 0, Math.PI*2); ctx.fill(); 
+                ctx.beginPath(); ctx.arc(-2, -18, 2, 0, Math.PI*2); ctx.fill(); 
+                ctx.beginPath(); ctx.moveTo(-4, -20); ctx.lineTo(-1, -19); ctx.stroke(); // Angry brow
+                ctx.beginPath(); ctx.moveTo(6, -20); ctx.lineTo(3, -19); ctx.stroke(); 
+                ctx.beginPath(); ctx.arc(2, -10, 3, Math.PI, 0); ctx.stroke(); // Frown
+                // Sweat drop
+                ctx.fillStyle = '#00a8ff';
+                ctx.beginPath(); ctx.arc(-8, -16, 2, 0, Math.PI*2); ctx.fill();
+            }
+
+            // Red Hat
+            ctx.fillStyle = 'red';
+            ctx.beginPath();
+            ctx.moveTo(-14, -25);
+            ctx.lineTo(14, -25);
+            ctx.lineTo(14, -28);
+            ctx.lineTo(10, -36);
+            ctx.lineTo(-10, -36);
+            ctx.lineTo(-14, -28);
+            ctx.fill();
+            
+            // Hat Brim
+            ctx.fillRect(-18, -26, 36, 4);
+
+            // Letter B on Hat
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('B', 0, -26);
+
+            ctx.restore();
+        }
+    }
+
+    class Enemy {
+        constructor(x, y, type) {
+            this.x = x;
+            this.y = y;
+            this.type = type; // 'cupcake', 'bombom'
+            this.width = 36;
+            this.height = 36;
+            this.vx = type === 'cupcake' ? 1.5 : 1;
+            this.vy = 0;
+            this.maxHp = type === 'cupcake' ? 2 : 4;
+            this.hp = this.maxHp;
+            this.phase = 1;
+            this.invulnTimer = 0;
+        }
+
+        takeDamage(amount) {
+            if(this.invulnTimer > 0) return;
+            this.hp -= amount;
+            this.invulnTimer = 10;
+            createParticles(this.x + this.width/2, this.y + this.height/2, '#fff', 10);
+            
+            if (this.hp <= 0) {
+                // Drop charge
+                charges.push(new ChargeOrb(this.x + this.width/2, this.y + this.height/2));
+                if (this.type === 'bombom') {
+                    createParticles(this.x + this.width/2, this.y + this.height/2, 'orange', 30);
+                }
+            }
+        }
+
+        update() {
+            if (this.invulnTimer > 0) this.invulnTimer--;
+            
+            // Phase change
+            if (this.hp <= this.maxHp / 2) this.phase = 2;
+
+            let currentVx = this.vx;
+            if (this.phase === 2) currentVx *= 1.5; // Move faster in phase 2
+
+            this.vy += GRAVITY;
+            this.x += currentVx;
+            this.y += this.vy;
+
+            // Simple collision
+            let left = Math.floor(this.x / TILE_SIZE);
+            let right = Math.floor((this.x + this.width) / TILE_SIZE);
+            let bottom = Math.floor((this.y + this.height) / TILE_SIZE);
+
+            if (getTile(left, bottom) !== 0 || getTile(right, bottom) !== 0) {
+                this.y = bottom * TILE_SIZE - this.height;
+                this.vy = 0;
+            }
+
+            // Wall bounce
+            if (getTile(currentVx > 0 ? right+1 : left-1, bottom-1) !== 0 || this.x <= 0) {
+                this.vx *= -1;
+            }
+
+            // Hit player
+            if (rectIntersect(this, player)) {
+                if (this.type === 'bombom') {
+                    player.takeDamage(2);
+                    this.takeDamage(999); // Explodes and dies
+                } else {
+                    player.takeDamage(1);
+                    // bounce back
+                    this.vx *= -1;
+                    this.x += this.vx * 5;
+                }
+            }
+        }
+
+        draw(ctx) {
+            if (this.invulnTimer > 0 && Math.floor(Date.now() / 100) % 2 === 0) return;
+            
+            ctx.save();
+            ctx.translate(this.x, this.y);
+
+            if (this.type === 'cupcake') {
+                // Wrapper
+                ctx.fillStyle = this.phase === 2 ? '#ffb8b8' : '#ffe4e1';
+                ctx.fillRect(4, 16, 28, 20);
+                ctx.fillStyle = '#ff69b4'; // Icing
+                ctx.beginPath();
+                ctx.arc(18, 16, 16, Math.PI, 0);
+                ctx.fill();
+                
+                // Cherry
+                ctx.fillStyle = 'red';
+                ctx.beginPath(); ctx.arc(18, 0, 5, 0, Math.PI*2); ctx.fill();
+                
+                // Face
+                ctx.fillStyle = 'black';
+                ctx.beginPath(); ctx.arc(12, 12, 2, 0, Math.PI*2); ctx.fill(); // L eye
+                ctx.beginPath(); ctx.arc(24, 12, 2, 0, Math.PI*2); ctx.fill(); // R eye
+                
+                if (this.phase === 1) {
+                    ctx.beginPath(); ctx.arc(18, 16, 3, 0, Math.PI); ctx.stroke(); // Smile
+                } else {
+                    ctx.beginPath(); ctx.moveTo(15, 18); ctx.lineTo(21, 16); ctx.stroke(); // Angry mouth
+                    // Angry brows
+                    ctx.beginPath(); ctx.moveTo(9, 9); ctx.lineTo(13, 10); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(27, 9); ctx.lineTo(23, 10); ctx.stroke();
+                }
+
+            } else if (this.type === 'bombom') {
+                // Body
+                ctx.fillStyle = this.phase === 2 ? '#662222' : '#333';
+                ctx.beginPath();
+                ctx.arc(18, 20, 16, 0, Math.PI*2);
+                ctx.fill();
+                
+                // Cap
+                ctx.fillStyle = '#555';
+                ctx.fillRect(12, 0, 12, 6);
+                
+                // Fuse
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(18, 0); ctx.lineTo(22, -8); ctx.stroke();
+                // Spark
+                if (Math.floor(Date.now() / 100) % 2 === 0) {
+                    ctx.fillStyle = 'yellow';
+                    ctx.beginPath(); ctx.arc(22, -8, 4, 0, Math.PI*2); ctx.fill();
+                }
+
+                // Face
+                ctx.fillStyle = 'white';
+                ctx.beginPath(); ctx.arc(12, 16, 3, 0, Math.PI*2); ctx.fill(); // L eye
+                ctx.beginPath(); ctx.arc(24, 16, 3, 0, Math.PI*2); ctx.fill(); // R eye
+                
+                ctx.fillStyle = 'black'; // Pupils
+                ctx.beginPath(); ctx.arc(12, 16, 1, 0, Math.PI*2); ctx.fill(); 
+                ctx.beginPath(); ctx.arc(24, 16, 1, 0, Math.PI*2); ctx.fill(); 
+                
+                // Jagged mouth
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(10, 24); ctx.lineTo(14, 28); ctx.lineTo(18, 24); 
+                ctx.lineTo(22, 28); ctx.lineTo(26, 24);
+                ctx.stroke();
+                
+                if (this.phase === 2) {
+                    // Red glowing eyes
+                    ctx.fillStyle = 'red';
+                    ctx.beginPath(); ctx.arc(12, 16, 2, 0, Math.PI*2); ctx.fill(); 
+                    ctx.beginPath(); ctx.arc(24, 16, 2, 0, Math.PI*2); ctx.fill(); 
+                }
+            }
+            ctx.restore();
+        }
+    }
+
+    class Boss {
+        constructor(x, y) {
+            this.x = x;
+            this.y = y;
+            this.width = 140;
+            this.height = 140;
+            this.maxHp = 15;
+            this.hp = this.maxHp;
+            this.state = 'idle';
+            this.timer = 0;
+            this.phase = 1;
+            this.invulnTimer = 0;
+            this.active = false; // becomes active when player is near
+        }
+
+        takeDamage(amount) {
+            if(this.invulnTimer > 0) return;
+            this.hp -= amount;
+            this.invulnTimer = 15;
+            createParticles(this.x + this.width/2, this.y + this.height/2, '#ffaa00', 40);
+        }
+
+        update() {
+            if (this.hp <= 0) {
+                endGame('win');
+                return;
+            }
+            
+            if (this.invulnTimer > 0) this.invulnTimer--;
+
+            if (!this.active) {
+                if (Math.abs(player.x - this.x) < 800) this.active = true;
+                return;
+            }
+
+            // Phase Update
+            if (this.hp <= 7) this.phase = 2;
+
+            // Basic AI
+            this.timer++;
+            let actionThreshold = this.phase === 2 ? 80 : 120; // Faster attacks in phase 2
+
+            if (this.timer > actionThreshold) {
+                this.timer = 0;
+                let rand = Math.random();
+                if (rand < 0.5) {
+                    this.fireBreath();
+                } else {
+                    this.throwBomb();
+                }
+                
+                // Move a bit
+                if(this.phase === 2) {
+                     this.x += (Math.random() > 0.5 ? 20 : -20);
+                     if (this.x > MAP_WIDTH*TILE_SIZE - this.width) this.x = MAP_WIDTH*TILE_SIZE - this.width;
+                }
+            }
+
+            // Boss fight mechanic: Asteroids falling when active
+            if (Math.random() < (this.phase === 2 ? 0.04 : 0.02)) {
+                let ax = camera.x + Math.random() * w;
+                asteroids.push(new Asteroid(ax, camera.y - 100));
+            }
+        }
+
+        fireBreath() {
+            let count = this.phase === 2 ? 8 : 5;
+            for(let i=0; i<count; i++) {
+                setTimeout(() => {
+                    if(this.hp > 0) {
+                        projectiles.push(new Projectile(this.x, this.y + 60, -5 - Math.random()*2, (Math.random()-0.5)*3, 'flame'));
+                    }
+                }, i * 150);
+            }
+        }
+
+        throwBomb() {
+            let count = this.phase === 2 ? 3 : 1;
+            for(let i=0; i<count; i++) {
+                setTimeout(() => {
+                    if(this.hp > 0) {
+                         projectiles.push(new Projectile(this.x + 30, this.y + 20, -5 - Math.random()*3, -6 - Math.random()*4, 'bomb'));
+                    }
+                }, i * 300);
+            }
+        }
+
+        draw(ctx) {
+            if (this.invulnTimer > 0 && Math.floor(Date.now() / 100) % 2 === 0) return;
+
+            ctx.save();
+            ctx.translate(this.x, this.y);
+
+            // Shell back
+            ctx.fillStyle = '#006400'; 
+            ctx.beginPath(); ctx.arc(90, 80, 60, 0, Math.PI*2); ctx.fill();
+            
+            // Shell patterns
+            ctx.strokeStyle = '#004d00';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(90, 20); ctx.lineTo(60, 60); ctx.lineTo(90, 100); ctx.lineTo(120, 60); ctx.closePath();
+            ctx.stroke();
+
+            // Legs
+            ctx.fillStyle = '#228b22';
+            ctx.fillRect(40, 120, 30, 20);
+            ctx.fillRect(110, 120, 30, 20);
+            
+            // Body / Belly
+            ctx.fillStyle = '#ffd700'; // Gold belly
+            ctx.beginPath(); ctx.ellipse(70, 80, 40, 50, 0, 0, Math.PI*2); ctx.fill();
+
+            // Head
+            ctx.fillStyle = '#228b22';
+            ctx.beginPath(); ctx.arc(30, 50, 35, 0, Math.PI*2); ctx.fill();
+
+            // Crown + Pirate Hat Combo
+            // Pirate Hat Base
+            ctx.fillStyle = '#111';
+            ctx.beginPath();
+            ctx.moveTo(-20, 30);
+            ctx.lineTo(80, 30);
+            ctx.lineTo(50, -10);
+            ctx.lineTo(10, -10);
+            ctx.fill();
+            // Jolly Roger simple skull
+            ctx.fillStyle = 'white';
+            ctx.beginPath(); ctx.arc(30, 10, 6, 0, Math.PI*2); ctx.fill();
+            ctx.fillRect(26, 16, 8, 4);
+
+            // Gold Crown spikes coming out of hat
+            ctx.fillStyle = '#ffd700';
+            ctx.beginPath();
+            ctx.moveTo(10, -10); ctx.lineTo(0, -30); ctx.lineTo(20, -10);
+            ctx.moveTo(30, -10); ctx.lineTo(30, -35); ctx.lineTo(40, -10);
+            ctx.moveTo(50, -10); ctx.lineTo(60, -30); ctx.lineTo(50, -10);
+            ctx.fill();
+
+            // Detailed Face
+            // Eye Patch (Left eye from our view, Turtle's right eye)
+            ctx.fillStyle = 'black';
+            ctx.beginPath(); ctx.arc(15, 45, 8, 0, Math.PI*2); ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(-5, 35); ctx.lineTo(35, 55); ctx.stroke();
+
+            // Other Eye
+            ctx.fillStyle = 'white';
+            ctx.beginPath(); ctx.arc(40, 45, 6, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = this.phase === 2 ? 'red' : 'black';
+            ctx.beginPath(); ctx.arc(38, 45, 2, 0, Math.PI*2); ctx.fill();
+
+            // Beak / Mouth
+            ctx.fillStyle = '#ddaa00';
+            ctx.beginPath();
+            ctx.moveTo(0, 60); ctx.lineTo(-15, 70); ctx.lineTo(0, 75);
+            ctx.fill();
+            
+            // Angry Mouth Line
+            ctx.strokeStyle = '#333';
+            ctx.beginPath(); ctx.moveTo(0, 68); ctx.lineTo(-10, 70); ctx.stroke();
+
+            if (this.phase === 2) {
+                // Aura or rage indicators
+                ctx.strokeStyle = 'red';
+                ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(40, 35); ctx.lineTo(48, 30); ctx.stroke();
+            }
+
+            ctx.restore();
+        }
+    }
+
+    class Projectile {
+        constructor(x, y, vx, vy, type) {
+            this.x = x;
+            this.y = y;
+            this.vx = vx;
+            this.vy = vy;
+            this.type = type;
+            this.width = type === 'laser' ? w : 16;
+            this.height = type === 'laser' ? 24 : 16;
+            this.life = type === 'laser' ? 20 : 200;
+        }
+        update() {
+            this.life--;
+            if (this.type !== 'laser') {
+                if (this.type === 'bomb' || this.type === 'thrown_dirt' || this.type === 'thrown_tnt') {
+                    this.vy += GRAVITY;
+                }
+                this.x += this.vx;
+                this.y += this.vy;
+                
+                // Collision with player (if enemy proj)
+                if ((this.type === 'bomb' || this.type === 'flame') && rectIntersect(this, player)) {
+                    player.takeDamage(this.type === 'bomb' ? 3 : 1);
+                    this.life = 0;
+                    createParticles(this.x, this.y, 'orange', 10);
+                }
+
+                // Collision with enemies (if player thrown block)
+                if (this.type === 'thrown_dirt' || this.type === 'thrown_tnt') {
+                    enemies.forEach(e => {
+                        if (rectIntersect(this, e)) {
+                            e.takeDamage(this.type === 'thrown_tnt' ? 6 : 2);
+                            this.life = 0;
+                            createParticles(this.x, this.y, this.type === 'thrown_tnt' ? 'red' : 'brown', 20);
+                        }
+                    });
+                    if (boss && rectIntersect(this, boss)) {
+                        boss.takeDamage(this.type === 'thrown_tnt' ? 6 : 2);
+                        this.life = 0;
+                        createParticles(this.x, this.y, 'orange', 20);
+                    }
+                }
+
+            } else {
+                // Laser logic
+                enemies.forEach(e => {
+                    if (rectIntersect(this, e)) e.takeDamage(7);
+                });
+                if (boss && rectIntersect(this, boss)) boss.takeDamage(7);
+            }
+        }
+        draw(ctx) {
+            if (this.type === 'flame') {
+                ctx.fillStyle = '#ff4500';
+                ctx.beginPath(); ctx.arc(this.x, this.y, 12, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = 'yellow';
+                ctx.beginPath(); ctx.arc(this.x-2, this.y-2, 6, 0, Math.PI*2); ctx.fill();
+            } else if (this.type === 'bomb') {
+                ctx.fillStyle = 'black';
+                ctx.beginPath(); ctx.arc(this.x, this.y, 14, 0, Math.PI*2); ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.beginPath(); ctx.moveTo(this.x, this.y-14); ctx.lineTo(this.x+4, this.y-20); ctx.stroke();
+            } else if (this.type === 'laser') {
+                ctx.fillStyle = `rgba(0, 255, 255, ${this.life/20})`;
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                ctx.fillStyle = 'white';
+                ctx.fillRect(this.x, this.y+6, this.width, 12);
+            } else if (this.type === 'thrown_dirt') {
+                ctx.fillStyle = COLORS[2];
+                ctx.fillRect(this.x, this.y, 20, 20);
+            } else if (this.type === 'thrown_tnt') {
+                ctx.fillStyle = COLORS[4];
+                ctx.fillRect(this.x, this.y, 20, 20);
+                ctx.fillStyle = 'white';
+                ctx.font = '10px Arial';
+                ctx.fillText('TNT', this.x+2, this.y+14);
+            }
+        }
+    }
+
+    class Asteroid {
+        constructor(x, y) {
+            this.x = x;
+            this.y = y;
+            this.vx = (Math.random() - 0.5) * 2;
+            this.vy = 4 + Math.random() * 4;
+            this.size = 15 + Math.random() * 15;
+            this.rotation = 0;
+            this.rotSpeed = (Math.random() - 0.5) * 0.2;
+        }
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+            this.rotation += this.rotSpeed;
+
+            if (rectIntersect({x: this.x-this.size/2, y: this.y-this.size/2, width: this.size, height: this.size}, player)) {
+                player.takeDamage(2);
+                this.y = MAP_HEIGHT * TILE_SIZE + 100; // Force removal
+                createParticles(this.x, this.y, 'gray', 20);
+            }
+        }
+        draw(ctx) {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.rotation);
+            ctx.fillStyle = '#666';
+            ctx.beginPath();
+            
+            // Jagged rock shape
+            for(let i=0; i<6; i++) {
+                let angle = (i/6) * Math.PI*2;
+                let r = this.size * (0.8 + Math.random()*0.4);
+                if(i===0) ctx.moveTo(Math.cos(angle)*r, Math.sin(angle)*r);
+                else ctx.lineTo(Math.cos(angle)*r, Math.sin(angle)*r);
+            }
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = '#444';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Fire tail
+            ctx.fillStyle = 'rgba(255, 100, 0, 0.5)';
+            ctx.beginPath();
+            ctx.arc(0, -this.size, this.size*0.8, 0, Math.PI, true);
+            ctx.fill();
+
+            ctx.restore();
+        }
+    }
+
+    class Particle {
+        constructor(x, y, color, speedMulti=1) {
+            this.x = x;
+            this.y = y;
+            this.vx = (Math.random() - 0.5) * 10 * speedMulti;
+            this.vy = (Math.random() - 0.5) * 10 * speedMulti;
+            this.life = 1;
+            this.decay = Math.random() * 0.05 + 0.02;
+            this.color = color;
+            this.size = Math.random() * 4 + 2;
+        }
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+            this.life -= this.decay;
+        }
+        draw(ctx) {
+            ctx.fillStyle = this.color;
+            ctx.globalAlpha = Math.max(0, this.life);
+            ctx.fillRect(this.x, this.y, this.size, this.size);
+            ctx.globalAlpha = 1;
+        }
+    }
+
+    class ChargeOrb {
+        constructor(x, y) {
+            this.x = x;
+            this.y = y;
+            this.width = 20;
+            this.height = 20;
+            this.floatY = 0;
+            this.time = Math.random() * 100;
+            this.collected = false;
+        }
+        update() {
+            this.time += 0.1;
+            this.floatY = Math.sin(this.time) * 5;
+            
+            // Gravity to fall to ground
+            let bottom = Math.floor((this.y + this.height + this.floatY) / TILE_SIZE);
+            let centerC = Math.floor((this.x + this.width/2) / TILE_SIZE);
+            if (getTile(centerC, bottom) === 0) {
+                 this.y += 2;
+            }
+
+            if (rectIntersect(this, player)) {
+                player.charges++;
+                this.collected = true;
+                updateUI();
+                createParticles(this.x, this.y, '#00ffff', 10);
+            }
+        }
+        draw(ctx) {
+            ctx.fillStyle = '#00ffff';
+            ctx.beginPath();
+            ctx.arc(this.x + this.width/2, this.y + this.height/2 + this.floatY, 8, 0, Math.PI*2);
+            ctx.fill();
+            
+            ctx.fillStyle = 'rgba(255,255,255,0.8)';
+            ctx.beginPath();
+            ctx.arc(this.x + this.width/2 - 2, this.y + this.height/2 + this.floatY - 2, 3, 0, Math.PI*2);
+            ctx.fill();
+        }
+    }
+
+    // Helper functions
+    function getTile(c, r) {
+        if (c < 0 || c >= MAP_WIDTH || r < 0 || r >= MAP_HEIGHT) return 1; // Walls outside
+        return map[r][c];
+    }
+    function setTile(c, r, val) {
+        if (c >= 0 && c < MAP_WIDTH && r >= 0 && r < MAP_HEIGHT) map[r][c] = val;
+    }
+    function rectIntersect(r1, r2) {
+        return !(r2.x > r1.x + r1.width || 
+                 r2.x + r2.width < r1.x || 
+                 r2.y > r1.y + r1.height ||
+                 r2.y + r2.height < r1.y);
+    }
+    function createParticles(x, y, color, count, speed=1) {
+        for(let i=0; i<count; i++) particles.push(new Particle(x, y, color, speed));
+    }
+
+    function handleSinglePress(code) {
+        if (gameState !== 'playing') return;
+
+        if (code === 'KeyE') {
+            // Mine block or Pickup
+            let c = Math.floor((player.x + player.width/2 + player.facing * TILE_SIZE) / TILE_SIZE);
+            let r = Math.floor((player.y + player.height/2) / TILE_SIZE);
+            
+            let tile = getTile(c, r);
+            if (tile !== 0) {
+                if (tile === 2) {
+                    player.inventory.push('dirt');
+                    setTile(c, r, 0);
+                    createParticles(c*TILE_SIZE + TILE_SIZE/2, r*TILE_SIZE + TILE_SIZE/2, COLORS[2], 15);
+                } else if (tile === 4) {
+                    player.inventory.push('tnt');
+                    setTile(c, r, 0);
+                    createParticles(c*TILE_SIZE + TILE_SIZE/2, r*TILE_SIZE + TILE_SIZE/2, COLORS[4], 15);
+                } else if (tile === 3) {
+                    // Mining Lava hurts you but removes block
+                    let hasLava = activeEffects.find(e => e.type === 'lava');
+                    if (!hasLava) {
+                        activeEffects.push({ type: 'lava', duration: 180, ticksLeft: 2 });
+                        player.takeDamage(1); 
+                    }
+                    setTile(c, r, 0);
+                    createParticles(c*TILE_SIZE + TILE_SIZE/2, r*TILE_SIZE + TILE_SIZE/2, COLORS[3], 15);
+                }
+                updateUI();
+            }
+        }
+        
+        if (code === 'KeyT') {
+            // Throw from inventory
+            if (player.inventory.length > 0) {
+                let item = player.inventory.shift(); // Remove first item
+                let typeStr = item === 'dirt' ? 'thrown_dirt' : 'thrown_tnt';
+                projectiles.push(new Projectile(
+                    player.x + (player.facing === 1 ? player.width : -20), 
+                    player.y + 10, 
+                    player.facing * 10, 
+                    -4, 
+                    typeStr
+                ));
+                updateUI();
+            }
+        }
+
+        if (code === 'KeyQ') {
+            // Slam
+            if (player.charges >= 3 && !player.slimming && !player.grounded) {
+                player.charges -= 3;
+                player.slimming = true;
+                player.vy = 0;
+                updateUI();
+            }
+        }
+        
+        if (code === 'KeyF') {
+            // Laser
+            if (player.charges >= 5) {
+                player.charges -= 5;
+                let lx = player.facing === 1 ? player.x + player.width : player.x - w;
+                projectiles.push(new Projectile(lx, player.y + 15, 0, 0, 'laser'));
+                updateUI();
+            }
+        }
+    }
+
+    function generateMap() {
+        map = [];
+        for (let r = 0; r < MAP_HEIGHT; r++) {
+            let row = [];
+            for (let c = 0; c < MAP_WIDTH; c++) {
+                if (r >= MAP_HEIGHT - 2) {
+                    row.push(1); // Floor
+                } else if (r === MAP_HEIGHT - 3 && c > 5 && c < MAP_WIDTH - 20 && Math.random() < 0.25) {
+                    // Random blocks
+                    let type = Math.random();
+                    if (type < 0.4) row.push(1); // stone
+                    else if (type < 0.7) row.push(2); // dirt (mineable)
+                    else if (type < 0.85) row.push(3); // lava (hazard)
+                    else row.push(4); // TNT (mineable/explosive)
+                } else if (r === MAP_HEIGHT - 6 && c > 10 && c < 20) {
+                    row.push(1); // platform
+                } else if (r === MAP_HEIGHT - 5 && c > 30 && c < 45 && c % 3 !== 0) {
+                    row.push(1); // jumps
+                } else {
+                    row.push(0);
+                }
+            }
+            map.push(row);
+        }
+
+        // Clean area for boss
+        for (let r = MAP_HEIGHT - 8; r < MAP_HEIGHT - 2; r++) {
+            for (let c = MAP_WIDTH - 20; c < MAP_WIDTH; c++) {
+                map[r][c] = 0;
+            }
+        }
+    }
+
+    function initGame() {
+        generateMap();
+        player = new Player(100, 100);
+        charges = [];
+        enemies = [];
+        projectiles = [];
+        particles = [];
+        activeEffects = [];
+        asteroids = [];
+        boss = new Boss(MAP_WIDTH * TILE_SIZE - 250, (MAP_HEIGHT - 2) * TILE_SIZE - 140);
+
+        // Spawn enemies
+        for(let i=0; i<12; i++) {
+            let type = Math.random() > 0.5 ? 'cupcake' : 'bombom';
+            enemies.push(new Enemy(400 + i * 250, 100, type));
+        }
+
+        gameState = 'playing';
+        messageOverlay.style.display = 'none';
+        updateUI();
+    }
+
+    function updateUI() {
+        healthUI.innerText = `Hearts: ❤️ ${player.hearts} / 10`;
+        chargesUI.innerText = `Charges: ⚡ ${player.charges}`;
+        
+        let invCounts = { dirt: 0, tnt: 0 };
+        player.inventory.forEach(item => invCounts[item]++);
+        let invText = [];
+        if(invCounts.dirt > 0) invText.push(`${invCounts.dirt} Dirt`);
+        if(invCounts.tnt > 0) invText.push(`${invCounts.tnt} TNT`);
+        inventoryUI.innerText = `Inventory: ${invText.length > 0 ? invText.join(', ') : '[Empty]'}`;
+
+        if (boss && boss.active) {
+            bossHealthContainer.style.display = 'block';
+            bossHealthFill.style.width = `${(boss.hp / boss.maxHp) * 100}%`;
+        } else {
+            bossHealthContainer.style.display = 'none';
+        }
+    }
+
+    function endGame(state) {
+        gameState = state;
+        messageOverlay.style.display = 'block';
+        if (state === 'win') {
+            messageTitle.innerText = "Victory!";
+            messageTitle.className = "text-5xl font-bold mb-4 text-green-400";
+            messageText.innerText = "You defeated the King Pirate Turtle!";
+        } else {
+            messageTitle.innerText = "Game Over";
+            messageTitle.className = "text-5xl font-bold mb-4 text-red-500";
+            messageText.innerText = "You ran out of hearts.";
+        }
+    }
+
+    function resetGame() {
+        initGame();
+    }
+
+    function updateEffects() {
+        for (let i = activeEffects.length - 1; i >= 0; i--) {
+            let ef = activeEffects[i];
+            ef.duration--;
+            if (ef.type === 'lava' && ef.duration % 60 === 0 && ef.ticksLeft > 0) {
+                player.takeDamage(1);
+                ef.ticksLeft--;
+            }
+            if (ef.duration <= 0) {
+                activeEffects.splice(i, 1);
+            }
+        }
+    }
+
+    function loop() {
+        if (gameState === 'playing') {
+            // Logic
+            player.update();
+            updateEffects();
+
+            charges.forEach(c => c.update());
+            charges = charges.filter(c => !c.collected);
+
+            enemies.forEach(e => e.update());
+            enemies = enemies.filter(e => e.hp > 0 && e.y < MAP_HEIGHT * TILE_SIZE);
+
+            if (boss) {
+                boss.update();
+                if (boss.hp <= 0) boss = null;
+            }
+
+            projectiles.forEach(p => p.update());
+            projectiles = projectiles.filter(p => p.life > 0 && p.y < MAP_HEIGHT * TILE_SIZE + 100);
+
+            asteroids.forEach(a => a.update());
+            asteroids = asteroids.filter(a => a.y < MAP_HEIGHT * TILE_SIZE + 50);
+
+            particles.forEach(p => p.update());
+            particles = particles.filter(p => p.life > 0);
+
+            // Camera follow
+            camera.x += (player.x - w / 2 - camera.x) * 0.1; // Smooth camera
+            camera.y = player.y - h / 2 + 100;
+            // Clamp camera
+            if (camera.x < 0) camera.x = 0;
+            if (camera.x > MAP_WIDTH * TILE_SIZE - w) camera.x = MAP_WIDTH * TILE_SIZE - w;
+            if (camera.y > MAP_HEIGHT * TILE_SIZE - h) camera.y = MAP_HEIGHT * TILE_SIZE - h;
+        }
+
+        // Draw
+        ctx.clearRect(0, 0, w, h);
+        
+        ctx.save();
+        ctx.translate(-camera.x, -camera.y);
+
+        // Draw Map
+        let startCol = Math.floor(camera.x / TILE_SIZE);
+        let endCol = startCol + Math.ceil(w / TILE_SIZE) + 1;
+        let startRow = Math.floor(camera.y / TILE_SIZE);
+        let endRow = startRow + Math.ceil(h / TILE_SIZE) + 1;
+
+        for (let r = Math.max(0, startRow); r < Math.min(MAP_HEIGHT, endRow); r++) {
+            for (let c = Math.max(0, startCol); c < Math.min(MAP_WIDTH, endCol); c++) {
+                let tile = map[r][c];
+                if (tile !== 0) {
+                    ctx.fillStyle = COLORS[tile];
+                    ctx.fillRect(c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                    ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                    
+                    // Decor
+                    if (tile === 4) { // TNT label
+                        ctx.fillStyle = 'white';
+                        ctx.font = 'bold 16px sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('TNT', c*TILE_SIZE + TILE_SIZE/2, r*TILE_SIZE + TILE_SIZE/1.5);
+                    }
+                    if (tile === 3) { // Lava animation
+                        ctx.fillStyle = 'rgba(255,255,0,0.4)';
+                        ctx.fillRect(c*TILE_SIZE, r*TILE_SIZE, TILE_SIZE, 10 + Math.sin(Date.now()/200 + c)*5);
+                    }
+                }
+            }
+        }
+
+        charges.forEach(c => c.draw(ctx));
+        enemies.forEach(e => e.draw(ctx));
+        if (boss) boss.draw(ctx);
+        player.draw(ctx);
+        projectiles.forEach(p => p.draw(ctx));
+        asteroids.forEach(a => a.draw(ctx));
+        particles.forEach(p => p.draw(ctx));
+
+        ctx.restore();
+
+        requestAnimationFrame(loop);
+    }
+
+    // Start
+    initGame();
+    loop();
+
+</script>
+</body>
+</html>

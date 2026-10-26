@@ -1,0 +1,3129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Endless Skater — SOCC Arcade</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Inter:wght@400;600;700;800&family=Permanent+Marker&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+      overflow: hidden;
+      background-color: #0f172a;
+    }
+    .font-marker {
+      font-family: 'Permanent Marker', cursive;
+    }
+    .font-skate {
+      font-family: 'Fredoka One', cursive;
+    }
+    /* Custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #f59e0b;
+      border-radius: 4px;
+    }
+    /* Subtle neon glow */
+    .glow-yellow {
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+    }
+    .glow-cyan {
+      box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+    }
+    .text-glow {
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8), 0 0 12px rgba(245, 158, 11, 0.5);
+    }
+    /* Game canvas container */
+    #game-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    /* Floating trick popups */
+    .trick-toast {
+      pointer-events: none;
+      animation: floatUpAndFade 1.2s forwards cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes floatUpAndFade {
+      0% { opacity: 0; transform: translateY(20px) scale(0.8) rotate(-4deg); }
+      20% { opacity: 1; transform: translateY(0px) scale(1.1) rotate(2deg); }
+      40% { transform: translateY(-10px) scale(1) rotate(-1deg); }
+      100% { opacity: 0; transform: translateY(-40px) scale(0.9) rotate(0deg); }
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-white w-screen h-screen m-0 p-0 overflow-hidden">
+
+  <!-- Main Game Container -->
+  <div id="game-container" class="relative w-full h-full bg-slate-900 overflow-hidden">
+    
+    <!-- Canvas for 2D side scrolling -->
+    <canvas id="gameCanvas" class="w-full h-full absolute inset-0 z-0"></canvas>
+
+    <!-- Top HUD Bar -->
+    <header class="absolute top-0 left-0 right-0 z-10 p-2.5 sm:p-4 flex items-center justify-between pointer-events-none">
+      
+      <!-- Left: Score, Spendable Points, Distance & Level Progress -->
+      <div class="flex items-center gap-2 sm:gap-3 pointer-events-auto">
+        <!-- Shop Points -->
+        <div class="bg-slate-900/85 backdrop-blur-md border border-amber-500/40 px-3 py-1.5 sm:py-2 rounded-xl shadow-lg flex items-center gap-2.5">
+          <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-amber-500/20 border border-amber-400 flex items-center justify-center text-amber-400">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <div>
+            <div class="text-[9px] sm:text-[10px] tracking-wider uppercase font-semibold text-amber-300">Shop Points</div>
+            <div id="hud-points" class="text-lg sm:text-2xl font-black text-amber-400 font-skate leading-none">0</div>
+          </div>
+        </div>
+
+        <!-- Level Indicator & Progress to Next Level -->
+        <button id="btn-open-levels" title="View / Select Unlocked Levels" class="bg-slate-900/85 backdrop-blur-md border border-cyan-500/40 hover:border-cyan-400 px-3 py-1.5 sm:py-2 rounded-xl shadow-lg flex items-center gap-2.5 transition active:scale-95 group text-left">
+          <div id="hud-level-icon" class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-cyan-500/20 border border-cyan-400 flex items-center justify-center text-base sm:text-lg group-hover:scale-110 transition-transform">
+            🏙️
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span id="hud-level-name" class="text-[11px] sm:text-xs font-black uppercase text-cyan-300 font-skate tracking-wide">Level 1: Street</span>
+              <span class="text-[9px] text-cyan-200/60 font-mono hidden md:inline">▾</span>
+            </div>
+            <div class="flex items-center gap-2 mt-0.5">
+              <div class="w-16 sm:w-24 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                <div id="hud-level-progress-bar" class="h-full bg-gradient-to-r from-cyan-400 to-emerald-400 rounded-full transition-all duration-300" style="width: 0%;"></div>
+              </div>
+              <span id="hud-level-target" class="text-[9px] sm:text-[10px] text-slate-400 font-mono font-bold leading-none">0/1000</span>
+            </div>
+          </div>
+        </button>
+
+        <!-- Distance -->
+        <div class="bg-slate-900/85 backdrop-blur-md border border-slate-700 px-3 py-1.5 sm:py-2 rounded-xl shadow-lg hidden md:block">
+          <div class="text-[10px] tracking-wider uppercase font-semibold text-slate-400">Distance</div>
+          <div id="hud-distance" class="text-lg font-bold text-white font-skate leading-none">0 m</div>
+        </div>
+      </div>
+
+      <!-- Center: Active Combo Banner (Only shows when combo is building) -->
+      <div id="combo-container" class="transition-all duration-200 transform scale-0 opacity-0 flex flex-col items-center pointer-events-none">
+        <div class="bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 text-white font-marker px-4 py-1 rounded-full text-base sm:text-xl shadow-lg border-2 border-white/60 tracking-wider flex items-center gap-2">
+          <span id="combo-trick-name">OLLIE</span>
+          <span id="combo-multiplier" class="bg-black/40 px-2 py-0.5 rounded-full text-xs sm:text-sm font-sans font-extrabold text-yellow-300">x1</span>
+        </div>
+        <div id="combo-score" class="text-yellow-300 font-skate text-lg sm:text-2xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] mt-0.5">+0 PTS</div>
+      </div>
+
+      <!-- Right: Action buttons (Shop, Audio, Help) -->
+      <div class="flex items-center gap-2 pointer-events-auto">
+        <!-- Direct Skate Shop Button -->
+        <button id="btn-open-shop" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white px-3 sm:px-4 py-2 rounded-xl font-bold font-skate text-sm sm:text-base flex items-center gap-2 shadow-lg border border-emerald-300/40 transition active:scale-95 group">
+          <svg class="w-5 h-5 text-emerald-200 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+          </svg>
+          <span>SKATE SHOP</span>
+          <span class="hidden md:inline-block text-[10px] bg-black/30 px-1.5 py-0.5 rounded font-mono text-emerald-200">[E]</span>
+        </button>
+
+        <!-- Bus Transit Button -->
+        <button id="btn-bus-transit" title="Take Bus Back to Previous Level [B]" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-3 sm:px-3.5 py-2 rounded-xl font-bold font-skate text-sm sm:text-base flex items-center gap-1.5 shadow-lg border border-blue-400/40 transition active:scale-95 group">
+          <span class="text-base sm:text-lg group-hover:scale-110 transition-transform">🚌</span>
+          <span class="hidden sm:inline">BUS</span>
+          <span class="hidden md:inline-block text-[10px] bg-black/30 px-1.5 py-0.5 rounded font-mono text-blue-200">[B]</span>
+        </button>
+
+        <!-- Sound Toggle -->
+        <button id="btn-audio-toggle" title="Toggle Sound" class="bg-slate-900/85 backdrop-blur-md border border-slate-700 hover:border-slate-500 p-2 sm:p-2.5 rounded-xl text-slate-300 hover:text-white transition active:scale-95">
+          <svg id="icon-sound-on" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
+          </svg>
+          <svg id="icon-sound-off" class="w-5 h-5 hidden text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path>
+          </svg>
+        </button>
+
+        <!-- Help / Controls Button -->
+        <button id="btn-help" title="Controls & Help" class="bg-slate-900/85 backdrop-blur-md border border-slate-700 hover:border-slate-500 p-2 sm:p-2.5 rounded-xl text-slate-300 hover:text-white transition active:scale-95">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Floating Near-Shop Prompt -->
+    <div id="shop-prompt" class="absolute top-20 left-1/2 -translate-x-1/2 z-10 pointer-events-none opacity-0 transition-all duration-300 transform scale-90">
+      <div class="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 text-white font-marker px-5 py-2.5 rounded-2xl shadow-2xl border-2 border-emerald-300 flex items-center gap-3 animate-pulse">
+        <svg class="w-6 h-6 text-yellow-300" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z"></path>
+        </svg>
+        <span class="text-base sm:text-lg tracking-wide">SKATE SHOP AHEAD! PRESS <kbd class="bg-black/40 px-2 py-0.5 rounded text-yellow-300 font-mono text-sm">[E]</kbd> OR TAP SHOP</span>
+      </div>
+    </div>
+
+    <!-- Floating Near-Bus-Stop Prompt -->
+    <div id="bus-prompt" class="absolute top-20 left-1/2 -translate-x-1/2 z-10 pointer-events-none opacity-0 transition-all duration-300 transform scale-90">
+      <div class="bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 text-white font-marker px-5 py-2.5 rounded-2xl shadow-2xl border-2 border-blue-300 flex items-center gap-3 animate-pulse">
+        <span class="text-xl">🚌</span>
+        <span class="text-base sm:text-lg tracking-wide">BUS STOP! PRESS <kbd class="bg-black/40 px-2 py-0.5 rounded text-yellow-300 font-mono text-sm">[B]</kbd> TO RIDE BACK</span>
+      </div>
+    </div>
+
+    <!-- LEVEL UP CELEBRATION MODAL -->
+    <div id="levelup-overlay" class="fixed inset-0 z-40 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center pointer-events-none opacity-0 transition-opacity duration-300">
+      <div class="transform scale-90 transition-transform duration-300 text-center p-6 sm:p-8 rounded-3xl bg-slate-900 border-2 border-amber-400 shadow-[0_0_50px_rgba(245,158,11,0.5)] max-w-md mx-4">
+        <div id="levelup-icon" class="text-6xl mb-2 animate-bounce">🛹</div>
+        <div class="text-xs uppercase tracking-widest font-black text-amber-400">Milestone Reached!</div>
+        <div id="levelup-title" class="text-2xl sm:text-3xl font-marker text-white tracking-wider mt-1">LEVEL UNLOCKED!</div>
+        <div id="levelup-name" class="text-xl sm:text-2xl font-black font-skate text-amber-300 mt-1">SUNSET SKATEPARK</div>
+        <div id="levelup-desc" class="text-xs sm:text-sm text-slate-300 mt-2 font-medium">New curved bowls, vert coping, and neon park grind rails!</div>
+        <div class="mt-5 inline-block bg-amber-400/20 border border-amber-400 text-amber-300 px-5 py-2 rounded-full font-bold text-xs uppercase tracking-widest animate-pulse">
+          TAP ANYWHERE OR JUMP TO CONTINUE
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Grind Balance Bar (Appears when grinding) -->
+    <div id="grind-bar-container" class="absolute bottom-28 sm:bottom-32 left-1/2 -translate-x-1/2 z-10 pointer-events-none opacity-0 transition-opacity duration-150 flex flex-col items-center">
+      <div class="text-xs font-bold uppercase tracking-wider text-amber-300 mb-1 drop-shadow">Grind Balance</div>
+      <div class="w-48 h-3.5 bg-slate-900/90 rounded-full p-0.5 border border-amber-400/60 shadow-xl relative overflow-hidden">
+        <!-- Safe Sweet Spot -->
+        <div class="absolute inset-y-0 left-1/4 right-1/4 bg-emerald-500/30 rounded-full"></div>
+        <!-- Center Notch -->
+        <div class="absolute inset-y-0 left-1/2 w-0.5 bg-white/70 -translate-x-1/2 z-10"></div>
+        <!-- Balance Indicator Pill -->
+        <div id="grind-balance-needle" class="absolute top-0.5 bottom-0.5 w-3 bg-gradient-to-r from-amber-400 to-yellow-300 rounded-full shadow transition-all duration-75" style="left: calc(50% - 6px);"></div>
+      </div>
+    </div>
+
+    <!-- On-Screen Touch / Click Controls (Visible on mobile or available for mouse users) -->
+    <div id="touch-controls" class="absolute bottom-3 left-0 right-0 z-10 px-3 sm:px-6 flex items-end justify-between pointer-events-none">
+      
+      <!-- Left: Tricks & Spin buttons -->
+      <div class="flex flex-col gap-2 pointer-events-auto">
+        <div class="flex gap-2">
+          <button id="btn-lean-back" class="w-12 h-12 sm:w-14 sm:h-14 bg-slate-900/80 active:bg-amber-600 border border-slate-700 active:border-amber-400 text-white rounded-2xl flex flex-col items-center justify-center shadow-lg font-bold transition">
+            <span class="text-lg">↺</span>
+            <span class="text-[9px] font-mono text-slate-400">A / ←</span>
+          </button>
+          <button id="btn-lean-fwd" class="w-12 h-12 sm:w-14 sm:h-14 bg-slate-900/80 active:bg-amber-600 border border-slate-700 active:border-amber-400 text-white rounded-2xl flex flex-col items-center justify-center shadow-lg font-bold transition">
+            <span class="text-lg">↻</span>
+            <span class="text-[9px] font-mono text-slate-400">D / →</span>
+          </button>
+        </div>
+        <div class="grid grid-cols-2 gap-1.5 sm:gap-2">
+          <button id="btn-trick-kickflip" class="px-2.5 py-1.5 bg-indigo-900/80 active:bg-indigo-600 border border-indigo-500/50 text-indigo-200 rounded-xl font-skate text-xs sm:text-sm flex flex-col items-center shadow transition active:scale-95">
+            <span>Kickflip</span>
+            <span class="text-[9px] font-mono text-indigo-300/80">[Z]</span>
+          </button>
+          <button id="btn-trick-heelflip" class="px-2.5 py-1.5 bg-violet-900/80 active:bg-violet-600 border border-violet-500/50 text-violet-200 rounded-xl font-skate text-xs sm:text-sm flex flex-col items-center shadow transition active:scale-95">
+            <span>Heelflip</span>
+            <span class="text-[9px] font-mono text-violet-300/80">[X]</span>
+          </button>
+          <button id="btn-trick-shuvit" class="px-2.5 py-1.5 bg-cyan-900/80 active:bg-cyan-600 border border-cyan-500/50 text-cyan-200 rounded-xl font-skate text-xs sm:text-sm flex flex-col items-center shadow transition active:scale-95">
+            <span>360 Shuv</span>
+            <span class="text-[9px] font-mono text-cyan-300/80">[C]</span>
+          </button>
+          <button id="btn-trick-grab" class="px-2.5 py-1.5 bg-fuchsia-900/80 active:bg-fuchsia-600 border border-fuchsia-500/50 text-fuchsia-200 rounded-xl font-skate text-xs sm:text-sm flex flex-col items-center shadow transition active:scale-95">
+            <span>Indy Grab</span>
+            <span class="text-[9px] font-mono text-fuchsia-300/80">[V]</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Right: Main OLLIE / JUMP button -->
+      <div class="flex flex-col items-end gap-2 pointer-events-auto">
+        <button id="btn-ollie" class="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600 active:scale-95 text-white rounded-3xl flex flex-col items-center justify-center shadow-[0_8px_25px_rgba(245,158,11,0.5)] border-2 border-amber-300 font-skate transition">
+          <span class="text-xl sm:text-2xl font-black">OLLIE</span>
+          <span class="text-[10px] font-sans font-extrabold uppercase tracking-widest text-amber-100">JUMP [SPACE]</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- BUS TRANSIT MODAL -->
+    <div id="bus-modal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 hidden">
+      <div class="bg-slate-900 border-2 border-blue-500/60 rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl relative">
+        <button id="btn-close-bus" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-xl">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-12 h-12 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-2xl border border-blue-400/40">
+            🚌
+          </div>
+          <div>
+            <h3 class="text-2xl font-marker text-white tracking-wide">METRO SKATE TRANSIT</h3>
+            <p class="text-xs text-slate-400">Catch the bus to ride back to previous skate levels!</p>
+          </div>
+        </div>
+
+        <div class="space-y-3 mt-4" id="bus-routes-container">
+          <!-- Dynamically populated via JS -->
+        </div>
+
+        <div class="mt-5 text-center text-xs text-slate-400">
+          Hop on the bus anytime by pressing <kbd class="bg-slate-800 px-1.5 py-0.5 rounded font-mono text-blue-300">[B]</kbd> or pulling up to any bus stop shelter!
+        </div>
+      </div>
+    </div>
+
+    <!-- Bus Transition Animated Screen -->
+    <div id="bus-transition-overlay" class="fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center pointer-events-none opacity-0 transition-opacity duration-300">
+      <div class="text-7xl mb-3 animate-bounce">🚌 💨</div>
+      <div id="bus-transition-title" class="text-2xl sm:text-3xl font-marker text-blue-400 tracking-wider">BOARDING BUS...</div>
+      <div id="bus-transition-dest" class="text-lg sm:text-xl font-skate text-white mt-1">HEADING TO DOWNTOWN STREETS</div>
+    </div>
+
+    <!-- LEVEL SELECTOR MODAL -->
+    <div id="levels-modal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 hidden">
+      <div class="bg-slate-900 border-2 border-cyan-500/60 rounded-3xl max-w-xl w-full p-5 sm:p-6 shadow-2xl relative">
+        <button id="btn-close-levels" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-xl">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-12 h-12 rounded-2xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-2xl border border-cyan-400/40">
+            🗺️
+          </div>
+          <div>
+            <h3 class="text-2xl font-marker text-white tracking-wide">SKATE DISTRICTS</h3>
+            <p class="text-xs text-slate-400">Unlock new skate parks and underground spots as you score points!</p>
+          </div>
+        </div>
+
+        <div class="space-y-3 mt-4" id="level-cards-container">
+          <!-- Dynamically populated via JS -->
+        </div>
+
+        <div class="mt-5 text-center text-xs text-slate-400">
+          Earn points by landing trick combos, ramp launches, and grinding rails!
+        </div>
+      </div>
+    </div>
+
+    <!-- SKATE SHOP MODAL -->
+    <div id="shop-modal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 hidden">
+      <div class="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-amber-500/60 rounded-3xl max-w-3xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+        
+        <!-- Shop Header -->
+        <div class="p-4 sm:p-6 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center text-white shadow-lg font-marker text-2xl">
+              🛹
+            </div>
+            <div>
+              <h2 class="text-2xl sm:text-3xl font-marker text-amber-400 tracking-wide leading-none">LOCAL SKATE SHOP</h2>
+              <p class="text-xs sm:text-sm text-slate-400 mt-1">Upgrade your Bearings & Trucks to boost Speed and Control!</p>
+            </div>
+          </div>
+
+          <!-- Points Display in Shop -->
+          <div class="bg-amber-500/10 border border-amber-500/30 rounded-2xl px-4 py-2 text-right">
+            <div class="text-[10px] uppercase font-bold text-amber-300 tracking-wider">Your Points</div>
+            <div id="shop-wallet-points" class="text-2xl sm:text-3xl font-skate text-amber-400 leading-none">0</div>
+          </div>
+        </div>
+
+        <!-- Current Skater Stats Bar -->
+        <div class="px-4 sm:px-6 py-3 bg-slate-950/60 border-b border-slate-800/80 grid grid-cols-2 gap-4">
+          <!-- Speed Stat -->
+          <div>
+            <div class="flex justify-between text-xs font-bold mb-1">
+              <span class="text-amber-400 uppercase tracking-wider flex items-center gap-1">
+                <span>⚡ SPEED (Bearings)</span>
+              </span>
+              <span id="stat-speed-label" class="text-white">Tier 1 • Standard</span>
+            </div>
+            <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden p-0.5">
+              <div id="stat-speed-bar" class="h-full bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full transition-all duration-300" style="width: 20%;"></div>
+            </div>
+          </div>
+          <!-- Control Stat -->
+          <div>
+            <div class="flex justify-between text-xs font-bold mb-1">
+              <span class="text-cyan-400 uppercase tracking-wider flex items-center gap-1">
+                <span>🎯 CONTROL (Trucks)</span>
+              </span>
+              <span id="stat-control-label" class="text-white">Tier 1 • Basic</span>
+            </div>
+            <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden p-0.5">
+              <div id="stat-control-bar" class="h-full bg-gradient-to-r from-cyan-500 to-blue-400 rounded-full transition-all duration-300" style="width: 20%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Shop Content Tabs / Sections -->
+        <div class="p-4 sm:p-6 overflow-y-auto space-y-6 flex-1">
+          
+          <!-- Section 1: Bearings (Speed Upgrades) -->
+          <div>
+            <div class="flex items-center gap-2 mb-3">
+              <div class="w-2.5 h-6 bg-amber-500 rounded-full"></div>
+              <h3 class="text-lg font-skate text-white">SKATEBOARD BEARINGS <span class="text-xs font-sans font-normal text-amber-400 ml-2">(Increases Maximum Speed & Rolling Momentum)</span></h3>
+            </div>
+            <div id="bearings-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <!-- Dynamically populated via JS -->
+            </div>
+          </div>
+
+          <!-- Section 2: Trucks (Control & Stability Upgrades) -->
+          <div>
+            <div class="flex items-center gap-2 mb-3">
+              <div class="w-2.5 h-6 bg-cyan-500 rounded-full"></div>
+              <h3 class="text-lg font-skate text-white">SKATEBOARD TRUCKS <span class="text-xs font-sans font-normal text-cyan-400 ml-2">(Boosts Ollie Pop, Spin Speed, Rail Balance & Landing Forgiveness)</span></h3>
+            </div>
+            <div id="trucks-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <!-- Dynamically populated via JS -->
+            </div>
+          </div>
+
+          <!-- Section 3: Extra Gear (Bonus decks) -->
+          <div>
+            <div class="flex items-center gap-2 mb-3">
+              <div class="w-2.5 h-6 bg-emerald-500 rounded-full"></div>
+              <h3 class="text-lg font-skate text-white">DECK & WHEELS TUNING <span class="text-xs font-sans font-normal text-emerald-400 ml-2">(Special trick point bonuses)</span></h3>
+            </div>
+            <div id="decks-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <!-- Dynamically populated via JS -->
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Shop Footer (Resume button) -->
+        <div class="p-4 sm:p-5 bg-slate-900 border-t border-slate-800 flex items-center justify-between">
+          <div class="text-xs text-slate-400 hidden sm:block">
+            Tip: High-tier trucks make grinding and aerial spins much easier to stick!
+          </div>
+          <button id="btn-close-shop" class="w-full sm:w-auto ml-auto px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black font-skate text-lg rounded-2xl shadow-xl transition active:scale-95 flex items-center justify-center gap-2">
+            <span>HIT THE STREETS</span>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+            </svg>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- CONTROLS & HOW TO PLAY MODAL -->
+    <div id="help-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 hidden">
+      <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-lg w-full p-6 shadow-2xl relative">
+        <button id="btn-close-help" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-xl">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-xl">
+            ?
+          </div>
+          <div>
+            <h3 class="text-xl font-marker text-white">HOW TO SKATE</h3>
+            <p class="text-xs text-slate-400">Master the streets, skatepark, and underground garage</p>
+          </div>
+        </div>
+
+        <div class="space-y-3.5 text-sm text-slate-300">
+          <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700/50">
+            <div class="font-bold text-amber-400 mb-1 flex items-center gap-2">
+              <span>🚀 JUMP & LAUNCH OFF RAMPS</span>
+            </div>
+            <p class="text-xs leading-relaxed">Press <kbd class="bg-slate-700 px-1.5 py-0.5 rounded text-white font-mono">SPACE</kbd> or tap <strong class="text-white">OLLIE</strong> to jump. Curved ramps launch you extra high into the sky for massive airtime!</p>
+          </div>
+
+          <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700/50">
+            <div class="font-bold text-cyan-400 mb-1 flex items-center gap-2">
+              <span>✨ GRIND RAILS FOR POINTS</span>
+            </div>
+            <p class="text-xs leading-relaxed">Land your skateboard onto any metal handrail to start grinding. Grinding awards continuous points and sparks! Keep your balance inside the sweet spot.</p>
+          </div>
+
+          <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700/50">
+            <div class="font-bold text-fuchsia-400 mb-1 flex items-center gap-2">
+              <span>🔥 AERIAL TRICKS (TAP TO FLIP - NO HOLDING!)</span>
+            </div>
+            <p class="text-xs leading-relaxed">Tap trick keys while airborne: <kbd class="bg-slate-700 px-1 py-0.5 rounded font-mono">Z</kbd> Kickflip, <kbd class="bg-slate-700 px-1 py-0.5 rounded font-mono">X</kbd> Heelflip, <kbd class="bg-slate-700 px-1 py-0.5 rounded font-mono">C</kbd> 360 Pop Shuvit, <kbd class="bg-slate-700 px-1 py-0.5 rounded font-mono">V</kbd> Indy Grab. You must tap cleanly—holding trick keys is disabled! Use <kbd class="bg-slate-700 px-1 py-0.5 rounded font-mono">A</kbd>/<kbd class="bg-slate-700 px-1 py-0.5 rounded font-mono">D</kbd> or arrow keys to rotate and do spins.</p>
+          </div>
+
+          <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700/50">
+            <div class="font-bold text-emerald-400 mb-1 flex items-center gap-2">
+              <span>🗺️ UNLOCK MULTIPLE LEVELS</span>
+            </div>
+            <p class="text-xs leading-relaxed">Earn <strong>1,000 Points</strong> to unlock the <strong>Sunset Skatepark</strong> with bowls and park rails, then earn <strong>another 1,000 Points</strong> (2,000 total) to unlock the <strong>Underground Garage</strong> with neon pipes and concrete obstacles!</p>
+          </div>
+
+          <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700/50">
+            <div class="font-bold text-blue-400 mb-1 flex items-center gap-2">
+              <span>🚌 BUS STOPS & RIDING BACK [B]</span>
+            </div>
+            <p class="text-xs leading-relaxed">Bus stops appear along every district. Press <kbd class="bg-slate-700 px-1 py-0.5 rounded font-mono text-blue-300">B</kbd> or tap the <strong>BUS</strong> button anytime to board the transit bus and ride back to previous levels!</p>
+          </div>
+
+          <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700/50">
+            <div class="font-bold text-yellow-400 mb-1 flex items-center gap-2">
+              <span>🏪 UPGRADE AT THE SKATE SHOP</span>
+            </div>
+            <p class="text-xs leading-relaxed">Press <kbd class="bg-slate-700 px-1.5 py-0.5 rounded text-white font-mono">E</kbd> or tap the Shop button anytime to upgrade your <strong>Bearings</strong> for speed and <strong>Trucks</strong> for control!</p>
+          </div>
+        </div>
+
+        <button id="btn-got-it" class="mt-5 w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl font-skate transition">
+          LET'S SKATE!
+        </button>
+      </div>
+    </div>
+
+    <!-- Tired / Quick Nap Notification Overlay -->
+    <div id="bail-overlay" class="absolute inset-0 z-20 pointer-events-none flex flex-col items-center justify-center opacity-0 transition-opacity duration-200">
+      <div class="text-4xl sm:text-6xl font-marker text-sky-300 drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] tracking-wider transform -rotate-3">
+        😴 WHEW! TIRED... Zzz
+      </div>
+      <div class="text-sm sm:text-base font-bold text-sky-100 bg-slate-900/90 px-4 py-1.5 rounded-full border border-sky-400/50 mt-2">
+        Taking a quick rest! Straighten your board before landing!
+      </div>
+    </div>
+
+  </div>
+
+  <!-- GAME ENGINE & LOGIC SCRIPT -->
+  <script>
+    /* ========================================================================
+       INFINITE 2D SIDE-SCROLLING SKATEBOARD GAME
+       Features:
+       - Endless rightward procedural urban & skate environments
+       - MULTIPLE LEVELS:
+         * Level 1: Downtown Street (Start)
+         * Level 2: Sunset Skatepark (Unlocked at 1,000 pts)
+         * Level 3: Underground Garage (Unlocked at 2,000 pts)
+       - NO TRICK HOLDING:
+         * Single-tap trick execution, key repeat disabled, flip animation cooldown
+       - Ramps (Quarter pipe / kicker launches)
+       - Grind rails with spark particles and balance meter
+       - In-depth Skate Shop with Bearings & Trucks upgrades
+       - Web Audio API Sound Synthesizer
+    ======================================================================== */
+
+    (function() {
+      // --- AUDIO SYNTHESIZER (Web Audio API) ---
+      let audioCtx = null;
+      let soundEnabled = true;
+
+      function initAudio() {
+        if (!audioCtx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) {
+            audioCtx = new AudioContextClass();
+          }
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+      }
+
+      function playSound(type) {
+        if (!soundEnabled || !audioCtx) return;
+        try {
+          const now = audioCtx.currentTime;
+          if (type === 'ollie') {
+            // Wood pop sound
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(140, now);
+            osc.frequency.exponentialRampToValueAtTime(40, now + 0.12);
+            gain.gain.setValueAtTime(0.4, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.12);
+          } else if (type === 'trick') {
+            // Whoosh flip sound
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(260, now);
+            osc.frequency.exponentialRampToValueAtTime(620, now + 0.15);
+            gain.gain.setValueAtTime(0.25, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.15);
+          } else if (type === 'grind') {
+            // Scratchy noise
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(180 + Math.random() * 80, now);
+            gain.gain.setValueAtTime(0.12, now);
+            gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.08);
+          } else if (type === 'land') {
+            // Solid wooden board slap
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(90, now);
+            osc.frequency.exponentialRampToValueAtTime(30, now + 0.1);
+            gain.gain.setValueAtTime(0.35, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.1);
+          } else if (type === 'coin') {
+            // Cash register / points chime
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(587.33, now);
+            osc.frequency.setValueAtTime(880, now + 0.08);
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.35);
+          } else if (type === 'bail') {
+            // Cute sleepy yawn / lullaby notes (G4 -> E4 -> C4)
+            const sleepyNotes = [392.00, 329.63, 261.63];
+            sleepyNotes.forEach((freq, idx) => {
+              const osc = audioCtx.createOscillator();
+              const gain = audioCtx.createGain();
+              osc.type = 'sine';
+              osc.frequency.setValueAtTime(freq, now + idx * 0.14);
+              gain.gain.setValueAtTime(0.22, now + idx * 0.14);
+              gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.14 + 0.25);
+              osc.connect(gain);
+              gain.connect(audioCtx.destination);
+              osc.start(now + idx * 0.14);
+              osc.stop(now + idx * 0.14 + 0.25);
+            });
+          } else if (type === 'levelup') {
+            // Triumphant 4-note arpeggio fanfare C5 -> E5 -> G5 -> C6
+            const freqs = [523.25, 659.25, 783.99, 1046.50];
+            freqs.forEach((freq, idx) => {
+              const osc = audioCtx.createOscillator();
+              const gain = audioCtx.createGain();
+              osc.type = 'triangle';
+              osc.frequency.setValueAtTime(freq, now + idx * 0.09);
+              gain.gain.setValueAtTime(0.28, now + idx * 0.09);
+              gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.09 + 0.35);
+              osc.connect(gain);
+              gain.connect(audioCtx.destination);
+              osc.start(now + idx * 0.09);
+              osc.stop(now + idx * 0.09 + 0.35);
+            });
+          } else if (type === 'bus') {
+            // Two-tone bus horn (F4 -> A4)
+            const notes = [349.23, 440.00];
+            notes.forEach((freq, idx) => {
+              const osc = audioCtx.createOscillator();
+              const gain = audioCtx.createGain();
+              osc.type = 'sawtooth';
+              osc.frequency.setValueAtTime(freq, now + idx * 0.12);
+              gain.gain.setValueAtTime(0.22, now + idx * 0.12);
+              gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.12 + 0.22);
+              osc.connect(gain);
+              gain.connect(audioCtx.destination);
+              osc.start(now + idx * 0.12);
+              osc.stop(now + idx * 0.12 + 0.22);
+            });
+            // Air brake release hiss
+            const hiss = audioCtx.createOscillator();
+            const hissGain = audioCtx.createGain();
+            hiss.type = 'triangle';
+            hiss.frequency.setValueAtTime(900, now + 0.26);
+            hiss.frequency.linearRampToValueAtTime(280, now + 0.58);
+            hissGain.gain.setValueAtTime(0.18, now + 0.26);
+            hissGain.gain.exponentialRampToValueAtTime(0.01, now + 0.58);
+            hiss.connect(hissGain);
+            hissGain.connect(audioCtx.destination);
+            hiss.start(now + 0.26);
+            hiss.stop(now + 0.58);
+          }
+        } catch (e) {
+          // Ignore audio errors gracefully
+        }
+      }
+
+      // --- LEVEL DEFINITIONS ---
+      const LEVELS = [
+        {
+          id: 1,
+          name: "Downtown Streets",
+          shortName: "Level 1: Street",
+          icon: "🏙️",
+          unlockThreshold: 0,
+          desc: "Original city asphalt, skyscrapers, and curbside skate shop.",
+          themeColor: "#38bdf8",
+          bannerText: "DOWNTOWN STREETS",
+          groundStyle: "asphalt"
+        },
+        {
+          id: 2,
+          name: "Sunset Skatepark",
+          shortName: "Level 2: Skatepark",
+          icon: "🛹",
+          unlockThreshold: 1000,
+          desc: "Curved vert bowls, metal coping, graffiti walls & floodlights.",
+          themeColor: "#f43f5e",
+          bannerText: "SUNSET SKATEPARK (1,000 PTS)",
+          groundStyle: "skatepark"
+        },
+        {
+          id: 3,
+          name: "Underground Garage",
+          shortName: "Level 3: Garage",
+          icon: "🚗",
+          unlockThreshold: 2000,
+          desc: "Industrial concrete pillars, yellow hazard rails & neon overhead pipes.",
+          themeColor: "#eab308",
+          bannerText: "UNDERGROUND GARAGE (2,000 PTS)",
+          groundStyle: "garage"
+        }
+      ];
+
+      // --- UPGRADE CATALOG DEFINITIONS ---
+      const BEARINGS_UPGRADES = [
+        { id: 1, name: "Stock Steel Bearings", tier: 1, cost: 0, speedMult: 1.0, accel: 1.0, desc: "Standard entry-level bearings. Reliable basic rolling." },
+        { id: 2, name: "ABEC-5 Speed Bearings", tier: 2, cost: 250, speedMult: 1.25, accel: 1.2, desc: "Smooth polished chrome ball bearings. +25% top speed!" },
+        { id: 3, name: "ABEC-9 Precision Chrome", tier: 3, cost: 650, speedMult: 1.55, accel: 1.45, desc: "Precision oiled bearings for fast cruising and minimal friction." },
+        { id: 4, name: "Bones Reds Race Bearings", tier: 4, cost: 1400, speedMult: 1.9, accel: 1.8, desc: "Skate-rated legendary bearings. High momentum retention!" },
+        { id: 5, name: "Swiss Ceramic Pro", tier: 5, cost: 2800, speedMult: 2.35, accel: 2.2, desc: "Aerospace ceramic balls that never overheat. Lightning velocity!" }
+      ];
+
+      const TRUCKS_UPGRADES = [
+        { id: 1, name: "Heavy Cast Trucks", tier: 1, cost: 0, controlMult: 1.0, popBoost: 1.0, angleForgiveness: 20, grindStability: 1.0, desc: "Standard heavy trucks. Modest turning and basic grind balance." },
+        { id: 2, name: "Stage 10 Alloy Trucks", tier: 2, cost: 300, controlMult: 1.3, popBoost: 1.15, angleForgiveness: 28, grindStability: 1.3, desc: "Lighter alloy hanger. +30% spin control and easier grind balance." },
+        { id: 3, name: "Independent Hollows", tier: 3, cost: 750, controlMult: 1.65, popBoost: 1.3, angleForgiveness: 36, grindStability: 1.6, desc: "Hollow chromoly kingpin & axle. Snappier ollies and quick spins." },
+        { id: 4, name: "Thunder Titanium Lights", tier: 4, cost: 1600, controlMult: 2.0, popBoost: 1.45, angleForgiveness: 44, grindStability: 2.0, desc: "Titanium strength. Huge landing forgiveness and locked-in grinds." },
+        { id: 5, name: "Pro Custom Hollow King", tier: 5, cost: 3200, controlMult: 2.5, popBoost: 1.65, angleForgiveness: 55, grindStability: 2.6, desc: "Ultimate pro trucks. Auto-balances grinds and lands steep angles!" }
+      ];
+
+      const DECKS_UPGRADES = [
+        { id: 1, name: "Classic 7-Ply Maple", cost: 0, trickBonus: 1.0, desc: "Standard sturdy street deck." },
+        { id: 2, name: "Carbon Fiber Concave", cost: 500, trickBonus: 1.3, desc: "+30% bonus points on all flip tricks!" },
+        { id: 3, name: "Golden Eagle Signature", cost: 1800, trickBonus: 1.75, desc: "+75% bonus points and shiny gold sparkles!" }
+      ];
+
+      // --- GAME STATE ---
+      const state = {
+        points: 0,              // Current spendable points in shop
+        totalCareerPoints: 0,   // Cumulative career points (used to unlock levels)
+        currentLevel: 1,        // Currently active level (1, 2, or 3)
+        maxLevelUnlocked: 1,    // Highest unlocked level (1, 2, or 3)
+        highScore: 0,
+        distance: 0,
+        equippedBearingsId: 1,
+        equippedTrucksId: 1,
+        equippedDeckId: 1,
+        ownedBearings: [1],
+        ownedTrucks: [1],
+        ownedDecks: [1],
+        isPaused: false,
+        isShopOpen: false,
+        isLevelsModalOpen: false,
+        isBusModalOpen: false,
+        isBailed: false,
+        bailTimer: 0,
+        // Active combo
+        activeComboTricks: [],
+        comboScore: 0,
+        comboMultiplier: 1,
+        comboDisplayTimer: 0,
+        // Grind state
+        isGrinding: false,
+        currentGrindRail: null,
+        grindBalance: 0, // -1 to +1
+        grindBalanceVel: 0,
+        grindTickTimer: 0,
+        // Shop proximity
+        nearShopBuilding: null
+      };
+
+      // Load saved game from localStorage
+      try {
+        const saved = localStorage.getItem('infinite_skater_save');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (typeof parsed.points === 'number') state.points = parsed.points;
+          if (typeof parsed.totalCareerPoints === 'number') state.totalCareerPoints = parsed.totalCareerPoints;
+          else state.totalCareerPoints = state.points; // fallback
+          if (typeof parsed.highScore === 'number') state.highScore = parsed.highScore;
+          if (parsed.equippedBearingsId) state.equippedBearingsId = parsed.equippedBearingsId;
+          if (parsed.equippedTrucksId) state.equippedTrucksId = parsed.equippedTrucksId;
+          if (parsed.equippedDeckId) state.equippedDeckId = parsed.equippedDeckId;
+          if (Array.isArray(parsed.ownedBearings)) state.ownedBearings = parsed.ownedBearings;
+          if (Array.isArray(parsed.ownedTrucks)) state.ownedTrucks = parsed.ownedTrucks;
+          if (Array.isArray(parsed.ownedDecks)) state.ownedDecks = parsed.ownedDecks;
+          if (parsed.currentLevel) state.currentLevel = parsed.currentLevel;
+          if (parsed.maxLevelUnlocked) state.maxLevelUnlocked = parsed.maxLevelUnlocked;
+        }
+      } catch (e) {
+        // Local storage unavailable or blocked
+      }
+
+      // Check level unlocks based on total points
+      function recalculateLevelUnlocks() {
+        if (state.totalCareerPoints >= 2000) {
+          state.maxLevelUnlocked = Math.max(state.maxLevelUnlocked, 3);
+        } else if (state.totalCareerPoints >= 1000) {
+          state.maxLevelUnlocked = Math.max(state.maxLevelUnlocked, 2);
+        }
+      }
+      recalculateLevelUnlocks();
+
+      function saveProgress() {
+        try {
+          const payload = {
+            points: state.points,
+            totalCareerPoints: state.totalCareerPoints,
+            highScore: state.highScore,
+            currentLevel: state.currentLevel,
+            maxLevelUnlocked: state.maxLevelUnlocked,
+            equippedBearingsId: state.equippedBearingsId,
+            equippedTrucksId: state.equippedTrucksId,
+            equippedDeckId: state.equippedDeckId,
+            ownedBearings: state.ownedBearings,
+            ownedTrucks: state.ownedTrucks,
+            ownedDecks: state.ownedDecks
+          };
+          localStorage.setItem('infinite_skater_save', JSON.stringify(payload));
+        } catch (e) {}
+      }
+
+      // --- CURRENT STAT HELPERS ---
+      function getCurrentBearings() {
+        return BEARINGS_UPGRADES.find(b => b.id === state.equippedBearingsId) || BEARINGS_UPGRADES[0];
+      }
+      function getCurrentTrucks() {
+        return TRUCKS_UPGRADES.find(t => t.id === state.equippedTrucksId) || TRUCKS_UPGRADES[0];
+      }
+      function getCurrentDeck() {
+        return DECKS_UPGRADES.find(d => d.id === state.equippedDeckId) || DECKS_UPGRADES[0];
+      }
+      function getCurrentLevelObj() {
+        return LEVELS.find(l => l.id === state.currentLevel) || LEVELS[0];
+      }
+
+      // --- CANVAS & VIEWPORT SETUP ---
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      let width = window.innerWidth;
+      let height = window.innerHeight;
+      let groundY = height * 0.76;
+
+      function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width * window.devicePixelRatio;
+        canvas.height = height * window.devicePixelRatio;
+        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        groundY = height * 0.76;
+      }
+      window.addEventListener('resize', resize);
+      resize();
+
+      // --- SKATER PLAYER PHYSICS ---
+      const skater = {
+        worldX: 100, // World horizontal position
+        y: groundY,
+        vx: 8,       // Base horizontal speed
+        vy: 0,       // Vertical velocity
+        angle: 0,    // Board rotation angle in radians
+        vAngle: 0,   // Angular velocity
+        isGrounded: true,
+        isCrouching: false,
+        crouchTime: 0,
+        currentTrickName: "",
+        trickFlipProgress: 0,
+        trickType: null, // 'kickflip', 'heelflip', 'shuvit', 'grab'
+        grabDuration: 0,
+        totalRotations: 0,
+        airStartTime: 0
+      };
+
+      // --- WORLD OBJECTS (PROCEDURAL GENERATION) ---
+      const worldObjects = [];
+      let nextGenX = 600;
+      let lastShopX = -1000;
+      let lastBusX = -1000;
+
+      function generateWorldAhead() {
+        const targetX = skater.worldX + width + 1400;
+        const currentLvl = state.currentLevel;
+
+        while (nextGenX < targetX) {
+          const distFromLastShop = nextGenX - lastShopX;
+          const distFromLastBus = nextGenX - lastBusX;
+
+          // Periodically spawn a Skate Shop (roughly every 1100-1600 units)
+          if (distFromLastShop > 1200 && Math.random() < 0.35) {
+            worldObjects.push({
+              type: 'shop',
+              level: currentLvl,
+              x: nextGenX,
+              y: groundY,
+              width: 320,
+              height: 240
+            });
+            lastShopX = nextGenX;
+            nextGenX += 520;
+            continue;
+          }
+
+          // Periodically spawn a Bus Stop (roughly every 900-1300 units)
+          if (distFromLastBus > 950 && Math.random() < 0.35) {
+            worldObjects.push({
+              type: 'bus_stop',
+              level: currentLvl,
+              x: nextGenX,
+              y: groundY,
+              width: 160,
+              height: 160
+            });
+            lastBusX = nextGenX;
+            nextGenX += 380;
+            continue;
+          }
+
+          // Otherwise spawn Ramps and MUCH LONGER Grind Rails
+          const roll = Math.random();
+          if (roll < 0.44) {
+            // Curved Ramp (Quarter Pipe / Kicker)
+            const rampW = currentLvl === 2 ? (180 + Math.random() * 70) : (160 + Math.random() * 60);
+            const rampH = currentLvl === 2 ? (95 + Math.random() * 45) : (80 + Math.random() * 40);
+            worldObjects.push({
+              type: 'ramp',
+              level: currentLvl,
+              x: nextGenX,
+              y: groundY,
+              width: rampW,
+              height: rampH
+            });
+            nextGenX += rampW + 180 + Math.random() * 180;
+          } else if (roll < 0.90) {
+            // EXTENDED LONGER GRIND RAIL (700 to 1200 units long!)
+            const railW = 750 + Math.random() * 450;
+            const railH = 50 + Math.random() * 25;
+            const isSloped = Math.random() < 0.4;
+            worldObjects.push({
+              type: 'rail',
+              level: currentLvl,
+              x: nextGenX,
+              y: groundY - railH,
+              width: railW,
+              height: railH,
+              sloped: isSloped,
+              slopeDrop: isSloped ? 30 : 0
+            });
+            nextGenX += railW + 180 + Math.random() * 150;
+          } else {
+            nextGenX += 250 + Math.random() * 150;
+          }
+        }
+
+        // Clean up objects that are far behind skater
+        while (worldObjects.length > 0 && worldObjects[0].x + 400 < skater.worldX - width) {
+          worldObjects.shift();
+        }
+      }
+
+      // Initial procedural seed
+      for (let i = 0; i < 5; i++) {
+        generateWorldAhead();
+      }
+
+      // --- PARTICLES SYSTEM ---
+      const particles = [];
+      function addParticle(x, y, vx, vy, color, size, life) {
+        particles.push({ x, y, vx, vy, color, size, life, maxLife: life });
+      }
+
+      function updateParticles(dt) {
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const p = particles[i];
+          p.x += p.vx * dt * 60;
+          p.y += p.vy * dt * 60;
+          p.life -= dt;
+          if (p.life <= 0) {
+            particles.splice(i, 1);
+          }
+        }
+      }
+
+      function renderParticles(cameraX) {
+        for (const p of particles) {
+          const alpha = p.life / p.maxLife;
+          ctx.fillStyle = p.color;
+          ctx.globalAlpha = Math.max(0, alpha);
+          ctx.beginPath();
+          ctx.arc(p.x - cameraX, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1.0;
+      }
+
+      // --- PARALLAX BACKGROUND ASSETS FOR LEVEL 1 & 2 & 3 ---
+      const distantBuildings = [];
+      for (let i = 0; i < 30; i++) {
+        distantBuildings.push({
+          x: i * 140,
+          width: 90 + Math.random() * 80,
+          height: 180 + Math.random() * 160,
+          color: `hsl(${220 + Math.random() * 20}, ${25 + Math.random() * 15}%, ${16 + Math.random() * 10}%)`
+        });
+      }
+
+      const midBuildings = [];
+      for (let i = 0; i < 25; i++) {
+        midBuildings.push({
+          x: i * 220,
+          width: 140 + Math.random() * 100,
+          height: 220 + Math.random() * 200,
+          color: `hsl(${215 + Math.random() * 20}, ${20 + Math.random() * 15}%, ${24 + Math.random() * 10}%)`,
+          stories: 4 + Math.floor(Math.random() * 6)
+        });
+      }
+
+      // --- CONTROLS / INPUT HANDLING (WITH NO-HOLD TRICK ENFORCEMENT) ---
+      const keys = {
+        space: false,
+        left: false,
+        right: false
+      };
+
+      // Set to track keys that are currently held down so they cannot re-trigger
+      const activeHeldKeys = new Set();
+
+      window.addEventListener('keydown', (e) => {
+        initAudio();
+
+        if (state.isShopOpen) {
+          if (e.key === 'Escape' || e.key.toLowerCase() === 'e') {
+            closeShop();
+          }
+          return;
+        }
+
+        if (state.isLevelsModalOpen) {
+          if (e.key === 'Escape') {
+            closeLevelsModal();
+          }
+          return;
+        }
+
+        if (state.isBusModalOpen) {
+          if (e.key === 'Escape') {
+            closeBusModal();
+          }
+          return;
+        }
+
+        // Dismiss Level Up celebration if showing
+        if (levelupDismissHandler) {
+          levelupDismissHandler();
+          return;
+        }
+
+        const keyLower = e.key.toLowerCase();
+
+        // 1. STRICT NO-HOLDING CHECK: Disallow OS key repeat events
+        if (e.repeat) return;
+        if (activeHeldKeys.has(keyLower)) return;
+        activeHeldKeys.add(keyLower);
+
+        // Core Movement Keys
+        if (e.code === 'Space' || e.key === 'ArrowUp') {
+          keys.space = true;
+          e.preventDefault();
+        } else if (e.key === 'ArrowLeft' || keyLower === 'a') {
+          keys.left = true;
+        } else if (e.key === 'ArrowRight' || keyLower === 'd') {
+          keys.right = true;
+        }
+        // Trick Keys (Explicit single-press execution only)
+        else if (keyLower === 'z') {
+          triggerTrick('kickflip');
+        } else if (keyLower === 'x') {
+          triggerTrick('heelflip');
+        } else if (keyLower === 'c') {
+          triggerTrick('shuvit');
+        } else if (keyLower === 'v' || e.key === 'ArrowDown') {
+          triggerTrick('grab');
+        }
+        // Shop / Menu
+        else if (keyLower === 'e' || keyLower === 's') {
+          openShop();
+        }
+        // Bus Transit - Take Bus Back to Previous Level [B]
+        else if (keyLower === 'b') {
+          handleBusTransitRequest();
+        }
+      });
+
+      window.addEventListener('keyup', (e) => {
+        const keyLower = e.key.toLowerCase();
+        activeHeldKeys.delete(keyLower);
+
+        if (e.code === 'Space' || e.key === 'ArrowUp') {
+          keys.space = false;
+          executeOllie();
+        } else if (e.key === 'ArrowLeft' || keyLower === 'a') {
+          keys.left = false;
+        } else if (e.key === 'ArrowRight' || keyLower === 'd') {
+          keys.right = false;
+        }
+      });
+
+      // --- TOUCH / MOUSE BUTTON LISTENERS ---
+      const btnOllie = document.getElementById('btn-ollie');
+      const btnLeanBack = document.getElementById('btn-lean-back');
+      const btnLeanFwd = document.getElementById('btn-lean-fwd');
+      const btnKickflip = document.getElementById('btn-trick-kickflip');
+      const btnHeelflip = document.getElementById('btn-trick-heelflip');
+      const btnShuvit = document.getElementById('btn-trick-shuvit');
+      const btnGrab = document.getElementById('btn-trick-grab');
+
+      btnOllie.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        initAudio();
+        keys.space = true;
+      });
+      window.addEventListener('pointerup', () => {
+        if (keys.space) {
+          keys.space = false;
+          executeOllie();
+        }
+      });
+
+      btnLeanBack.addEventListener('pointerdown', () => { initAudio(); keys.left = true; });
+      btnLeanBack.addEventListener('pointerup', () => { keys.left = false; });
+      btnLeanFwd.addEventListener('pointerdown', () => { initAudio(); keys.right = true; });
+      btnLeanFwd.addEventListener('pointerup', () => { keys.right = false; });
+
+      // Mobile button clicks - Single tap execution
+      btnKickflip.addEventListener('click', (e) => { e.preventDefault(); initAudio(); triggerTrick('kickflip'); });
+      btnHeelflip.addEventListener('click', (e) => { e.preventDefault(); initAudio(); triggerTrick('heelflip'); });
+      btnShuvit.addEventListener('click', (e) => { e.preventDefault(); initAudio(); triggerTrick('shuvit'); });
+      btnGrab.addEventListener('click', (e) => { e.preventDefault(); initAudio(); triggerTrick('grab'); });
+
+      // HUD Button Listeners
+      document.getElementById('btn-open-shop').addEventListener('click', () => {
+        initAudio();
+        openShop();
+      });
+      document.getElementById('btn-close-shop').addEventListener('click', () => {
+        initAudio();
+        closeShop();
+      });
+
+      // Levels Modal Listeners
+      document.getElementById('btn-open-levels').addEventListener('click', () => {
+        initAudio();
+        openLevelsModal();
+      });
+      document.getElementById('btn-close-levels').addEventListener('click', () => {
+        closeLevelsModal();
+      });
+
+      // Bus Transit Button & Modal Listeners
+      document.getElementById('btn-bus-transit').addEventListener('click', () => {
+        initAudio();
+        handleBusTransitRequest();
+      });
+      document.getElementById('btn-close-bus').addEventListener('click', () => {
+        closeBusModal();
+      });
+
+      // Audio Toggle Button
+      const btnAudio = document.getElementById('btn-audio-toggle');
+      const iconSoundOn = document.getElementById('icon-sound-on');
+      const iconSoundOff = document.getElementById('icon-sound-off');
+      btnAudio.addEventListener('click', () => {
+        initAudio();
+        soundEnabled = !soundEnabled;
+        iconSoundOn.classList.toggle('hidden', !soundEnabled);
+        iconSoundOff.classList.toggle('hidden', soundEnabled);
+      });
+
+      // Help Modal
+      const helpModal = document.getElementById('help-modal');
+      document.getElementById('btn-help').addEventListener('click', () => {
+        initAudio();
+        helpModal.classList.remove('hidden');
+      });
+      document.getElementById('btn-close-help').addEventListener('click', () => {
+        helpModal.classList.add('hidden');
+      });
+      document.getElementById('btn-got-it').addEventListener('click', () => {
+        helpModal.classList.add('hidden');
+      });
+
+      // --- TRICK TRIGGERING WITH ANTI-HOLD COOLDOWN ---
+      function triggerTrick(type) {
+        if (state.isBailed || state.isShopOpen || state.isLevelsModalOpen) return;
+
+        // ANTI-HOLD GUARD: Cannot execute a new trick while current flip/grab is still active!
+        if (skater.trickFlipProgress > 0.08 || skater.grabDuration > 0.08) {
+          return;
+        }
+
+        // If on flat ground, perform a quick ollie pop first
+        if (skater.isGrounded) {
+          executeOllie(0.7);
+        }
+
+        const bearings = getCurrentBearings();
+        const trucks = getCurrentTrucks();
+        const deck = getCurrentDeck();
+
+        let trickName = "";
+        let basePoints = 0;
+
+        if (type === 'kickflip') {
+          trickName = "Kickflip";
+          basePoints = 150;
+          skater.trickFlipProgress = 1.0;
+        } else if (type === 'heelflip') {
+          trickName = "Heelflip";
+          basePoints = 180;
+          skater.trickFlipProgress = 1.0;
+        } else if (type === 'shuvit') {
+          trickName = "360 Pop Shuvit";
+          basePoints = 240;
+          skater.trickFlipProgress = 1.0;
+        } else if (type === 'grab') {
+          trickName = "Indy Grab";
+          basePoints = 200;
+          skater.grabDuration = 0.35; // Fixed non-holdable duration
+          skater.trickFlipProgress = 0.5;
+        }
+
+        // Apply deck trick bonus
+        const pts = Math.round(basePoints * deck.trickBonus);
+
+        skater.trickType = type;
+        skater.currentTrickName = trickName;
+
+        // Add to active combo
+        state.activeComboTricks.push(trickName);
+        state.comboScore += pts;
+        state.comboMultiplier = Math.min(10, state.activeComboTricks.length);
+        updateComboUI();
+
+        playSound('trick');
+        spawnTrickToast(trickName, pts);
+
+        // Flashy particles
+        for (let i = 0; i < 8; i++) {
+          addParticle(
+            skater.worldX,
+            skater.y + 15,
+            (Math.random() - 0.5) * 6,
+            (Math.random() - 0.5) * 6,
+            '#fbbf24',
+            3,
+            0.5
+          );
+        }
+      }
+
+      function executeOllie(forceMult = 1.0) {
+        if (!skater.isGrounded && !state.isGrinding) return;
+
+        const trucks = getCurrentTrucks();
+        const pop = 14 * trucks.popBoost * forceMult;
+
+        skater.vy = -pop;
+        skater.isGrounded = false;
+        skater.isCrouching = false;
+        skater.crouchTime = 0;
+
+        if (state.isGrinding) {
+          // Popping off a grind
+          state.isGrinding = false;
+          state.currentGrindRail = null;
+          state.activeComboTricks.push("Rail Pop");
+          state.comboMultiplier++;
+          updateComboUI();
+        } else {
+          // Ground ollie
+          if (state.activeComboTricks.length === 0) {
+            state.activeComboTricks.push("Ollie");
+            state.comboScore = 50;
+            state.comboMultiplier = 1;
+            updateComboUI();
+          }
+        }
+
+        playSound('ollie');
+
+        // Dust puff on jump
+        for (let i = 0; i < 6; i++) {
+          addParticle(
+            skater.worldX - 10 + Math.random() * 20,
+            groundY + 2,
+            -Math.random() * 3,
+            -Math.random() * 2,
+            '#94a3b8',
+            3,
+            0.4
+          );
+        }
+      }
+
+      // Floating trick text notification
+      function spawnTrickToast(text, pts) {
+        const toast = document.createElement('div');
+        toast.className = 'trick-toast absolute z-20 font-marker text-amber-300 text-lg sm:text-2xl drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]';
+        toast.style.left = `${(width * 0.28) + (Math.random() * 40 - 20)}px`;
+        toast.style.top = `${(height * 0.45) + (Math.random() * 40 - 20)}px`;
+        toast.innerHTML = `${text} <span class="text-sm sm:text-base text-yellow-100 font-sans font-black">+${pts}</span>`;
+        document.getElementById('game-container').appendChild(toast);
+        setTimeout(() => toast.remove(), 1200);
+      }
+
+      // --- COMBO UI UPDATES ---
+      const comboContainer = document.getElementById('combo-container');
+      const comboTrickName = document.getElementById('combo-trick-name');
+      const comboMultiplier = document.getElementById('combo-multiplier');
+      const comboScore = document.getElementById('combo-score');
+
+      function updateComboUI() {
+        if (state.activeComboTricks.length > 0) {
+          comboContainer.classList.remove('scale-0', 'opacity-0');
+          comboContainer.classList.add('scale-100', 'opacity-100');
+          comboTrickName.textContent = state.activeComboTricks[state.activeComboTricks.length - 1];
+          comboMultiplier.textContent = `x${state.comboMultiplier}`;
+          comboScore.textContent = `+${state.comboScore * state.comboMultiplier} PTS`;
+        } else {
+          comboContainer.classList.add('scale-0', 'opacity-0');
+          comboContainer.classList.remove('scale-100', 'opacity-100');
+        }
+      }
+
+      // --- LEVEL PROGRESSION SYSTEM ---
+      let levelupDismissHandler = null;
+
+      function checkLevelProgression(earnedPoints) {
+        state.totalCareerPoints += earnedPoints;
+
+        // Check Milestone 1: 1,000 Points unlocks Sunset Skatepark
+        if (state.totalCareerPoints >= 1000 && state.maxLevelUnlocked < 2) {
+          state.maxLevelUnlocked = 2;
+          state.currentLevel = 2; // Automatically enter the new level!
+          showLevelUpModal(LEVELS[1]);
+        }
+        // Check Milestone 2: 2,000 Points (another 1,000) unlocks Underground Garage
+        else if (state.totalCareerPoints >= 2000 && state.maxLevelUnlocked < 3) {
+          state.maxLevelUnlocked = 3;
+          state.currentLevel = 3; // Automatically enter the new level!
+          showLevelUpModal(LEVELS[2]);
+        }
+
+        updateLevelHUD();
+      }
+
+      function updateLevelHUD() {
+        const curr = getCurrentLevelObj();
+        document.getElementById('hud-level-name').textContent = curr.shortName;
+        document.getElementById('hud-level-icon').textContent = curr.icon;
+
+        const pBar = document.getElementById('hud-level-progress-bar');
+        const pTarget = document.getElementById('hud-level-target');
+
+        if (state.totalCareerPoints < 1000) {
+          const pct = Math.min(100, (state.totalCareerPoints / 1000) * 100);
+          pBar.style.width = `${pct}%`;
+          pTarget.textContent = `${state.totalCareerPoints}/1000`;
+        } else if (state.totalCareerPoints < 2000) {
+          const pct = Math.min(100, ((state.totalCareerPoints - 1000) / 1000) * 100);
+          pBar.style.width = `${pct}%`;
+          pTarget.textContent = `${state.totalCareerPoints}/2000`;
+        } else {
+          pBar.style.width = '100%';
+          pTarget.textContent = `MAX LEVEL`;
+        }
+      }
+
+      function showLevelUpModal(lvl) {
+        playSound('levelup');
+        const overlay = document.getElementById('levelup-overlay');
+        const title = document.getElementById('levelup-title');
+        const name = document.getElementById('levelup-name');
+        const desc = document.getElementById('levelup-desc');
+        const icon = document.getElementById('levelup-icon');
+
+        icon.textContent = lvl.icon;
+        title.textContent = "LEVEL UNLOCKED!";
+        name.textContent = lvl.name.toUpperCase();
+        desc.textContent = lvl.desc;
+
+        overlay.classList.remove('opacity-0', 'pointer-events-none');
+        overlay.querySelector('div').classList.remove('scale-90');
+        overlay.querySelector('div').classList.add('scale-100');
+
+        // Confetti particles
+        for (let i = 0; i < 40; i++) {
+          addParticle(
+            skater.worldX + (Math.random() - 0.5) * 200,
+            skater.y - 100 + (Math.random() - 0.5) * 80,
+            (Math.random() - 0.5) * 12,
+            (Math.random() - 0.5) * 10,
+            ['#f59e0b', '#38bdf8', '#ec4899', '#10b981', '#ffffff'][Math.floor(Math.random() * 5)],
+            4,
+            1.5
+          );
+        }
+
+        levelupDismissHandler = () => {
+          overlay.classList.add('opacity-0', 'pointer-events-none');
+          overlay.querySelector('div').classList.add('scale-90');
+          overlay.querySelector('div').classList.remove('scale-100');
+          levelupDismissHandler = null;
+          overlay.removeEventListener('click', levelupDismissHandler);
+        };
+        setTimeout(() => {
+          overlay.addEventListener('click', levelupDismissHandler);
+        }, 300);
+      }
+
+      // --- LEVEL SELECTOR MODAL ---
+      function openLevelsModal() {
+        state.isLevelsModalOpen = true;
+        renderLevelsList();
+        document.getElementById('levels-modal').classList.remove('hidden');
+      }
+
+      function closeLevelsModal() {
+        state.isLevelsModalOpen = false;
+        document.getElementById('levels-modal').classList.add('hidden');
+      }
+
+      function renderLevelsList() {
+        const container = document.getElementById('level-cards-container');
+        container.innerHTML = '';
+
+        LEVELS.forEach(lvl => {
+          const isUnlocked = state.totalCareerPoints >= lvl.unlockThreshold || state.maxLevelUnlocked >= lvl.id;
+          const isSelected = state.currentLevel === lvl.id;
+
+          const card = document.createElement('div');
+          card.className = `p-4 rounded-2xl border transition flex items-center justify-between ${
+            isSelected ? 'bg-cyan-950/40 border-cyan-400 shadow-md ring-1 ring-cyan-400' :
+            isUnlocked ? 'bg-slate-800/80 border-slate-700 hover:border-slate-500 cursor-pointer' :
+            'bg-slate-900/60 border-slate-800 opacity-60'
+          }`;
+
+          card.innerHTML = `
+            <div class="flex items-center gap-3.5">
+              <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${isUnlocked ? 'bg-slate-700 border border-slate-600' : 'bg-slate-900 border border-slate-800'}">
+                ${lvl.icon}
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <h4 class="font-bold font-skate text-base text-white">${lvl.name}</h4>
+                  ${isSelected ? `<span class="bg-cyan-500/20 text-cyan-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-cyan-400/50">ACTIVE</span>` : ''}
+                </div>
+                <p class="text-xs text-slate-300 mt-0.5">${lvl.desc}</p>
+                <div class="text-[11px] font-mono mt-1 ${isUnlocked ? 'text-emerald-400 font-semibold' : 'text-amber-400 font-bold'}">
+                  ${isUnlocked ? '✓ UNLOCKED' : `🔒 Unlocks at ${lvl.unlockThreshold} PTS (${Math.max(0, lvl.unlockThreshold - state.totalCareerPoints)} pts needed)`}
+                </div>
+              </div>
+            </div>
+            <div>
+              ${isSelected ? `
+                <button disabled class="px-4 py-2 bg-cyan-500/20 text-cyan-300 border border-cyan-400/50 rounded-xl text-xs font-bold font-skate">SKATING HERE</button>
+              ` : isUnlocked ? `
+                <button data-select-level="${lvl.id}" class="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white rounded-xl text-xs font-bold font-skate transition active:scale-95">GO HERE</button>
+              ` : `
+                <button disabled class="px-4 py-2 bg-slate-800 text-slate-500 rounded-xl text-xs font-bold font-skate cursor-not-allowed">LOCKED</button>
+              `}
+            </div>
+          `;
+          container.appendChild(card);
+        });
+
+        // Attach level switch click listeners
+        container.querySelectorAll('[data-select-level]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const lvlId = parseInt(btn.getAttribute('data-select-level'), 10);
+            state.currentLevel = lvlId;
+            saveProgress();
+            updateLevelHUD();
+            closeLevelsModal();
+            playSound('ollie');
+          });
+        });
+      }
+
+      function bankCombo() {
+        if (state.activeComboTricks.length > 0) {
+          const earned = state.comboScore * state.comboMultiplier;
+          state.points += earned;
+          if (state.points > state.highScore) {
+            state.highScore = state.points;
+          }
+
+          // Check career points for level unlocks
+          checkLevelProgression(earned);
+
+          saveProgress();
+          playSound('coin');
+
+          // Pop score banner
+          const hudPts = document.getElementById('hud-points');
+          hudPts.textContent = state.points.toLocaleString();
+          hudPts.classList.add('scale-125', 'text-yellow-200');
+          setTimeout(() => hudPts.classList.remove('scale-125', 'text-yellow-200'), 250);
+
+          // Clear combo
+          state.activeComboTricks = [];
+          state.comboScore = 0;
+          state.comboMultiplier = 1;
+          updateComboUI();
+        }
+      }
+
+      function triggerBail() {
+        if (state.isBailed) return;
+        state.isBailed = true;
+        state.bailTimer = 1.8;
+        state.isGrinding = false;
+        state.currentGrindRail = null;
+        skater.grabDuration = 0;
+
+        // Reset active combo
+        state.activeComboTricks = [];
+        state.comboScore = 0;
+        state.comboMultiplier = 1;
+        updateComboUI();
+
+        playSound('bail');
+
+        // Show sleepy rest overlay
+        const bailOverlay = document.getElementById('bail-overlay');
+        bailOverlay.classList.remove('opacity-0');
+        setTimeout(() => bailOverlay.classList.add('opacity-0'), 1600);
+
+        // Skater gently sits down on the ground to rest
+        skater.vy = 0;
+        skater.angle = 0;
+        skater.vAngle = 0;
+        skater.y = groundY;
+        skater.isGrounded = true;
+
+        // Soft sleepy dream bubbles
+        for (let i = 0; i < 10; i++) {
+          addParticle(
+            skater.worldX + (Math.random() - 0.5) * 20,
+            skater.y - 15 - Math.random() * 15,
+            (Math.random() - 0.5) * 1.5,
+            -Math.random() * 2 - 0.5,
+            i % 2 === 0 ? '#7dd3fc' : '#e0f2fe',
+            3,
+            0.9
+          );
+        }
+      }
+
+      // --- SHOP OPEN / CLOSE & POPULATION ---
+      const shopModal = document.getElementById('shop-modal');
+      const shopWalletPoints = document.getElementById('shop-wallet-points');
+      const bearingsList = document.getElementById('bearings-list');
+      const trucksList = document.getElementById('trucks-list');
+      const decksList = document.getElementById('decks-list');
+
+      function openShop() {
+        state.isShopOpen = true;
+        initAudio();
+        renderShop();
+        shopModal.classList.remove('hidden');
+      }
+
+      function closeShop() {
+        state.isShopOpen = false;
+        shopModal.classList.add('hidden');
+        saveProgress();
+      }
+
+      function renderShop() {
+        shopWalletPoints.textContent = state.points.toLocaleString();
+        document.getElementById('hud-points').textContent = state.points.toLocaleString();
+
+        // Update Stat Meters
+        const currB = getCurrentBearings();
+        const currT = getCurrentTrucks();
+
+        document.getElementById('stat-speed-label').textContent = `Tier ${currB.tier} • ${currB.name}`;
+        document.getElementById('stat-speed-bar').style.width = `${(currB.tier / 5) * 100}%`;
+
+        document.getElementById('stat-control-label').textContent = `Tier ${currT.tier} • ${currT.name}`;
+        document.getElementById('stat-control-bar').style.width = `${(currT.tier / 5) * 100}%`;
+
+        // Render Bearings
+        bearingsList.innerHTML = '';
+        BEARINGS_UPGRADES.forEach(item => {
+          const isOwned = state.ownedBearings.includes(item.id);
+          const isEquipped = state.equippedBearingsId === item.id;
+          const canAfford = state.points >= item.cost;
+
+          const card = document.createElement('div');
+          card.className = `p-3.5 rounded-2xl border transition flex flex-col justify-between ${
+            isEquipped ? 'bg-amber-950/40 border-amber-500 shadow-md ring-1 ring-amber-400' :
+            isOwned ? 'bg-slate-900 border-slate-700' : 'bg-slate-900/60 border-slate-800'
+          }`;
+
+          card.innerHTML = `
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-amber-400 uppercase tracking-wider">Tier ${item.tier}</span>
+                <span class="text-xs font-mono ${item.cost === 0 ? 'text-slate-400' : canAfford || isOwned ? 'text-amber-300' : 'text-red-400 font-bold'}">
+                  ${isOwned ? 'OWNED' : `${item.cost} PTS`}
+                </span>
+              </div>
+              <h4 class="font-bold text-white text-base mt-0.5">${item.name}</h4>
+              <p class="text-xs text-slate-400 mt-1">${item.desc}</p>
+              <div class="text-[11px] font-semibold text-emerald-400 mt-2">
+                ⚡ Top Speed: +${Math.round((item.speedMult - 1) * 100)}%
+              </div>
+            </div>
+            <div class="mt-3">
+              ${isEquipped ?
+                `<button disabled class="w-full py-1.5 bg-amber-500/20 text-amber-300 border border-amber-400/50 rounded-xl text-xs font-bold font-skate">EQUIPPED</button>` :
+                isOwned ?
+                `<button data-equip-bearing="${item.id}" class="w-full py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-xs font-bold font-skate transition">EQUIP</button>` :
+                `<button data-buy-bearing="${item.id}" ${canAfford ? '' : 'disabled'} class="w-full py-1.5 ${canAfford ? 'bg-amber-500 hover:bg-amber-400 text-slate-950' : 'bg-slate-800 text-slate-500 cursor-not-allowed'} rounded-xl text-xs font-bold font-skate transition">
+                  ${canAfford ? `BUY FOR ${item.cost} PTS` : `NEED ${item.cost} PTS`}
+                </button>`
+              }
+            </div>
+          `;
+          bearingsList.appendChild(card);
+        });
+
+        // Render Trucks
+        trucksList.innerHTML = '';
+        TRUCKS_UPGRADES.forEach(item => {
+          const isOwned = state.ownedTrucks.includes(item.id);
+          const isEquipped = state.equippedTrucksId === item.id;
+          const canAfford = state.points >= item.cost;
+
+          const card = document.createElement('div');
+          card.className = `p-3.5 rounded-2xl border transition flex flex-col justify-between ${
+            isEquipped ? 'bg-cyan-950/40 border-cyan-500 shadow-md ring-1 ring-cyan-400' :
+            isOwned ? 'bg-slate-900 border-slate-700' : 'bg-slate-900/60 border-slate-800'
+          }`;
+
+          card.innerHTML = `
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-cyan-400 uppercase tracking-wider">Tier ${item.tier}</span>
+                <span class="text-xs font-mono ${item.cost === 0 ? 'text-slate-400' : canAfford || isOwned ? 'text-cyan-300' : 'text-red-400 font-bold'}">
+                  ${isOwned ? 'OWNED' : `${item.cost} PTS`}
+                </span>
+              </div>
+              <h4 class="font-bold text-white text-base mt-0.5">${item.name}</h4>
+              <p class="text-xs text-slate-400 mt-1">${item.desc}</p>
+              <div class="text-[11px] font-semibold text-cyan-300 mt-2">
+                🎯 Landing Tolerance: ±${item.angleForgiveness}° | Grind Stability: +${Math.round((item.grindStability - 1) * 100)}%
+              </div>
+            </div>
+            <div class="mt-3">
+              ${isEquipped ?
+                `<button disabled class="w-full py-1.5 bg-cyan-500/20 text-cyan-300 border border-cyan-400/50 rounded-xl text-xs font-bold font-skate">EQUIPPED</button>` :
+                isOwned ?
+                `<button data-equip-truck="${item.id}" class="w-full py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-xs font-bold font-skate transition">EQUIP</button>` :
+                `<button data-buy-truck="${item.id}" ${canAfford ? '' : 'disabled'} class="w-full py-1.5 ${canAfford ? 'bg-cyan-500 hover:bg-cyan-400 text-slate-950' : 'bg-slate-800 text-slate-500 cursor-not-allowed'} rounded-xl text-xs font-bold font-skate transition">
+                  ${canAfford ? `BUY FOR ${item.cost} PTS` : `NEED ${item.cost} PTS`}
+                </button>`
+              }
+            </div>
+          `;
+          trucksList.appendChild(card);
+        });
+
+        // Render Bonus Decks
+        decksList.innerHTML = '';
+        DECKS_UPGRADES.forEach(item => {
+          const isOwned = state.ownedDecks.includes(item.id);
+          const isEquipped = state.equippedDeckId === item.id;
+          const canAfford = state.points >= item.cost;
+
+          const card = document.createElement('div');
+          card.className = `p-3.5 rounded-2xl border transition flex flex-col justify-between ${
+            isEquipped ? 'bg-emerald-950/40 border-emerald-500 shadow-md ring-1 ring-emerald-400' :
+            isOwned ? 'bg-slate-900 border-slate-700' : 'bg-slate-900/60 border-slate-800'
+          }`;
+
+          card.innerHTML = `
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider">Custom Deck</span>
+                <span class="text-xs font-mono ${item.cost === 0 ? 'text-slate-400' : canAfford || isOwned ? 'text-emerald-300' : 'text-red-400 font-bold'}">
+                  ${isOwned ? 'OWNED' : `${item.cost} PTS`}
+                </span>
+              </div>
+              <h4 class="font-bold text-white text-base mt-0.5">${item.name}</h4>
+              <p class="text-xs text-slate-400 mt-1">${item.desc}</p>
+            </div>
+            <div class="mt-3">
+              ${isEquipped ?
+                `<button disabled class="w-full py-1.5 bg-emerald-500/20 text-emerald-300 border border-emerald-400/50 rounded-xl text-xs font-bold font-skate">EQUIPPED</button>` :
+                isOwned ?
+                `<button data-equip-deck="${item.id}" class="w-full py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-xs font-bold font-skate transition">EQUIP</button>` :
+                `<button data-buy-deck="${item.id}" ${canAfford ? '' : 'disabled'} class="w-full py-1.5 ${canAfford ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950' : 'bg-slate-800 text-slate-500 cursor-not-allowed'} rounded-xl text-xs font-bold font-skate transition">
+                  ${canAfford ? `BUY FOR ${item.cost} PTS` : `NEED ${item.cost} PTS`}
+                </button>`
+              }
+            </div>
+          `;
+          decksList.appendChild(card);
+        });
+
+        attachShopItemListeners();
+      }
+
+      function attachShopItemListeners() {
+        document.querySelectorAll('[data-buy-bearing]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = parseInt(btn.getAttribute('data-buy-bearing'), 10);
+            const item = BEARINGS_UPGRADES.find(b => b.id === id);
+            if (item && state.points >= item.cost && !state.ownedBearings.includes(id)) {
+              state.points -= item.cost;
+              state.ownedBearings.push(id);
+              state.equippedBearingsId = id;
+              playSound('coin');
+              saveProgress();
+              renderShop();
+            }
+          });
+        });
+        document.querySelectorAll('[data-equip-bearing]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = parseInt(btn.getAttribute('data-equip-bearing'), 10);
+            state.equippedBearingsId = id;
+            playSound('ollie');
+            saveProgress();
+            renderShop();
+          });
+        });
+
+        document.querySelectorAll('[data-buy-truck]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = parseInt(btn.getAttribute('data-buy-truck'), 10);
+            const item = TRUCKS_UPGRADES.find(t => t.id === id);
+            if (item && state.points >= item.cost && !state.ownedTrucks.includes(id)) {
+              state.points -= item.cost;
+              state.ownedTrucks.push(id);
+              state.equippedTrucksId = id;
+              playSound('coin');
+              saveProgress();
+              renderShop();
+            }
+          });
+        });
+        document.querySelectorAll('[data-equip-truck]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = parseInt(btn.getAttribute('data-equip-truck'), 10);
+            state.equippedTrucksId = id;
+            playSound('ollie');
+            saveProgress();
+            renderShop();
+          });
+        });
+
+        document.querySelectorAll('[data-buy-deck]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = parseInt(btn.getAttribute('data-buy-deck'), 10);
+            const item = DECKS_UPGRADES.find(d => d.id === id);
+            if (item && state.points >= item.cost && !state.ownedDecks.includes(id)) {
+              state.points -= item.cost;
+              state.ownedDecks.push(id);
+              state.equippedDeckId = id;
+              playSound('coin');
+              saveProgress();
+              renderShop();
+            }
+          });
+        });
+        document.querySelectorAll('[data-equip-deck]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = parseInt(btn.getAttribute('data-equip-deck'), 10);
+            state.equippedDeckId = id;
+            playSound('ollie');
+            saveProgress();
+            renderShop();
+          });
+        });
+      }
+
+      // --- MAIN UPDATE LOOP ---
+      let lastTime = performance.now();
+
+      function update(dt) {
+        if (state.isShopOpen || state.isLevelsModalOpen) return;
+
+        const bearings = getCurrentBearings();
+        const trucks = getCurrentTrucks();
+
+        // 1. Recover from bail
+        if (state.isBailed) {
+          state.bailTimer -= dt;
+          if (state.bailTimer <= 0) {
+            state.isBailed = false;
+            skater.angle = 0;
+            skater.vAngle = 0;
+            skater.y = groundY;
+            skater.vy = 0;
+            skater.isGrounded = true;
+          }
+        }
+
+        // 2. Horizontal speed and movement
+        const targetSpeed = 8.5 * bearings.speedMult;
+        if (!state.isBailed) {
+          if (skater.vx < targetSpeed) {
+            skater.vx += 3.0 * bearings.accel * dt;
+          } else {
+            skater.vx = targetSpeed;
+          }
+        } else {
+          skater.vx = Math.max(0, skater.vx - 12 * dt);
+        }
+
+        skater.worldX += skater.vx * dt * 60;
+        state.distance = Math.floor(skater.worldX / 30);
+        document.getElementById('hud-distance').textContent = `${state.distance} m`;
+
+        // 3. Aerial Rotation Control (A/D or Left/Right)
+        if (!skater.isGrounded && !state.isGrinding && !state.isBailed) {
+          const spinRate = 5.5 * trucks.controlMult;
+          if (keys.left) {
+            skater.vAngle = -spinRate;
+          } else if (keys.right) {
+            skater.vAngle = spinRate;
+          } else {
+            skater.vAngle *= 0.92;
+          }
+          skater.angle += skater.vAngle * dt;
+        }
+
+        // Track air flip progress for trick animation & cooldown decay
+        if (skater.trickFlipProgress > 0) {
+          skater.trickFlipProgress = Math.max(0, skater.trickFlipProgress - dt * 3.8);
+        }
+        // Grab duration decay
+        if (skater.grabDuration > 0) {
+          skater.grabDuration = Math.max(0, skater.grabDuration - dt * 2.8);
+        }
+
+        // 4. Grind Mechanic
+        const grindBarContainer = document.getElementById('grind-bar-container');
+        const grindNeedle = document.getElementById('grind-balance-needle');
+
+        if (state.isGrinding) {
+          grindBarContainer.classList.remove('opacity-0');
+
+          const stabilityFactor = trucks.grindStability;
+          state.grindBalanceVel += (Math.random() - 0.5) * (0.8 / stabilityFactor);
+          if (keys.left) state.grindBalanceVel -= 2.2 * stabilityFactor * dt;
+          if (keys.right) state.grindBalanceVel += 2.2 * stabilityFactor * dt;
+
+          state.grindBalance += state.grindBalanceVel * dt;
+          state.grindBalanceVel *= 0.94;
+
+          const pct = Math.max(0, Math.min(100, (state.grindBalance + 1) * 50));
+          grindNeedle.style.left = `calc(${pct}% - 6px)`;
+
+          if (Math.abs(state.grindBalance) > 0.95) {
+            triggerBail();
+          }
+
+          if (Math.random() < 0.6) {
+            addParticle(
+              skater.worldX + (Math.random() - 0.5) * 15,
+              skater.y + 12,
+              -Math.random() * 5 - 2,
+              (Math.random() - 0.5) * 4,
+              Math.random() > 0.3 ? '#f59e0b' : '#ffffff',
+              2.5,
+              0.25
+            );
+          }
+          playSound('grind');
+
+          state.grindTickTimer += dt;
+          if (state.grindTickTimer >= 0.12) {
+            state.grindTickTimer = 0;
+            state.comboScore += 30;
+            updateComboUI();
+          }
+
+          const rail = state.currentGrindRail;
+          if (!rail || skater.worldX > rail.x + rail.width) {
+            state.isGrinding = false;
+            state.currentGrindRail = null;
+            skater.vy = -3.5;
+            skater.isGrounded = false;
+            state.activeComboTricks.push("Long Rail Grind");
+            state.comboMultiplier++;
+            updateComboUI();
+          } else {
+            const progress = (skater.worldX - rail.x) / rail.width;
+            skater.y = rail.y + (rail.sloped ? progress * rail.slopeDrop : 0);
+            skater.angle = rail.sloped ? Math.atan2(rail.slopeDrop, rail.width) : 0;
+          }
+        } else {
+          grindBarContainer.classList.add('opacity-0');
+        }
+
+        // 5. Vertical Physics & Gravity
+        if (!state.isGrinding) {
+          const gravity = 0.58;
+          skater.vy += gravity * dt * 60;
+          skater.y += skater.vy * dt * 60;
+
+          let onObstacle = false;
+
+          for (const obj of worldObjects) {
+            // RAMPS
+            if (obj.type === 'ramp') {
+              if (skater.worldX >= obj.x && skater.worldX <= obj.x + obj.width) {
+                const progress = (skater.worldX - obj.x) / obj.width;
+                const rampSurfaceY = obj.y - (Math.pow(progress, 1.8) * obj.height);
+
+                if (skater.y >= rampSurfaceY - 8 && skater.vy >= 0) {
+                  skater.y = rampSurfaceY;
+                  skater.isGrounded = true;
+                  onObstacle = true;
+
+                  const slopeAngle = -Math.atan2(obj.height * 1.8 * Math.pow(progress, 0.8), obj.width);
+                  skater.angle = slopeAngle;
+
+                  if (progress > 0.88) {
+                    skater.vy = -18.5; // HUGE LAUNCH!
+                    skater.isGrounded = false;
+                    skater.vAngle = 2.0;
+                    playSound('ollie');
+                    state.activeComboTricks.push("Ramp Launch");
+                    state.comboScore += 100;
+                    state.comboMultiplier++;
+                    updateComboUI();
+
+                    for (let i = 0; i < 10; i++) {
+                      addParticle(
+                        skater.worldX,
+                        skater.y + 10,
+                        -Math.random() * 4,
+                        Math.random() * 3,
+                        state.currentLevel === 2 ? '#ec4899' : '#38bdf8',
+                        3,
+                        0.4
+                      );
+                    }
+                  }
+                }
+              }
+            }
+
+            // RAILS
+            if (obj.type === 'rail') {
+              const railTopY = obj.y;
+              if (
+                skater.worldX >= obj.x &&
+                skater.worldX <= obj.x + obj.width &&
+                skater.y >= railTopY - 14 &&
+                skater.y <= railTopY + 18 &&
+                skater.vy > 0
+              ) {
+                state.isGrinding = true;
+                state.currentGrindRail = obj;
+                state.grindBalance = 0;
+                state.grindBalanceVel = (Math.random() - 0.5) * 0.4;
+                skater.y = railTopY;
+                skater.vy = 0;
+                skater.isGrounded = false;
+                onObstacle = true;
+
+                state.activeComboTricks.push("50-50 Grind");
+                state.comboScore += 120;
+                state.comboMultiplier = Math.max(state.comboMultiplier, state.activeComboTricks.length);
+                updateComboUI();
+                playSound('land');
+                break;
+              }
+            }
+          }
+
+          // Ground Collision
+          if (!onObstacle && skater.y >= groundY) {
+            skater.y = groundY;
+            skater.vy = 0;
+            skater.grabDuration = 0;
+
+            if (!skater.isGrounded && !state.isBailed) {
+              const normAngle = ((skater.angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+              const degrees = (normAngle * 180 / Math.PI);
+              const diffFromFlat = Math.min(degrees, 360 - degrees);
+              const allowedAngle = trucks.angleForgiveness;
+
+              if (diffFromFlat > allowedAngle) {
+                triggerBail();
+              } else {
+                skater.isGrounded = true;
+                skater.angle = 0;
+                skater.vAngle = 0;
+                playSound('land');
+                bankCombo();
+
+                for (let i = 0; i < 8; i++) {
+                  addParticle(
+                    skater.worldX + (Math.random() - 0.5) * 20,
+                    groundY + 2,
+                    (Math.random() - 0.5) * 4,
+                    -Math.random() * 2,
+                    '#cbd5e1',
+                    2.5,
+                    0.3
+                  );
+                }
+              }
+            } else {
+              skater.isGrounded = true;
+              if (!state.isBailed) {
+                skater.angle = 0;
+                skater.vAngle = 0;
+              }
+            }
+          }
+        }
+
+        // 6. Shop & Bus Stop Proximity Notification Checks
+        let nearShop = null;
+        let nearBus = null;
+        for (const obj of worldObjects) {
+          if (obj.type === 'shop') {
+            const dist = Math.abs(skater.worldX - (obj.x + obj.width / 2));
+            if (dist < 280) nearShop = obj;
+          } else if (obj.type === 'bus_stop') {
+            const dist = Math.abs(skater.worldX - (obj.x + obj.width / 2));
+            if (dist < 280) nearBus = obj;
+          }
+        }
+        state.nearShopBuilding = nearShop;
+        state.nearBusStop = nearBus;
+
+        const shopPrompt = document.getElementById('shop-prompt');
+        if (nearShop) {
+          shopPrompt.classList.remove('opacity-0', 'scale-90');
+          shopPrompt.classList.add('opacity-100', 'scale-100');
+        } else {
+          shopPrompt.classList.add('opacity-0', 'scale-90');
+          shopPrompt.classList.remove('opacity-100', 'scale-100');
+        }
+
+        const busPrompt = document.getElementById('bus-prompt');
+        if (nearBus) {
+          busPrompt.classList.remove('opacity-0', 'scale-90');
+          busPrompt.classList.add('opacity-100', 'scale-100');
+        } else {
+          busPrompt.classList.add('opacity-0', 'scale-90');
+          busPrompt.classList.remove('opacity-100', 'scale-100');
+        }
+
+        // 7. Update particles & generate more world
+        updateParticles(dt);
+        generateWorldAhead();
+      }
+
+      // --- RENDERING PIPELINE FOR MULTIPLE LEVELS ---
+      function render() {
+        ctx.clearRect(0, 0, width, height);
+        const cameraX = skater.worldX - width * 0.28;
+        const lvl = state.currentLevel;
+
+        // =====================================================================
+        // LEVEL 1: DOWNTOWN STREETS
+        // =====================================================================
+        if (lvl === 1) {
+          // 1. Sky Gradient (City dusk / twilight)
+          const skyGrad = ctx.createLinearGradient(0, 0, 0, groundY);
+          skyGrad.addColorStop(0, '#090d16');
+          skyGrad.addColorStop(0.5, '#1e1b4b');
+          skyGrad.addColorStop(0.85, '#311042');
+          skyGrad.addColorStop(1, '#ea580c');
+          ctx.fillStyle = skyGrad;
+          ctx.fillRect(0, 0, width, groundY);
+
+          // Moon / Sun
+          ctx.fillStyle = '#fef08a';
+          ctx.beginPath();
+          ctx.arc(width * 0.8, height * 0.18, 38, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 2. Parallax Distant Skyline
+          const distantOffset = (cameraX * 0.08) % 3000;
+          ctx.save();
+          ctx.translate(-distantOffset, 0);
+          for (let loop = -1; loop <= 2; loop++) {
+            const shift = loop * 3000;
+            for (const b of distantBuildings) {
+              ctx.fillStyle = b.color;
+              ctx.fillRect(b.x + shift, groundY - b.height, b.width, b.height);
+            }
+          }
+          ctx.restore();
+
+          // 3. Parallax Midground City Buildings with Windows
+          const midOffset = (cameraX * 0.25) % 4000;
+          ctx.save();
+          ctx.translate(-midOffset, 0);
+          for (let loop = -1; loop <= 2; loop++) {
+            const shift = loop * 4000;
+            for (const b of midBuildings) {
+              ctx.fillStyle = b.color;
+              ctx.fillRect(b.x + shift, groundY - b.height, b.width, b.height);
+              ctx.strokeStyle = '#0f172a';
+              ctx.lineWidth = 2;
+              ctx.strokeRect(b.x + shift, groundY - b.height, b.width, b.height);
+
+              ctx.fillStyle = '#fef3c7';
+              const winRows = Math.floor(b.height / 35);
+              const winCols = Math.floor(b.width / 32);
+              for (let r = 1; r < winRows; r++) {
+                for (let c = 1; c < winCols; c++) {
+                  if ((r + c + b.width) % 3 !== 0) {
+                    ctx.fillRect(b.x + shift + c * 28, groundY - b.height + r * 30, 14, 18);
+                  }
+                }
+              }
+            }
+          }
+          ctx.restore();
+
+          // 4. Ground Sidewalk & Street
+          ctx.fillStyle = '#64748b';
+          ctx.fillRect(0, groundY, width, 14);
+          ctx.fillStyle = '#334155';
+          ctx.fillRect(0, groundY + 14, width, height - groundY);
+
+          ctx.strokeStyle = '#1e293b';
+          ctx.lineWidth = 2;
+          const slabSpacing = 120;
+          const slabOffset = (cameraX % slabSpacing);
+          for (let x = -slabOffset; x < width + slabSpacing; x += slabSpacing) {
+            ctx.beginPath();
+            ctx.moveTo(x, groundY);
+            ctx.lineTo(x, height);
+            ctx.stroke();
+          }
+
+          ctx.fillStyle = '#f59e0b';
+          const dashSpacing = 160;
+          const dashOffset = (cameraX % dashSpacing);
+          for (let x = -dashOffset; x < width + dashSpacing; x += dashSpacing) {
+            ctx.fillRect(x, groundY + 55, 70, 6);
+          }
+        }
+
+        // =====================================================================
+        // LEVEL 2: SUNSET SKATEPARK (Unlocked at 1,000 pts)
+        // =====================================================================
+        else if (lvl === 2) {
+          // 1. Sky Gradient (Sunset Skatepark: Violet, Magenta, Peach, Golden)
+          const skyGrad = ctx.createLinearGradient(0, 0, 0, groundY);
+          skyGrad.addColorStop(0, '#2e1065');
+          skyGrad.addColorStop(0.35, '#701a75');
+          skyGrad.addColorStop(0.65, '#c026d3');
+          skyGrad.addColorStop(0.88, '#fb923c');
+          skyGrad.addColorStop(1, '#fde047');
+          ctx.fillStyle = skyGrad;
+          ctx.fillRect(0, 0, width, groundY);
+
+          // Giant Radiant Golden Sunset Sun
+          const sunX = width * 0.75;
+          const sunY = groundY - 50;
+          const sunGrad = ctx.createRadialGradient(sunX, sunY, 10, sunX, sunY, 90);
+          sunGrad.addColorStop(0, '#ffffff');
+          sunGrad.addColorStop(0.3, '#fef08a');
+          sunGrad.addColorStop(0.7, '#f59e0b');
+          sunGrad.addColorStop(1, 'rgba(245, 158, 11, 0)');
+          ctx.fillStyle = sunGrad;
+          ctx.beginPath();
+          ctx.arc(sunX, sunY, 90, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 2. Parallax Distant Skatepark Lights & Palm Trees
+          const distantOffset = (cameraX * 0.1) % 2500;
+          ctx.save();
+          ctx.translate(-distantOffset, 0);
+          for (let loop = -1; loop <= 2; loop++) {
+            const shift = loop * 2500;
+            // Stadium Floodlight Towers
+            for (let i = 0; i < 6; i++) {
+              const lx = shift + i * 420 + 80;
+              ctx.fillStyle = '#1e1b4b';
+              ctx.fillRect(lx, groundY - 260, 10, 260); // tower pole
+              ctx.fillRect(lx - 25, groundY - 275, 60, 18); // lamp rack
+              // Glow circles
+              ctx.fillStyle = 'rgba(254, 240, 138, 0.4)';
+              ctx.beginPath();
+              ctx.arc(lx + 5, groundY - 265, 30, 0, Math.PI * 2);
+              ctx.fill();
+            }
+            // Silhouette Palm Trees
+            for (let i = 0; i < 7; i++) {
+              const tx = shift + i * 360 + 200;
+              ctx.strokeStyle = '#311042';
+              ctx.lineWidth = 8;
+              ctx.beginPath();
+              ctx.moveTo(tx, groundY);
+              ctx.quadraticCurveTo(tx + 15, groundY - 120, tx + 25, groundY - 200);
+              ctx.stroke();
+              // Fronds
+              ctx.fillStyle = '#311042';
+              for (let f = 0; f < 6; f++) {
+                ctx.beginPath();
+                ctx.ellipse(tx + 25 + Math.cos(f) * 35, groundY - 200 + Math.sin(f) * 18, 38, 12, f, 0, Math.PI * 2);
+                ctx.fill();
+              }
+            }
+          }
+          ctx.restore();
+
+          // 3. Parallax Midground Skatepark Vert Ramps & Graffiti Walls
+          const midOffset = (cameraX * 0.28) % 3600;
+          ctx.save();
+          ctx.translate(-midOffset, 0);
+          for (let loop = -1; loop <= 2; loop++) {
+            const shift = loop * 3600;
+            for (let i = 0; i < 7; i++) {
+              const wx = shift + i * 520;
+              // Graffiti concrete park wall
+              ctx.fillStyle = '#334155';
+              ctx.fillRect(wx, groundY - 140, 360, 140);
+              ctx.strokeStyle = '#1e293b';
+              ctx.lineWidth = 3;
+              ctx.strokeRect(wx, groundY - 140, 360, 140);
+
+              // Metal top coping
+              ctx.fillStyle = '#cbd5e1';
+              ctx.fillRect(wx, groundY - 146, 360, 6);
+
+              // Graffiti tags
+              ctx.fillStyle = (i % 2 === 0) ? '#38bdf8' : '#ec4899';
+              ctx.font = 'bold 26px "Permanent Marker", cursive';
+              ctx.fillText((i % 3 === 0) ? "SKATE" : (i % 3 === 1) ? "POW!" : "RADICAL", wx + 40, groundY - 70);
+
+              ctx.fillStyle = '#facc15';
+              ctx.font = 'bold 16px "Permanent Marker", cursive';
+              ctx.fillText("⚡ 100% URETHANE ⚡", wx + 70, groundY - 30);
+            }
+          }
+          ctx.restore();
+
+          // 4. Skatepark Concrete Floor
+          ctx.fillStyle = '#06b6d4'; // teal coping line
+          ctx.fillRect(0, groundY, width, 10);
+          ctx.fillStyle = '#475569'; // smooth blue-grey park concrete
+          ctx.fillRect(0, groundY + 10, width, height - groundY);
+
+          // Skatepark transition arc lines
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = 3;
+          const markSpacing = 150;
+          const markOffset = (cameraX % markSpacing);
+          for (let x = -markOffset; x < width + markSpacing; x += markSpacing) {
+            ctx.beginPath();
+            ctx.moveTo(x, groundY + 10);
+            ctx.lineTo(x + 40, height);
+            ctx.stroke();
+          }
+        }
+
+        // =====================================================================
+        // LEVEL 3: UNDERGROUND GARAGE (Unlocked at 2,000 pts)
+        // =====================================================================
+        else if (lvl === 3) {
+          // 1. Dark Underground Parking Structure Ceiling & Ambient
+          const ceilingGrad = ctx.createLinearGradient(0, 0, 0, groundY);
+          ceilingGrad.addColorStop(0, '#090d16');
+          ceilingGrad.addColorStop(0.3, '#0f172a');
+          ceilingGrad.addColorStop(0.7, '#1e293b');
+          ceilingGrad.addColorStop(1, '#1e293b');
+          ctx.fillStyle = ceilingGrad;
+          ctx.fillRect(0, 0, width, groundY);
+
+          // Concrete ceiling overhead support beams
+          ctx.fillStyle = '#111827';
+          ctx.fillRect(0, 0, width, 55);
+          ctx.strokeStyle = '#374151';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(0, 0, width, 55);
+
+          // Industrial silver ventilation pipe
+          ctx.fillStyle = '#4b5563';
+          ctx.fillRect(0, 48, width, 16);
+          ctx.strokeStyle = '#9ca3af';
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(0, 48, width, 16);
+
+          // Fluorescent overhead tube lights with glowing light cones
+          const tubeSpacing = 320;
+          const tubeOffset = (cameraX * 0.4) % tubeSpacing;
+          for (let x = -tubeOffset; x < width + tubeSpacing; x += tubeSpacing) {
+            // Light fixture
+            ctx.fillStyle = '#e2e8f0';
+            ctx.fillRect(x, 62, 90, 8);
+            // Light cone
+            const coneGrad = ctx.createLinearGradient(x + 45, 70, x + 45, groundY);
+            coneGrad.addColorStop(0, 'rgba(186, 230, 253, 0.35)');
+            coneGrad.addColorStop(1, 'rgba(186, 230, 253, 0.02)');
+            ctx.fillStyle = coneGrad;
+            ctx.beginPath();
+            ctx.moveTo(x + 10, 70);
+            ctx.lineTo(x + 80, 70);
+            ctx.lineTo(x + 160, groundY);
+            ctx.lineTo(x - 70, groundY);
+            ctx.closePath();
+            ctx.fill();
+          }
+
+          // 2. Parallax Midground Concrete Pillars with Hazard Caution Stripes & Parked Cars
+          const midOffset = (cameraX * 0.28) % 3600;
+          ctx.save();
+          ctx.translate(-midOffset, 0);
+          for (let loop = -1; loop <= 2; loop++) {
+            const shift = loop * 3600;
+            for (let i = 0; i < 7; i++) {
+              const px = shift + i * 500 + 40;
+              // Heavy concrete pillar
+              ctx.fillStyle = '#1e293b';
+              ctx.fillRect(px, 55, 110, groundY - 55);
+              ctx.strokeStyle = '#334155';
+              ctx.lineWidth = 3;
+              ctx.strokeRect(px, 55, 110, groundY - 55);
+
+              // Yellow and Black Diagonal Hazard Stripes Band
+              const hazardY = groundY - 120;
+              const hazardH = 50;
+              ctx.fillStyle = '#eab308';
+              ctx.fillRect(px, hazardY, 110, hazardH);
+              // Black diagonal stripes
+              ctx.fillStyle = '#0f172a';
+              for (let s = -20; s < 130; s += 24) {
+                ctx.beginPath();
+                ctx.moveTo(px + s, hazardY);
+                ctx.lineTo(px + s + 12, hazardY);
+                ctx.lineTo(px + s - 6, hazardY + hazardH);
+                ctx.lineTo(px + s - 18, hazardY + hazardH);
+                ctx.closePath();
+                ctx.fill();
+              }
+
+              // Zone Stencil text
+              ctx.fillStyle = '#94a3b8';
+              ctx.font = 'bold 16px monospace';
+              ctx.fillText(`P-3 ZONE ${String.fromCharCode(65 + (i % 4))}`, px + 8, groundY - 130);
+
+              // Parked Car Silhouette between pillars
+              const carX = px + 170;
+              ctx.fillStyle = '#090d16';
+              // Car body
+              ctx.beginPath();
+              ctx.roundRect(carX, groundY - 60, 160, 50, [12, 12, 0, 0]);
+              ctx.fill();
+              // Car roof/cabin
+              ctx.beginPath();
+              ctx.roundRect(carX + 30, groundY - 95, 95, 40, [16, 16, 0, 0]);
+              ctx.fill();
+              // Wheels
+              ctx.fillStyle = '#1e293b';
+              ctx.beginPath();
+              ctx.arc(carX + 35, groundY - 10, 16, 0, Math.PI * 2);
+              ctx.arc(carX + 125, groundY - 10, 16, 0, Math.PI * 2);
+              ctx.fill();
+              // Taillights
+              ctx.fillStyle = 'rgba(239, 68, 68, 0.7)';
+              ctx.fillRect(carX + 152, groundY - 45, 8, 12);
+            }
+          }
+          ctx.restore();
+
+          // 3. Polished Dark Epoxy Garage Floor
+          ctx.fillStyle = '#0f172a';
+          ctx.fillRect(0, groundY, width, height - groundY);
+
+          // Yellow Angled Parking Stall Lines
+          ctx.strokeStyle = '#eab308';
+          ctx.lineWidth = 4;
+          const stallSpacing = 160;
+          const stallOffset = (cameraX % stallSpacing);
+          for (let x = -stallOffset; x < width + stallSpacing; x += stallSpacing) {
+            ctx.beginPath();
+            ctx.moveTo(x, groundY);
+            ctx.lineTo(x + 55, height);
+            ctx.stroke();
+          }
+
+          // Metal drainage grates
+          ctx.fillStyle = '#334155';
+          const grateSpacing = 280;
+          const grateOffset = (cameraX % grateSpacing);
+          for (let x = -grateOffset; x < width + grateSpacing; x += grateSpacing) {
+            ctx.fillRect(x, groundY + 35, 45, 12);
+          }
+        }
+
+        // =====================================================================
+        // 5. RENDER WORLD OBJECTS (Dynamic themed Ramps, Rails, and Skate Shop)
+        // =====================================================================
+        for (const obj of worldObjects) {
+          const screenX = obj.x - cameraX;
+          if (screenX + obj.width < -100 || screenX > width + 100) continue;
+
+          // Object theme is determined by active level or obj.level
+          const objLevel = obj.level || lvl;
+
+          if (obj.type === 'shop') {
+            renderSkateShopStorefront(screenX, obj.y, obj.width, obj.height, objLevel);
+          } else if (obj.type === 'bus_stop') {
+            renderBusStop(screenX, obj.y, obj.width, obj.height, objLevel);
+          } else if (obj.type === 'ramp') {
+            renderCurvedRamp(screenX, obj.y, obj.width, obj.height, objLevel);
+          } else if (obj.type === 'rail') {
+            renderGrindRail(screenX, obj.y, obj.width, obj.height, obj.sloped, obj.slopeDrop, objLevel);
+          }
+        }
+
+        // 6. RENDER PARTICLES (Sparks, dust, popups)
+        renderParticles(cameraX);
+
+        // 7. RENDER SKATER CHARACTER & SKATEBOARD
+        renderSkater(skater.worldX - cameraX, skater.y, skater.angle);
+
+        // Speed lines effect when bearing speed is high
+        if (skater.vx > 14) {
+          renderSpeedLines();
+        }
+      }
+
+      // --- SPECIFIC THEMED DRAWING FUNCTIONS ---
+
+      // Themed Skate Shop Storefront
+      function renderSkateShopStorefront(x, y, w, h, level = 1) {
+        ctx.save();
+        const shopTop = y - h;
+
+        // Level-dependent building theme
+        const bodyColor = level === 3 ? '#1e293b' : level === 2 ? '#475569' : '#3f3f46';
+        const signBorder = level === 3 ? '#eab308' : level === 2 ? '#06b6d4' : '#f59e0b';
+        const signTitle = level === 3 ? "Garage Pitstop" : level === 2 ? "Park Pro Shop" : "Skate Shop";
+
+        ctx.fillStyle = bodyColor;
+        ctx.fillRect(x, shopTop, w, h);
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(x, shopTop, w, h);
+
+        // Wall Texture lines
+        ctx.strokeStyle = level === 3 ? '#334155' : '#52525b';
+        ctx.lineWidth = 1;
+        for (let rowY = shopTop + 30; rowY < y - 10; rowY += 24) {
+          ctx.beginPath();
+          ctx.moveTo(x, rowY);
+          ctx.lineTo(x + w, rowY);
+          ctx.stroke();
+        }
+
+        // Roof details
+        ctx.fillStyle = '#71717a';
+        ctx.fillRect(x + w * 0.65, shopTop - 35, 12, 35);
+        ctx.beginPath();
+        ctx.ellipse(x + w * 0.65 + 6, shopTop - 40, 20, 10, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#a1a1aa';
+        ctx.fill();
+        ctx.stroke();
+
+        // Big Shop Signboard
+        const signW = w * 0.8;
+        const signH = 50;
+        const signX = x + (w - signW) / 2;
+        const signY = shopTop + 15;
+
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(signX, signY, signW, signH);
+        ctx.strokeStyle = signBorder;
+        ctx.lineWidth = 3;
+        ctx.strokeRect(signX, signY, signW, signH);
+
+        // Sign text
+        ctx.fillStyle = signBorder;
+        ctx.font = 'bold 20px "Permanent Marker", cursive';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(signTitle, signX + signW / 2, signY + signH / 2);
+
+        // Awning / Canopy
+        const awningY = signY + signH + 6;
+        const awningH = 24;
+        const stripeCount = 8;
+        const stripeW = signW / stripeCount;
+        for (let i = 0; i < stripeCount; i++) {
+          if (level === 3) {
+            ctx.fillStyle = (i % 2 === 0) ? '#eab308' : '#0f172a';
+          } else if (level === 2) {
+            ctx.fillStyle = (i % 2 === 0) ? '#06b6d4' : '#f43f5e';
+          } else {
+            ctx.fillStyle = (i % 2 === 0) ? '#ef4444' : '#f8fafc';
+          }
+          ctx.fillRect(signX + i * stripeW, awningY, stripeW, awningH);
+        }
+        ctx.strokeStyle = '#0f172a';
+        ctx.strokeRect(signX, awningY, signW, awningH);
+
+        // Shop Front Door & Windows
+        const doorW = 52;
+        const doorH = 92;
+        const doorX = x + w / 2 - doorW / 2;
+        const doorY = y - doorH;
+
+        ctx.fillStyle = '#090d16';
+        ctx.fillRect(doorX, doorY, doorW, doorH);
+        ctx.fillStyle = level === 3 ? '#eab308' : '#38bdf8';
+        ctx.globalAlpha = 0.35;
+        ctx.fillRect(doorX + 5, doorY + 6, doorW - 10, doorH - 12);
+        ctx.globalAlpha = 1.0;
+        ctx.strokeStyle = '#94a3b8';
+        ctx.strokeRect(doorX + 5, doorY + 6, doorW - 10, doorH - 12);
+
+        // Skateboard in shop window display
+        ctx.fillStyle = '#f59e0b';
+        ctx.beginPath();
+        ctx.roundRect(doorX + 11, doorY + 36, 30, 8, 4);
+        ctx.fill();
+
+        // Glowing Entrance Mat
+        ctx.fillStyle = '#10b981';
+        ctx.fillRect(x + w * 0.2, y - 4, w * 0.6, 6);
+        ctx.fillStyle = '#ecfdf5';
+        ctx.font = 'bold 10px sans-serif';
+        ctx.fillText("ENTER [E]", x + w / 2, y + 1);
+
+        ctx.restore();
+      }
+
+      // Themed Curved Launch Ramp
+      function renderCurvedRamp(x, y, w, h, level = 1) {
+        ctx.save();
+
+        const rampGrad = ctx.createLinearGradient(x, y, x + w, y - h);
+        if (level === 3) {
+          // Concrete loading dock ramp with yellow hazard trim
+          rampGrad.addColorStop(0, '#334155');
+          rampGrad.addColorStop(1, '#64748b');
+        } else if (level === 2) {
+          // Vibrant skatepark vert ramp
+          rampGrad.addColorStop(0, '#0284c7');
+          rampGrad.addColorStop(0.7, '#38bdf8');
+          rampGrad.addColorStop(1, '#fde047');
+        } else {
+          // Plywood street ramp as in original drawing
+          rampGrad.addColorStop(0, '#d97706');
+          rampGrad.addColorStop(1, '#fde68a');
+        }
+
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.quadraticCurveTo(x + w * 0.45, y, x + w, y - h);
+        ctx.lineTo(x + w, y);
+        ctx.closePath();
+
+        ctx.fillStyle = rampGrad;
+        ctx.fill();
+
+        // Edge border
+        ctx.strokeStyle = level === 3 ? '#eab308' : level === 2 ? '#0284c7' : '#78350f';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        // Steel top coping tube
+        ctx.fillStyle = level === 3 ? '#eab308' : '#e2e8f0';
+        ctx.beginPath();
+        ctx.arc(x + w, y - h, 5.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Decorative internal support lines
+        ctx.strokeStyle = level === 3 ? 'rgba(234, 179, 8, 0.4)' : 'rgba(0, 0, 0, 0.25)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x + w * 0.5, y);
+        ctx.lineTo(x + w * 0.5, y - h * 0.3);
+        ctx.moveTo(x + w * 0.75, y);
+        ctx.lineTo(x + w * 0.75, y - h * 0.65);
+        ctx.stroke();
+
+        ctx.restore();
+      }
+
+      // Themed Metal Grind Rail (Extended with dynamic multi-posts for long grinds)
+      function renderGrindRail(x, y, w, h, sloped, slopeDrop, level = 1) {
+        ctx.save();
+        const endY = y + (sloped ? slopeDrop : 0);
+
+        // Sturdy support posts spaced evenly every ~130px across the long rail
+        const postCount = Math.max(3, Math.floor(w / 130) + 1);
+        ctx.strokeStyle = level === 3 ? '#ca8a04' : level === 2 ? '#0284c7' : '#64748b';
+        ctx.lineWidth = 6;
+        for (let i = 0; i < postCount; i++) {
+          const px = x + 20 + i * ((w - 40) / (postCount - 1));
+          const postTopY = y + ((px - x) / w) * (sloped ? slopeDrop : 0);
+          ctx.beginPath();
+          ctx.moveTo(px, postTopY);
+          ctx.lineTo(px, groundY);
+          ctx.stroke();
+
+          ctx.fillStyle = level === 3 ? '#0f172a' : '#334155';
+          ctx.fillRect(px - 10, groundY - 4, 20, 4);
+        }
+
+        // Main long rail bar
+        const railColor = level === 3 ? '#eab308' : level === 2 ? '#38bdf8' : '#e2e8f0';
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + w, endY);
+        ctx.strokeStyle = railColor;
+        ctx.lineWidth = 8;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+
+        // Highlight sheen along top
+        ctx.beginPath();
+        ctx.moveTo(x, y - 2);
+        ctx.lineTo(x + w, endY - 2);
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.restore();
+      }
+
+      // Themed Bus Stop Station / Shelter
+      function renderBusStop(x, y, w, h, level = 1) {
+        ctx.save();
+        const stopTop = y - h;
+
+        // Theme colors
+        const frameColor = level === 3 ? '#eab308' : level === 2 ? '#06b6d4' : '#3b82f6';
+        const roofColor = level === 3 ? '#1e293b' : level === 2 ? '#0f172a' : '#1e3a8a';
+        const signText = level === 3 ? "SUBWAY SHUTTLE" : level === 2 ? "PARK TRANSIT" : "METRO BUS";
+
+        // 1. Bus Stop Shelter Canopy Roof
+        ctx.fillStyle = roofColor;
+        ctx.beginPath();
+        ctx.roundRect(x + 10, stopTop + 10, w - 20, 16, [6, 6, 2, 2]);
+        ctx.fill();
+        ctx.strokeStyle = frameColor;
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        // 2. Glass Backwall Panel & Steel Support Columns
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.15)';
+        ctx.fillRect(x + 20, stopTop + 26, w - 40, h - 26);
+        ctx.strokeStyle = '#64748b';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(x + 20, stopTop + 26, w - 40, h - 26);
+
+        // Transit Route Map Poster inside shelter
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(x + 35, stopTop + 45, 50, 40);
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillRect(x + 40, stopTop + 52, 40, 4);
+        ctx.fillStyle = '#f59e0b';
+        ctx.fillRect(x + 40, stopTop + 62, 30, 4);
+        ctx.fillStyle = '#10b981';
+        ctx.fillRect(x + 40, stopTop + 72, 35, 4);
+
+        // 3. Waiting Bench inside shelter
+        ctx.fillStyle = '#78350f';
+        ctx.fillRect(x + 32, y - 35, w - 64, 8); // wooden seat
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(x + 40, y - 27, 6, 27); // left leg
+        ctx.fillRect(x + w - 46, y - 27, 6, 27); // right leg
+
+        // 4. Bus Stop Pole & Circular Sign
+        const poleX = x + w + 12;
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillRect(poleX - 3, stopTop - 15, 6, h + 15);
+
+        // Bus sign disk
+        ctx.fillStyle = frameColor;
+        ctx.beginPath();
+        ctx.arc(poleX, stopTop - 12, 18, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Bus Icon on sign
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText("🚌", poleX, stopTop - 12);
+
+        // Header label
+        ctx.fillStyle = frameColor;
+        ctx.font = 'bold 11px "Permanent Marker", cursive';
+        ctx.fillText(signText, x + w / 2, stopTop + 5);
+
+        // Yellow Bus Stop Curb Hatching
+        ctx.fillStyle = '#eab308';
+        ctx.fillRect(x, y - 3, w + 35, 4);
+        ctx.fillStyle = '#fef08a';
+        ctx.font = 'bold 9px sans-serif';
+        ctx.fillText("BUS ZONE", x + (w + 35) / 2, y + 9);
+
+        ctx.restore();
+      }
+
+      // Draw Animated Skater & Skateboard
+      function renderSkater(x, y, angle) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(state.isBailed ? 0 : angle);
+
+        const isTrickFlipping = skater.trickFlipProgress > 0;
+        const flipAngle = skater.trickFlipProgress * Math.PI * 2;
+
+        // --- SKATEBOARD DECK & TRUCKS ---
+        ctx.save();
+        ctx.translate(0, 10);
+
+        if (isTrickFlipping && (skater.trickType === 'kickflip' || skater.trickType === 'heelflip')) {
+          ctx.scale(1, Math.cos(flipAngle));
+        } else if (isTrickFlipping && skater.trickType === 'shuvit') {
+          ctx.rotate(flipAngle);
+        }
+
+        const deck = getCurrentDeck();
+        const trucks = getCurrentTrucks();
+        const bearings = getCurrentBearings();
+
+        // 1. Skateboard Deck
+        const deckColor = deck.id === 3 ? '#eab308' : deck.id === 2 ? '#06b6d4' : '#ea580c';
+        ctx.fillStyle = deckColor;
+        ctx.beginPath();
+        ctx.moveTo(-32, -4);
+        ctx.lineTo(32, -4);
+        ctx.quadraticCurveTo(36, -6, 38, -10);
+        ctx.quadraticCurveTo(36, -2, 32, 2);
+        ctx.lineTo(-32, 2);
+        ctx.quadraticCurveTo(-36, -2, -38, -10);
+        ctx.quadraticCurveTo(-36, -6, -32, -4);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Black Grip Tape on top
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(-28, -6, 56, 2);
+
+        // 2. Trucks
+        const truckColor = trucks.tier >= 4 ? '#e2e8f0' : trucks.tier >= 2 ? '#94a3b8' : '#475569';
+        ctx.fillStyle = truckColor;
+        ctx.fillRect(18, 0, 7, 5);
+        ctx.fillRect(-25, 0, 7, 5);
+
+        // 3. Wheels & Bearings
+        const wheelColor = bearings.tier >= 4 ? '#ef4444' : bearings.tier >= 2 ? '#f59e0b' : '#f8fafc';
+        ctx.fillStyle = wheelColor;
+        ctx.beginPath();
+        ctx.arc(21, 6, 5.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.fillStyle = bearings.tier >= 4 ? '#fbbf24' : '#1e293b';
+        ctx.beginPath();
+        ctx.arc(21, 6, 1.8, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = wheelColor;
+        ctx.beginPath();
+        ctx.arc(-22, 6, 5.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.fillStyle = bearings.tier >= 4 ? '#fbbf24' : '#1e293b';
+        ctx.beginPath();
+        ctx.arc(-22, 6, 1.8, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+
+        // --- SKATER BODY ---
+        const crouchOffset = keys.space && skater.isGrounded ? 8 : 0;
+        const hipX = 0;
+        const hipY = 2 + crouchOffset;
+        const chestX = 3;
+        const chestY = -22 + crouchOffset;
+        const headX = 6;
+        const headY = -36 + crouchOffset;
+
+        ctx.strokeStyle = '#f8fafc';
+        ctx.lineWidth = 3.5;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        if (state.isBailed) {
+          // Kid-friendly tired / resting pose sitting on the skateboard with floating "Zzz"
+          const t = Date.now() * 0.005;
+          const breathOffset = Math.sin(t * 1.5) * 1.2;
+
+          // Sitting legs stretched forward on the board
+          ctx.beginPath();
+          ctx.moveTo(-6, 4);
+          ctx.lineTo(8, 5);
+          ctx.lineTo(20, 3);
+          ctx.stroke();
+
+          // Leaning back torso resting on one arm
+          ctx.beginPath();
+          ctx.moveTo(-6, 4);
+          ctx.lineTo(-12, -14 + breathOffset);
+          ctx.stroke();
+
+          // Supporting arm resting on deck behind back
+          ctx.beginPath();
+          ctx.moveTo(-12, -12 + breathOffset);
+          ctx.lineTo(-22, 4);
+          ctx.stroke();
+
+          // Other arm resting on lap
+          ctx.beginPath();
+          ctx.moveTo(-10, -10 + breathOffset);
+          ctx.lineTo(4, 1);
+          ctx.stroke();
+
+          // Nodding sleepy head
+          const sleepHeadX = -10;
+          const sleepHeadY = -24 + breathOffset;
+          ctx.fillStyle = '#f8fafc';
+          ctx.beginPath();
+          ctx.arc(sleepHeadX, sleepHeadY, 7, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Cap tilted down while napping
+          ctx.fillStyle = '#ef4444';
+          ctx.beginPath();
+          ctx.arc(sleepHeadX, sleepHeadY - 1, 7.5, Math.PI * 0.75, Math.PI * 1.95);
+          ctx.lineTo(sleepHeadX + 11, sleepHeadY + 1);
+          ctx.closePath();
+          ctx.fill();
+
+          // Closed peaceful sleeping eye
+          ctx.strokeStyle = '#0f172a';
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.arc(sleepHeadX + 3, sleepHeadY + 1, 2.2, 0.1 * Math.PI, 0.9 * Math.PI);
+          ctx.stroke();
+
+          // Expanding/contracting cute blue sleep bubble
+          const bubbleRadius = 3.2 + Math.sin(t * 2) * 1.5;
+          ctx.fillStyle = 'rgba(186, 230, 253, 0.75)';
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.arc(sleepHeadX + 10, sleepHeadY + 3, bubbleRadius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          // Floating "z", "Z", "Z" rising above the skater
+          ctx.textAlign = 'center';
+          const zItems = [
+            { text: 'z', size: 13, offset: 0 },
+            { text: 'Z', size: 17, offset: 0.33 },
+            { text: 'Z', size: 22, offset: 0.66 }
+          ];
+          zItems.forEach((item, idx) => {
+            const cycle = ((Date.now() * 0.0008) + item.offset) % 1;
+            const zx = sleepHeadX + 6 + idx * 8 + Math.sin(cycle * Math.PI * 2 + idx) * 5;
+            const zy = sleepHeadY - 12 - cycle * 38;
+            const alpha = Math.sin(cycle * Math.PI);
+
+            ctx.save();
+            ctx.globalAlpha = Math.max(0, alpha);
+            ctx.font = `bold ${item.size}px "Fredoka One", cursive`;
+            ctx.fillStyle = idx === 2 ? '#fde047' : '#7dd3fc';
+            ctx.strokeStyle = '#0f172a';
+            ctx.lineWidth = 3;
+            ctx.strokeText(item.text, zx, zy);
+            ctx.fillText(item.text, zx, zy);
+            ctx.restore();
+          });
+
+          ctx.restore();
+          return;
+        }
+
+        // Back Leg
+        ctx.beginPath();
+        ctx.moveTo(hipX, hipY);
+        ctx.lineTo(-12, hipY - 2);
+        ctx.lineTo(-18, 4);
+        ctx.stroke();
+
+        // Front Leg
+        ctx.beginPath();
+        ctx.moveTo(hipX, hipY);
+        ctx.lineTo(12, hipY + (crouchOffset ? 2 : -4));
+        ctx.lineTo(18, 4);
+        ctx.stroke();
+
+        // Torso
+        ctx.beginPath();
+        ctx.moveTo(hipX, hipY);
+        ctx.lineTo(chestX, chestY);
+        ctx.stroke();
+
+        // Head & Skate Helmet/Cap
+        ctx.fillStyle = '#f8fafc';
+        ctx.beginPath();
+        ctx.arc(headX, headY, 6.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath();
+        ctx.arc(headX, headY - 1, 7, Math.PI * 0.8, Math.PI * 1.9);
+        ctx.lineTo(headX + 11, headY - 1);
+        ctx.closePath();
+        ctx.fill();
+
+        // Arms (Indy Grab or balanced out for grinding)
+        if (skater.grabDuration > 0 && !skater.isGrounded) {
+          ctx.beginPath();
+          ctx.moveTo(chestX, chestY);
+          ctx.lineTo(0, 0);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(chestX, chestY);
+          ctx.lineTo(-14, chestY - 12);
+          ctx.stroke();
+        } else if (state.isGrinding) {
+          ctx.beginPath();
+          ctx.moveTo(chestX, chestY);
+          ctx.lineTo(chestX + 18, chestY - 6 + state.grindBalance * 8);
+          ctx.moveTo(chestX, chestY);
+          ctx.lineTo(chestX - 18, chestY - 8 - state.grindBalance * 8);
+          ctx.stroke();
+        } else {
+          ctx.beginPath();
+          ctx.moveTo(chestX, chestY);
+          ctx.lineTo(chestX + 12, chestY + 6);
+          ctx.moveTo(chestX, chestY);
+          ctx.lineTo(chestX - 12, chestY + 2);
+          ctx.stroke();
+        }
+
+        ctx.restore();
+      }
+
+      // Speed lines animation
+      function renderSpeedLines() {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+        ctx.lineWidth = 1.5;
+        const lineCount = 8;
+        for (let i = 0; i < lineCount; i++) {
+          const ly = height * 0.2 + (i * 45) + (Math.sin(Date.now() * 0.01 + i) * 10);
+          const lx = (Date.now() * 1.5 + i * 200) % width;
+          ctx.beginPath();
+          ctx.moveTo(lx, ly);
+          ctx.lineTo(lx + 80, ly);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      // --- GAME ANIMATION LOOP ---
+      function gameLoop(currentTime) {
+        const dt = Math.min(0.08, (currentTime - lastTime) / 1000);
+        lastTime = currentTime;
+
+        update(dt);
+        render();
+
+        requestAnimationFrame(gameLoop);
+      }
+
+
+      // --- BUS TRANSIT LOGIC (TAKE BUS BACK TO PREVIOUS LEVELS) ---
+      function handleBusTransitRequest() {
+        initAudio();
+        const currentLvl = state.currentLevel;
+
+        // If at Level 1, there are no previous levels to return to
+        if (currentLvl === 1) {
+          // If player has already unlocked higher levels, allow transit to any unlocked level
+          if (state.maxLevelUnlocked > 1) {
+            openBusModal();
+          } else {
+            spawnTrickToast("Already at Level 1: Downtown! Score 1,000 PTS to unlock Skatepark.", 0);
+          }
+          return;
+        }
+
+        // If on Level 2 or Level 3, open the Bus Transit menu or board directly back
+        openBusModal();
+      }
+
+      function openBusModal() {
+        state.isBusModalOpen = true;
+        renderBusRoutes();
+        document.getElementById('bus-modal').classList.remove('hidden');
+      }
+
+      function closeBusModal() {
+        state.isBusModalOpen = false;
+        document.getElementById('bus-modal').classList.add('hidden');
+      }
+
+      function renderBusRoutes() {
+        const container = document.getElementById('bus-routes-container');
+        container.innerHTML = '';
+        const currentLvl = state.currentLevel;
+
+        // Filter levels: highlight previous levels specifically, as requested
+        LEVELS.forEach(lvl => {
+          const isCurrent = currentLvl === lvl.id;
+          const isPrevious = lvl.id < currentLvl;
+          const isUnlocked = state.totalCareerPoints >= lvl.unlockThreshold || state.maxLevelUnlocked >= lvl.id;
+
+          const card = document.createElement('div');
+          card.className = `p-4 rounded-2xl border transition flex items-center justify-between ${
+            isCurrent ? 'bg-slate-900 border-slate-700 opacity-70' :
+            isPrevious ? 'bg-blue-950/40 border-blue-400 shadow-md ring-1 ring-blue-400/50 hover:border-blue-300' :
+            isUnlocked ? 'bg-slate-800/80 border-slate-700' : 'bg-slate-900/60 border-slate-800 opacity-50'
+          }`;
+
+          card.innerHTML = `
+            <div class="flex items-center gap-3.5">
+              <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${isPrevious ? 'bg-blue-500/20 border border-blue-400' : 'bg-slate-800 border border-slate-700'}">
+                ${lvl.icon}
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <h4 class="font-bold font-skate text-base text-white">${lvl.name}</h4>
+                  ${isCurrent ? `<span class="bg-slate-700 text-slate-300 text-[10px] font-bold px-2 py-0.5 rounded-full">HERE NOW</span>` :
+                    isPrevious ? `<span class="bg-blue-500/20 text-blue-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-blue-400/50">PREVIOUS LEVEL</span>` : ''}
+                </div>
+                <p class="text-xs text-slate-300 mt-0.5">${lvl.desc}</p>
+              </div>
+            </div>
+            <div>
+              ${isCurrent ? `
+                <button disabled class="px-3.5 py-1.5 bg-slate-800 text-slate-400 rounded-xl text-xs font-bold font-skate">CURRENT</button>
+              ` : isPrevious || isUnlocked ? `
+                <button data-board-bus="${lvl.id}" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold font-skate transition active:scale-95 flex items-center gap-1.5 shadow">
+                  <span>🚌 TAKE BUS</span>
+                </button>
+              ` : `
+                <button disabled class="px-3.5 py-1.5 bg-slate-800 text-slate-500 rounded-xl text-xs font-bold font-skate cursor-not-allowed">LOCKED</button>
+              `}
+            </div>
+          `;
+          container.appendChild(card);
+        });
+
+        // Board bus click handlers
+        container.querySelectorAll('[data-board-bus]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const destLvlId = parseInt(btn.getAttribute('data-board-bus'), 10);
+            boardBusToLevel(destLvlId);
+          });
+        });
+      }
+
+      function boardBusToLevel(targetLvlId) {
+        closeBusModal();
+        playSound('bus');
+
+        const destObj = LEVELS.find(l => l.id === targetLvlId) || LEVELS[0];
+        const overlay = document.getElementById('bus-transition-overlay');
+        const title = document.getElementById('bus-transition-title');
+        const dest = document.getElementById('bus-transition-dest');
+
+        title.textContent = "BOARDING TRANSIT BUS...";
+        dest.textContent = `HEADING BACK TO ${destObj.name.toUpperCase()}!`;
+
+        overlay.classList.remove('opacity-0');
+
+        setTimeout(() => {
+          state.currentLevel = targetLvlId;
+          saveProgress();
+          updateLevelHUD();
+
+          // Clear remaining objects ahead and seed new level objects immediately
+          while (worldObjects.length > 0 && worldObjects[worldObjects.length - 1].x > skater.worldX + 50) {
+            worldObjects.pop();
+          }
+          nextGenX = skater.worldX + 250;
+          generateWorldAhead();
+
+          setTimeout(() => {
+            overlay.classList.add('opacity-0');
+            spawnTrickToast(`Arrived at ${destObj.name}!`, 0);
+          }, 350);
+        }, 500);
+      }
+
+      // Start the loop on load
+      window.onload = () => {
+        requestAnimationFrame(gameLoop);
+        document.getElementById('hud-points').textContent = state.points.toLocaleString();
+        updateLevelHUD();
+      };
+
+    })();
+  </script>
+</body>
+</html>

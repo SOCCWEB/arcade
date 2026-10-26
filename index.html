@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10102b">
+  <meta name="description" content="SOCC Arcade — a playful home for tiny games and big fun.">
+  <title>SOCC Arcade — Play something awesome</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Press+Start+2P&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="site-header">
+      <div class="marquee-stars" aria-hidden="true"><span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span></div>
+      <div class="marquee-topline"><span class="marquee-lights"><i></i><i></i><i></i></span> INSERT COIN <span class="marquee-lights"><i></i><i></i><i></i></span></div>
+      <a class="marquee-title" href="#top" aria-label="SOCC Arcade home"><span class="marquee-socc">SOCC</span><span class="marquee-arcade">ARCADE</span></a>
+      <a class="marquee-caption" id="random-game-button" href="#games"><span aria-hidden="true">▶</span> PRESS START FOR FUN</a>
+      <div class="launch-screen" id="launch-screen" aria-live="polite" aria-hidden="true"><div class="launch-screen-stars">✦　✧　✦</div><div class="launch-preview-icon" id="launch-preview-icon">🛹</div><div class="launch-preview-title" id="launch-preview-title">ENDLESS SKATER</div><div class="launch-preview-status">LOADING CARTRIDGE<span>...</span></div></div>
+      <div class="marquee-bottom"><nav class="main-nav" aria-label="Main navigation"><a class="nav-link active" href="#games">Games</a><a class="nav-link" href="#new">New &amp; shiny</a><a class="nav-link" href="#about">About</a></nav><button class="submit-button" id="open-submit-dialog" type="button" hidden><span aria-hidden="true">＋</span> Submit a game</button></div>
+    </header>
+
+    <main id="top" class="control-deck">
+      <div class="cabinet-control-strip" aria-hidden="true">
+        <div class="deck-control joystick-control"><span class="joystick-ball"></span><span class="joystick-shaft"></span><span class="joystick-base"></span><b>PLAYER 1</b></div>
+        <div class="deck-instruction"><span class="instruction-lights">● ● ●</span><strong>CHOOSE YOUR GAME</strong><small>ONE PLAYER · ALL FUN</small></div>
+        <div class="deck-control button-control"><span class="arcade-button red"></span><span class="arcade-button yellow"></span><b>A  B</b></div>
+      </div>
+      <section class="new-section featured-section" id="featured" aria-labelledby="featured-title">
+        <div class="section-heading">
+          <div><div class="section-kicker"><span>★</span> HAND-PICKED FOR YOUR NEXT PLAY</div><h2 id="featured-title">Featured Games</h2></div>
+          <div class="carousel-controls"><span class="carousel-count"><b id="featured-slide-current">01</b> / 05</span><button class="arrow-button" id="featured-previous" aria-label="Previous featured games">←</button><button class="arrow-button arrow-next" id="featured-next" aria-label="Next featured games">→</button></div>
+        </div>
+        <div class="carousel-window" aria-label="Featured games">
+          <div class="carousel-track" id="featured-track"></div>
+        </div>
+      </section>
+
+      <section class="new-section" id="new" aria-labelledby="new-title">
+        <div class="section-heading">
+          <div><div class="section-kicker"><span>✦</span> FRESH OFF THE GAME MACHINE</div><h2 id="new-title">New &amp; shiny</h2></div>
+          <div class="carousel-controls"><span class="carousel-count"><b id="slide-current">01</b> / 10</span><button class="arrow-button" id="previous" aria-label="Previous games">←</button><button class="arrow-button arrow-next" id="next" aria-label="Next games">→</button></div>
+        </div>
+        <div class="carousel-window" aria-label="Newest games">
+          <div class="carousel-track" id="carousel-track"></div>
+        </div>
+      </section>
+
+      <section class="games-section" id="games" aria-labelledby="games-title">
+        <div class="section-heading games-heading">
+          <div><div class="section-kicker"><span>▧</span> PICK YOUR NEXT ADVENTURE</div><h2 id="games-title">The arcade <span class="title-count">(45)</span></h2></div>
+          <div class="filter-wrap"><span class="filter-label">SHOW ME</span><select id="support-filter" aria-label="Filter games by device support"><option value="all">All games</option><option value="laptop">Laptop friendly</option><option value="mobile">Mobile friendly</option></select><span class="select-chevron">⌄</span></div>
+        </div>
+        <p class="grid-scroll-hint">↔ SWIPE TO BROWSE ALL 5 COLUMNS</p>
+        <div class="games-grid-wrap" id="games-grid-wrap" tabindex="0" aria-label="Scrollable five-column game grid"><div class="games-grid" id="games-grid"></div></div>
+        <div class="grid-footer"><span>THAT'S ALL FOR NOW, PLAYER <span class="footer-smile">☺</span></span><span>MADE FOR PLAYING, BUILT WITH <b>♥</b></span></div>
+      </section>
+    </main>
+    <footer class="site-footer" id="about"><a class="brand footer-brand" href="#top"><span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></span><span class="brand-name"><span class="brand-main">SOCC</span><span class="brand-sub">ARCADE</span></span></a><p>All games designed by Woodman Park SOCC Students</p><span class="footer-copy">© 2025 SOCC ARCADE <span>✦</span></span></footer>
+  </div>
+
+  <dialog class="submit-dialog" id="submit-dialog" aria-labelledby="submit-title">
+    <div class="submit-dialog-shell">
+      <div class="submit-dialog-heading"><div><div class="section-kicker"><span>✦</span> ADD TO THE ARCADE</div><h2 id="submit-title">Submit a game</h2><p>Build your game card, then send the details with your HTML game.</p></div><button class="dialog-close" id="close-submit-dialog" type="button" aria-label="Close submission form">×</button></div>
+      <form id="submission-form">
+        <div class="submission-layout">
+          <section class="submission-fields" aria-label="Game details">
+            <label class="form-field">Game name<input id="submission-name" name="name" type="text" maxlength="48" placeholder="e.g. Super Space Buddy" required></label>
+            <label class="form-field">Short description<textarea id="submission-description" name="description" rows="3" maxlength="160" placeholder="What do players do in your game?" required></textarea><span class="field-hint">One fun sentence, up to 160 characters.</span></label>
+            <label class="form-field">Author / creator name<input id="submission-author" name="author" type="text" maxlength="40" placeholder="Your name or creator tag" required></label>
+            <div class="form-field"><span class="form-label">Game file <span class="required-mark">REQUIRED</span></span><label class="file-drop" for="submission-file"><span class="file-icon">▧</span><span><b id="file-prompt">Choose one HTML file</b><small id="file-detail">.html or .htm · Max one file</small></span><span class="file-browse">Browse</span></label><input class="visually-hidden" id="submission-file" name="gameFile" type="file" accept=".html,.htm,text/html" required></div>
+          </section>
+          <section class="thumbnail-designer" aria-label="Thumbnail designer">
+            <div class="form-label">Design your thumbnail</div><div class="thumbnail-preview" id="submission-preview" aria-label="Thumbnail preview"><span id="preview-icon">🕹️</span></div>
+            <fieldset class="preset-group"><legend>Choose an icon</legend><div class="icon-presets" id="icon-presets"><button type="button" class="icon-preset is-selected" data-icon="🕹️" aria-label="Arcade joystick" aria-pressed="true">🕹️</button><button type="button" class="icon-preset" data-icon="🚀" aria-label="Rocket" aria-pressed="false">🚀</button><button type="button" class="icon-preset" data-icon="🐸" aria-label="Frog" aria-pressed="false">🐸</button><button type="button" class="icon-preset" data-icon="🦊" aria-label="Fox" aria-pressed="false">🦊</button><button type="button" class="icon-preset" data-icon="🥔" aria-label="Potato" aria-pressed="false">🥔</button><button type="button" class="icon-preset" data-icon="🛹" aria-label="Skateboard" aria-pressed="false">🛹</button><button type="button" class="icon-preset" data-icon="🦀" aria-label="Crab" aria-pressed="false">🦀</button><button type="button" class="icon-preset" data-icon="🍩" aria-label="Donut" aria-pressed="false">🍩</button><button type="button" class="icon-preset" data-icon="🐰" aria-label="Bunny" aria-pressed="false">🐰</button><button type="button" class="icon-preset" data-icon="🧙" aria-label="Wizard" aria-pressed="false">🧙</button><button type="button" class="icon-preset" data-icon="👾" aria-label="Space invader" aria-pressed="false">👾</button><button type="button" class="icon-preset" data-icon="⚽" aria-label="Soccer ball" aria-pressed="false">⚽</button><button type="button" class="icon-preset" data-icon="🐉" aria-label="Dragon" aria-pressed="false">🐉</button><button type="button" class="icon-preset" data-icon="👻" aria-label="Ghost" aria-pressed="false">👻</button><button type="button" class="icon-preset" data-icon="🤖" aria-label="Robot" aria-pressed="false">🤖</button><button type="button" class="icon-preset" data-icon="💎" aria-label="Gem" aria-pressed="false">💎</button><button type="button" class="icon-preset" data-icon="⚡" aria-label="Lightning" aria-pressed="false">⚡</button><button type="button" class="icon-preset" data-icon="🌈" aria-label="Rainbow" aria-pressed="false">🌈</button><button type="button" class="icon-preset" data-icon="⭐" aria-label="Star" aria-pressed="false">⭐</button><button type="button" class="icon-preset" data-icon="🌙" aria-label="Moon" aria-pressed="false">🌙</button><button type="button" class="icon-preset" data-icon="🍓" aria-label="Strawberry" aria-pressed="false">🍓</button><button type="button" class="icon-preset" data-icon="🍕" aria-label="Pizza" aria-pressed="false">🍕</button><button type="button" class="icon-preset" data-icon="🍉" aria-label="Watermelon" aria-pressed="false">🍉</button><button type="button" class="icon-preset" data-icon="🧁" aria-label="Cupcake" aria-pressed="false">🧁</button><button type="button" class="icon-preset" data-icon="🎸" aria-label="Guitar" aria-pressed="false">🎸</button><button type="button" class="icon-preset" data-icon="🥁" aria-label="Drum" aria-pressed="false">🥁</button><button type="button" class="icon-preset" data-icon="🎮" aria-label="Game controller" aria-pressed="false">🎮</button><button type="button" class="icon-preset" data-icon="🎲" aria-label="Dice" aria-pressed="false">🎲</button><button type="button" class="icon-preset" data-icon="🧩" aria-label="Puzzle piece" aria-pressed="false">🧩</button><button type="button" class="icon-preset" data-icon="🪄" aria-label="Magic wand" aria-pressed="false">🪄</button><button type="button" class="icon-preset" data-icon="🛸" aria-label="UFO" aria-pressed="false">🛸</button><button type="button" class="icon-preset" data-icon="🚗" aria-label="Car" aria-pressed="false">🚗</button><button type="button" class="icon-preset" data-icon="🏎️" aria-label="Race car" aria-pressed="false">🏎️</button><button type="button" class="icon-preset" data-icon="🚂" aria-label="Train" aria-pressed="false">🚂</button><button type="button" class="icon-preset" data-icon="🦖" aria-label="Dinosaur" aria-pressed="false">🦖</button><button type="button" class="icon-preset" data-icon="🐢" aria-label="Turtle" aria-pressed="false">🐢</button><button type="button" class="icon-preset" data-icon="🦄" aria-label="Unicorn" aria-pressed="false">🦄</button><button type="button" class="icon-preset" data-icon="🐼" aria-label="Panda" aria-pressed="false">🐼</button><button type="button" class="icon-preset" data-icon="🐙" aria-label="Octopus" aria-pressed="false">🐙</button><button type="button" class="icon-preset" data-icon="🐳" aria-label="Whale" aria-pressed="false">🐳</button><button type="button" class="icon-preset" data-icon="🌵" aria-label="Cactus" aria-pressed="false">🌵</button><button type="button" class="icon-preset" data-icon="🎯" aria-label="Target" aria-pressed="false">🎯</button></div></fieldset>
+            <fieldset class="preset-group color-group"><legend>Pick a backing color</legend><div class="color-presets" id="color-presets"><button type="button" class="color-preset is-selected" data-color="#a9d94d" style="--swatch:#a9d94d" aria-label="Lime" aria-pressed="true"></button><button type="button" class="color-preset" data-color="#f17ca7" style="--swatch:#f17ca7" aria-label="Pink" aria-pressed="false"></button><button type="button" class="color-preset" data-color="#7564f5" style="--swatch:#7564f5" aria-label="Violet" aria-pressed="false"></button><button type="button" class="color-preset" data-color="#38afc1" style="--swatch:#38afc1" aria-label="Ocean blue" aria-pressed="false"></button><button type="button" class="color-preset" data-color="#f3bd4d" style="--swatch:#f3bd4d" aria-label="Gold" aria-pressed="false"></button><button type="button" class="color-preset" data-color="#df78b6" style="--swatch:#df78b6" aria-label="Candy" aria-pressed="false"></button><button type="button" class="color-preset" data-color="#4ea66e" style="--swatch:#4ea66e" aria-label="Forest" aria-pressed="false"></button><button type="button" class="color-preset" data-color="#587ad3" style="--swatch:#587ad3" aria-label="Space blue" aria-pressed="false"></button></div></fieldset>
+          </section>
+        </div>
+        <p class="submission-note"><span>ⓘ</span> This arcade is hosted as a static site. Your email draft will include your details and thumbnail choices; please attach the selected HTML file before sending.</p>
+        <div class="submit-dialog-actions"><button class="cancel-submit" id="cancel-submit" type="button">Cancel</button><button class="submit-form-button" type="submit">Continue to email <span>↗</span></button></div>
+        <p class="form-feedback" id="form-feedback" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </dialog>
+  <script src="script.js"></script>
+</body>
+</html>

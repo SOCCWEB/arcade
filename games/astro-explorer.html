@@ -1,0 +1,1814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+  <title>Astro Explorer — SOCC Arcade</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #020308;
+      color: #e2e8f0;
+      font-family: 'Chakra Petch', sans-serif;
+    }
+
+    #gameCanvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      cursor: crosshair;
+    }
+
+    .glass-hud {
+      background: rgba(8, 14, 28, 0.85);
+      border: 1px solid rgba(56, 189, 248, 0.28);
+      box-shadow: 0 0 20px rgba(14, 165, 233, 0.15), inset 0 0 10px rgba(2, 132, 199, 0.1);
+      backdrop-filter: blur(8px);
+    }
+
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .touch-btn {
+      touch-action: none;
+      transition: transform 0.08s ease, filter 0.08s ease;
+    }
+    .touch-btn:active {
+      transform: scale(0.92);
+      filter: brightness(1.3);
+    }
+  </style>
+</head>
+<body class="relative overflow-hidden">
+
+  <!-- Primary Canvas -->
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- Top Flight & Mining HUD -->
+  <header class="absolute top-3 left-3 right-3 flex flex-wrap items-center justify-between gap-2 pointer-events-none z-20">
+    <!-- Vital Gauges -->
+    <div class="glass-hud rounded-xl p-3 flex items-center gap-4 pointer-events-auto">
+      <div>
+        <div class="flex justify-between items-center text-[10px] uppercase text-sky-300 font-bold mb-1">
+          <span id="vital1Label">Hull Integrity</span>
+          <span id="vital1Val" class="text-emerald-400 mono">100%</span>
+        </div>
+        <div class="w-28 sm:w-36 h-2 bg-slate-900 border border-slate-700 rounded overflow-hidden">
+          <div id="vital1Bar" class="h-full bg-emerald-500 transition-all duration-100" style="width: 100%;"></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="flex justify-between items-center text-[10px] uppercase text-sky-300 font-bold mb-1">
+          <span id="vital2Label">Shield / Fuel</span>
+          <span id="vital2Val" class="text-cyan-400 mono">100%</span>
+        </div>
+        <div class="w-28 sm:w-36 h-2 bg-slate-900 border border-slate-700 rounded overflow-hidden">
+          <div id="vital2Bar" class="h-full bg-cyan-400 transition-all duration-100" style="width: 100%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center Navigation Radar & Current Sector -->
+    <div class="glass-hud rounded-xl px-4 py-2 flex flex-col items-center pointer-events-auto">
+      <div class="flex items-center gap-2">
+        <span id="modeDot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span id="modeTitle" class="text-xs sm:text-sm font-bold text-sky-300 tracking-wider">STARSHIP PILOT</span>
+      </div>
+      <div id="sectorInfo" class="text-[11px] sm:text-xs text-amber-400 mono font-semibold mt-0.5">LOCATION: DEEP SPACE</div>
+      <!-- Compass / Waypoint Tracker -->
+      <div id="navBeacon" class="text-[10px] text-cyan-300 font-mono mt-0.5 flex items-center gap-1">
+        <span>NAV:</span> <span id="navTarget">Nearest Planet: Terra Nova (SE)</span>
+      </div>
+    </div>
+
+    <!-- Inventory & Sound Controls -->
+    <div class="glass-hud rounded-xl p-2.5 flex items-center gap-3 pointer-events-auto">
+      <!-- Mined Resources Inventory -->
+      <div class="flex items-center gap-2 px-2.5 py-1 bg-slate-900/80 border border-slate-700 rounded-lg">
+        <div class="flex items-center gap-1" title="Iron / Copper">
+          <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+          <span id="invIron" class="text-xs mono font-bold text-amber-300">0</span>
+        </div>
+        <div class="flex items-center gap-1" title="Plasma Crystal">
+          <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+          <span id="invCrystal" class="text-xs mono font-bold text-cyan-300">0</span>
+        </div>
+        <div class="flex items-center gap-1" title="Pure Gold">
+          <span class="w-2 h-2 rounded-full bg-yellow-300"></span>
+          <span id="invGold" class="text-xs mono font-bold text-yellow-300">0</span>
+        </div>
+      </div>
+
+      <!-- Quick Fast-Travel / Warp Selector -->
+      <div class="hidden lg:flex items-center gap-1 text-[11px]">
+        <button id="warpSpace" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-600 transition">Orbit</button>
+        <button id="warpTerra" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-slate-600 transition">Terra</button>
+        <button id="warpInferno" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-rose-300 border border-slate-600 transition">Inferno</button>
+        <button id="warpCryo" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-600 transition">Cryo</button>
+      </div>
+
+      <!-- Audio Mute -->
+      <button id="soundBtn" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 transition" title="Toggle Sound">
+        <svg id="soundIcon" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072M11 5L6 9H2v6h4l5 4V5z"/>
+        </svg>
+      </button>
+
+      <!-- Emergency Teleport / Respawn -->
+      <button id="respawnBtn" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 transition" title="Emergency Recovery">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Interactive Action Prompt (Hatch / Land / Blast Off) -->
+  <div id="actionBanner" class="absolute bottom-24 left-1/2 -translate-x-1/2 glass-hud px-6 py-2.5 rounded-full border border-sky-400 text-sky-200 text-xs sm:text-sm font-semibold tracking-wide flex items-center gap-3 shadow-2xl opacity-0 transition-opacity duration-200 z-30 pointer-events-none">
+    <span class="mono text-xs bg-sky-500 text-slate-950 font-bold px-2 py-0.5 rounded">[E]</span>
+    <span id="actionBannerText">Press [E] to Disembark</span>
+  </div>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="absolute top-18 left-1/2 -translate-x-1/2 glass-hud px-4 py-1.5 rounded-lg text-xs mono text-cyan-300 border border-cyan-400 opacity-0 transition-opacity duration-300 z-30 pointer-events-none"></div>
+
+  <!-- Virtual Touch Controls for Mobile Devices -->
+  <div id="touchPanel" class="absolute inset-x-0 bottom-3 px-4 flex justify-between items-end pointer-events-none z-20 md:hidden">
+    <!-- Left D-Pad -->
+    <div class="flex flex-col items-center gap-1.5 pointer-events-auto">
+      <button id="btnUp" class="touch-btn w-12 h-12 rounded-xl glass-hud flex items-center justify-center text-sky-300 border border-sky-500/40">
+        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l-7 8h5v8h4v-8h5z"/></svg>
+      </button>
+      <div class="flex gap-2">
+        <button id="btnLeft" class="touch-btn w-12 h-12 rounded-xl glass-hud flex items-center justify-center text-sky-300 border border-sky-500/40">
+          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M4 12l8-7v5h8v4h-8v5z"/></svg>
+        </button>
+        <button id="btnDown" class="touch-btn w-12 h-12 rounded-xl glass-hud flex items-center justify-center text-sky-300 border border-sky-500/40">
+          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l7-8h-5V4h-4v8H5z"/></svg>
+        </button>
+        <button id="btnRight" class="touch-btn w-12 h-12 rounded-xl glass-hud flex items-center justify-center text-sky-300 border border-sky-500/40">
+          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M20 12l-8-7v5H4v4h8v5z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Right Action Buttons -->
+    <div class="flex gap-2 pointer-events-auto">
+      <!-- Hatch / Board Interact -->
+      <button id="btnInteract" class="touch-btn w-14 h-14 rounded-2xl bg-amber-500/20 border border-amber-400 text-amber-300 flex flex-col items-center justify-center">
+        <span class="mono text-xs font-bold">E</span>
+        <span class="text-[9px] uppercase tracking-tighter">Hatch</span>
+      </button>
+
+      <!-- Laser Fire / Jump -->
+      <button id="btnAction" class="touch-btn w-14 h-14 rounded-2xl bg-cyan-500/20 border border-cyan-400 text-cyan-300 flex flex-col items-center justify-center">
+        <span id="actionLabel" class="mono text-xs font-bold">FIRE</span>
+        <span class="text-[9px] uppercase tracking-tighter">Action</span>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    /* ==========================================================================
+       SYNTHESIZED SOUND FX (Web Audio API)
+       ========================================================================== */
+    class SoundEngine {
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+        this.miningOsc = null;
+        this.miningGain = null;
+        this.engineOsc = null;
+        this.engineGain = null;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioContext();
+        }
+        if (this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+
+      toggleMute() {
+        this.muted = !this.muted;
+        if (this.muted) {
+          this.stopMiningLaser();
+          this.stopEngine();
+        }
+        return this.muted;
+      }
+
+      playLaserShot() {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(840, now);
+        osc.frequency.exponentialRampToValueAtTime(120, now + 0.12);
+
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.12);
+      }
+
+      startMiningLaser() {
+        if (this.muted || this.miningOsc) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        this.miningOsc = this.ctx.createOscillator();
+        this.miningGain = this.ctx.createGain();
+
+        this.miningOsc.type = 'sawtooth';
+        this.miningOsc.frequency.setValueAtTime(140, now);
+
+        // Sub-frequency wobble for heavy plasma drilling
+        const lfo = this.ctx.createOscillator();
+        const lfoGain = this.ctx.createGain();
+        lfo.frequency.value = 24;
+        lfoGain.gain.value = 45;
+        lfo.connect(this.miningOsc.frequency);
+        lfo.start(now);
+
+        this.miningGain.gain.setValueAtTime(0.01, now);
+        this.miningGain.gain.linearRampToValueAtTime(0.18, now + 0.08);
+
+        this.miningOsc.connect(this.miningGain);
+        this.miningGain.connect(this.ctx.destination);
+        this.miningOsc.start(now);
+      }
+
+      stopMiningLaser() {
+        if (this.miningGain && this.miningOsc) {
+          try {
+            const now = this.ctx.currentTime;
+            this.miningGain.gain.linearRampToValueAtTime(0.001, now + 0.05);
+            setTimeout(() => {
+              if (this.miningOsc) {
+                this.miningOsc.stop();
+                this.miningOsc.disconnect();
+                this.miningOsc = null;
+                this.miningGain = null;
+              }
+            }, 60);
+          } catch (e) {
+            this.miningOsc = null;
+            this.miningGain = null;
+          }
+        }
+      }
+
+      playDebrisCrumble() {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const dur = 0.15;
+        const bufferSize = Math.floor(this.ctx.sampleRate * dur);
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * 0.4;
+        }
+
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(450, now);
+        filter.Q.value = 1.8;
+
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.18, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+        noise.start(now);
+      }
+
+      playExplosion(big = false) {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const dur = big ? 0.45 : 0.22;
+        const bufferSize = Math.floor(this.ctx.sampleRate * dur);
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = Math.random() * 2 - 1;
+        }
+
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(big ? 350 : 650, now);
+        filter.frequency.linearRampToValueAtTime(40, now + dur);
+
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(big ? 0.35 : 0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+        noise.start(now);
+      }
+
+      playOrePickup() {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(587.33, now); // D5
+        osc.frequency.setValueAtTime(880.00, now + 0.06); // A5
+        osc.frequency.setValueAtTime(1174.66, now + 0.12); // D6
+
+        gain.gain.setValueAtTime(0.16, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.26);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.26);
+      }
+
+      playHatch() {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(260, now);
+        osc.frequency.exponentialRampToValueAtTime(140, now + 0.22);
+
+        gain.gain.setValueAtTime(0.18, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.22);
+      }
+
+      startEngine() {
+        if (this.muted || this.engineOsc) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        this.engineOsc = this.ctx.createOscillator();
+        this.engineGain = this.ctx.createGain();
+
+        this.engineOsc.type = 'triangle';
+        this.engineOsc.frequency.setValueAtTime(70, now);
+
+        this.engineGain.gain.setValueAtTime(0.01, now);
+        this.engineGain.gain.linearRampToValueAtTime(0.12, now + 0.08);
+
+        this.engineOsc.connect(this.engineGain);
+        this.engineGain.connect(this.ctx.destination);
+        this.engineOsc.start(now);
+      }
+
+      stopEngine() {
+        if (this.engineGain && this.engineOsc) {
+          try {
+            const now = this.ctx.currentTime;
+            this.engineGain.gain.linearRampToValueAtTime(0.001, now + 0.06);
+            setTimeout(() => {
+              if (this.engineOsc) {
+                this.engineOsc.stop();
+                this.engineOsc.disconnect();
+                this.engineOsc = null;
+                this.engineGain = null;
+              }
+            }, 70);
+          } catch(e) {
+            this.engineOsc = null;
+            this.engineGain = null;
+          }
+        }
+      }
+    }
+
+    const sound = new SoundEngine();
+
+    /* ==========================================================================
+       CANVAS & DOM HUD BINDINGS
+       ========================================================================== */
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const vital1Label = document.getElementById('vital1Label');
+    const vital1Val = document.getElementById('vital1Val');
+    const vital1Bar = document.getElementById('vital1Bar');
+    const vital2Label = document.getElementById('vital2Label');
+    const vital2Val = document.getElementById('vital2Val');
+    const vital2Bar = document.getElementById('vital2Bar');
+    const modeTitle = document.getElementById('modeTitle');
+    const modeDot = document.getElementById('modeDot');
+    const sectorInfo = document.getElementById('sectorInfo');
+    const navTarget = document.getElementById('navTarget');
+    const actionBanner = document.getElementById('actionBanner');
+    const actionBannerText = document.getElementById('actionBannerText');
+    const actionLabel = document.getElementById('actionLabel');
+    const invIron = document.getElementById('invIron');
+    const invCrystal = document.getElementById('invCrystal');
+    const invGold = document.getElementById('invGold');
+    const toast = document.getElementById('toast');
+    const soundBtn = document.getElementById('soundBtn');
+    const soundIcon = document.getElementById('soundIcon');
+    const respawnBtn = document.getElementById('respawnBtn');
+
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.style.opacity = '1';
+      setTimeout(() => { toast.style.opacity = '0'; }, 2500);
+    }
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    /* ==========================================================================
+       PLANETARY DESTINATION DATA & DESTRUCTIBLE LANDSCAPE CANVAS
+       ========================================================================== */
+    const PLANETS = [
+      {
+        id: 'TERRA',
+        name: 'Terra Nova',
+        desc: 'Lush Alien Flora & Rich Minerals',
+        spaceX: 1800,
+        spaceY: 500,
+        radius: 120,
+        gravity: 0.28,
+        groundLevel: 560,
+        skyColors: ['#042f2e', '#0f766e'],
+        terrainTop: '#22c55e',
+        terrainRock: '#14532d',
+        terrainDeep: '#064e3b',
+        oreFreq: { copper: 0.6, crystal: 0.3, gold: 0.1 },
+        deformCanvas: null,
+        deformCtx: null,
+        width: 3600,
+        height: 1200
+      },
+      {
+        id: 'INFERNO',
+        name: 'Inferno Prime',
+        desc: 'Volcanic Lava Formations & Pyrite Gems',
+        spaceX: 4200,
+        spaceY: -700,
+        radius: 140,
+        gravity: 0.34,
+        groundLevel: 580,
+        skyColors: ['#450a0a', '#991b1b'],
+        terrainTop: '#f97316',
+        terrainRock: '#7f1d1d',
+        terrainDeep: '#450a0a',
+        oreFreq: { copper: 0.3, crystal: 0.3, gold: 0.4 },
+        deformCanvas: null,
+        deformCtx: null,
+        width: 3600,
+        height: 1200
+      },
+      {
+        id: 'CRYO',
+        name: 'Cryo-7',
+        desc: 'Glacial Ice Chasms & Deep Diamonds',
+        spaceX: -2400,
+        spaceY: 1600,
+        radius: 135,
+        gravity: 0.22,
+        groundLevel: 540,
+        skyColors: ['#082f49', '#0284c7'],
+        terrainTop: '#bae6fd',
+        terrainRock: '#0369a1',
+        terrainDeep: '#0c4a6e',
+        oreFreq: { copper: 0.2, crystal: 0.6, gold: 0.2 },
+        deformCanvas: null,
+        deformCtx: null,
+        width: 3600,
+        height: 1200
+      },
+      {
+        id: 'NEON',
+        name: 'Neon Synth',
+        desc: 'Electroluminescent Tech Ruins & Core Matter',
+        spaceX: -1900,
+        spaceY: -2200,
+        radius: 150,
+        gravity: 0.30,
+        groundLevel: 570,
+        skyColors: ['#3b0764', '#701a75'],
+        terrainTop: '#e879f9',
+        terrainRock: '#581c87',
+        terrainDeep: '#2e1065',
+        oreFreq: { copper: 0.1, crystal: 0.5, gold: 0.4 },
+        deformCanvas: null,
+        deformCtx: null,
+        width: 3600,
+        height: 1200
+      }
+    ];
+
+    // Build the dynamic raster canvases for continuous destructible mining
+    function generatePlanetTerrain(planet) {
+      const pCanvas = document.createElement('canvas');
+      pCanvas.width = planet.width;
+      pCanvas.height = planet.height;
+      const pCtx = pCanvas.getContext('2d', { willReadFrequently: true });
+
+      // Generate base organic terrain height curve with sine waves
+      pCtx.fillStyle = planet.terrainRock;
+      pCtx.beginPath();
+      pCtx.moveTo(0, planet.height);
+
+      const slices = 200;
+      const step = planet.width / slices;
+      const heightProfile = [];
+
+      for (let i = 0; i <= slices; i++) {
+        const x = i * step;
+        const h = planet.groundLevel + 
+                  Math.sin(x * 0.005) * 60 + 
+                  Math.sin(x * 0.015) * 35 + 
+                  Math.cos(x * 0.002) * 80;
+        heightProfile.push({ x, y: h });
+        if (i === 0) pCtx.lineTo(x, h);
+        else pCtx.lineTo(x, h);
+      }
+
+      pCtx.lineTo(planet.width, planet.height);
+      pCtx.closePath();
+      pCtx.fill();
+
+      // Deep mantle strata gradient
+      pCtx.globalCompositeOperation = 'source-atop';
+      const strata = pCtx.createLinearGradient(0, planet.groundLevel - 50, 0, planet.height);
+      strata.addColorStop(0, planet.terrainTop);
+      strata.addColorStop(0.08, planet.terrainRock);
+      strata.addColorStop(1, planet.terrainDeep);
+      pCtx.fillStyle = strata;
+      pCtx.fillRect(0, 0, planet.width, planet.height);
+
+      // Add mineral pockets / embedded veins throughout subterranean crust
+      for (let v = 0; v < 160; v++) {
+        const vx = Math.random() * (planet.width - 100) + 50;
+        const vy = planet.groundLevel + 40 + Math.random() * (planet.height - planet.groundLevel - 80);
+        const vRadius = Math.random() * 18 + 8;
+
+        const oreRand = Math.random();
+        pCtx.fillStyle = oreRand < planet.oreFreq.copper ? '#f97316' : 
+                         (oreRand < planet.oreFreq.copper + planet.oreFreq.crystal ? '#38bdf8' : '#eab308');
+        pCtx.beginPath();
+        pCtx.arc(vx, vy, vRadius, 0, Math.PI * 2);
+        pCtx.fill();
+      }
+
+      pCtx.globalCompositeOperation = 'source-over';
+
+      planet.deformCanvas = pCanvas;
+      planet.deformCtx = pCtx;
+      planet.heightProfile = heightProfile;
+    }
+
+    // Initialize all planets' destructible canvases
+    PLANETS.forEach(generatePlanetTerrain);
+
+    /* ==========================================================================
+       GAME STATE & ENTITIES
+       ========================================================================== */
+    let currentMode = 'SPACE'; // 'SPACE' | 'PLANET_FLIGHT' | 'ASTRONAUT'
+    let currentPlanet = null; // null if in deep space
+
+    const inventory = {
+      iron: 0,
+      crystal: 0,
+      gold: 0
+    };
+
+    // Spaceship
+    const ship = {
+      x: 0,
+      y: 0,
+      vx: 0,
+      vy: 0,
+      angle: -Math.PI / 2, // Heading in space
+      speed: 0,
+      maxSpeed: 10,
+      thrustPower: 0.28,
+      turnSpeed: 0.052,
+      friction: 0.988,
+      width: 48,
+      height: 26,
+      hull: 100,
+      maxHull: 100,
+      shield: 100,
+      maxShield: 100,
+      landed: false,
+      landingGearDeployed: true
+    };
+
+    // Astronaut Player
+    const astronaut = {
+      x: 400,
+      y: 400,
+      vx: 0,
+      vy: 0,
+      width: 18,
+      height: 32,
+      onGround: false,
+      walkSpeed: 3.5,
+      jumpForce: 7.2,
+      oxygen: 100,
+      maxOxygen: 100,
+      fuel: 100,
+      maxFuel: 100,
+      facing: 1, // 1: Right, -1: Left
+      walkCycle: 0,
+      isMining: false
+    };
+
+    // Camera view offset
+    const camera = { x: 0, y: 0 };
+
+    // Deep Space Asteroids
+    const asteroids = [];
+    for (let i = 0; i < 90; i++) {
+      spawnAsteroid((Math.random() - 0.5) * 8000, (Math.random() - 0.5) * 8000);
+    }
+
+    function spawnAsteroid(x, y, radius = null) {
+      const r = radius || (Math.random() * 32 + 16);
+      const pts = [];
+      const count = 9;
+      for (let p = 0; p < count; p++) {
+        const a = (p / count) * Math.PI * 2;
+        const d = r * (0.75 + Math.random() * 0.5);
+        pts.push({ x: Math.cos(a) * d, y: Math.sin(a) * d });
+      }
+      asteroids.push({
+        x,
+        y,
+        vx: (Math.random() - 0.5) * 1.2,
+        vy: (Math.random() - 0.5) * 1.2,
+        radius: r,
+        points: pts,
+        angle: Math.random() * Math.PI * 2,
+        rotSpeed: (Math.random() - 0.5) * 0.02,
+        hp: Math.max(1, Math.floor(r / 8))
+      });
+    }
+
+    // Dynamic Projectiles, Mined Ore drops, Crumble Debris, Particles
+    const projectiles = [];
+    const oreDrops = [];
+    const debrisParticles = [];
+    const fxParticles = [];
+
+    // Background Stars for 3 Parallax Planes
+    const starfield = [];
+    for (let s = 0; s < 350; s++) {
+      starfield.push({
+        x: (Math.random() - 0.5) * 12000,
+        y: (Math.random() - 0.5) * 12000,
+        size: Math.random() * 2.2 + 0.6,
+        alpha: Math.random() * 0.8 + 0.2,
+        layer: Math.random() < 0.4 ? 0.2 : (Math.random() < 0.7 ? 0.5 : 0.85)
+      });
+    }
+
+    /* ==========================================================================
+       INPUT CONTROLS (Keyboard, Mouse, Touch)
+       ========================================================================== */
+    const keys = {
+      up: false,
+      down: false,
+      left: false,
+      right: false,
+      space: false,
+      interact: false
+    };
+
+    const mouse = {
+      screenX: window.innerWidth / 2,
+      screenY: window.innerHeight / 2,
+      worldX: 0,
+      worldY: 0,
+      down: false,
+      rightDown: false
+    };
+
+    window.addEventListener('keydown', (e) => {
+      sound.init();
+      if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
+        e.preventDefault();
+      }
+      if (e.code === 'KeyW' || e.code === 'ArrowUp') keys.up = true;
+      if (e.code === 'KeyS' || e.code === 'ArrowDown') keys.down = true;
+      if (e.code === 'KeyA' || e.code === 'ArrowLeft') keys.left = true;
+      if (e.code === 'KeyD' || e.code === 'ArrowRight') keys.right = true;
+      if (e.code === 'Space') keys.space = true;
+      if (e.code === 'KeyE') {
+        keys.interact = true;
+        handleHatchInteract();
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      if (e.code === 'KeyW' || e.code === 'ArrowUp') keys.up = false;
+      if (e.code === 'KeyS' || e.code === 'ArrowDown') keys.down = false;
+      if (e.code === 'KeyA' || e.code === 'ArrowLeft') keys.left = false;
+      if (e.code === 'KeyD' || e.code === 'ArrowRight') keys.right = false;
+      if (e.code === 'Space') keys.space = false;
+      if (e.code === 'KeyE') keys.interact = false;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      mouse.screenX = e.clientX;
+      mouse.screenY = e.clientY;
+    });
+
+    window.addEventListener('mousedown', (e) => {
+      sound.init();
+      if (e.button === 0) {
+        mouse.down = true;
+        if (currentMode === 'ASTRONAUT') {
+          sound.startMiningLaser();
+        } else if (currentMode === 'SPACE' || currentMode === 'PLANET_FLIGHT') {
+          fireShipLaser();
+        }
+      } else if (e.button === 2) {
+        mouse.rightDown = true;
+      }
+    });
+
+    window.addEventListener('mouseup', (e) => {
+      if (e.button === 0) {
+        mouse.down = false;
+        sound.stopMiningLaser();
+      } else if (e.button === 2) {
+        mouse.rightDown = false;
+      }
+    });
+
+    window.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    // Virtual Touch Handlers
+    function bindTouch(id, keyName) {
+      const el = document.getElementById(id);
+      const setKey = (val) => { sound.init(); keys[keyName] = val; };
+      el.addEventListener('pointerdown', (e) => { e.preventDefault(); setKey(true); });
+      el.addEventListener('pointerup', (e) => { e.preventDefault(); setKey(false); });
+      el.addEventListener('pointercancel', (e) => { e.preventDefault(); setKey(false); });
+    }
+    bindTouch('btnUp', 'up');
+    bindTouch('btnDown', 'down');
+    bindTouch('btnLeft', 'left');
+    bindTouch('btnRight', 'right');
+
+    document.getElementById('btnInteract').addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      sound.init();
+      handleHatchInteract();
+    });
+
+    document.getElementById('btnAction').addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      sound.init();
+      if (currentMode === 'ASTRONAUT') {
+        mouse.down = true;
+        sound.startMiningLaser();
+      } else {
+        fireShipLaser();
+      }
+    });
+
+    document.getElementById('btnAction').addEventListener('pointerup', (e) => {
+      e.preventDefault();
+      if (currentMode === 'ASTRONAUT') {
+        mouse.down = false;
+        sound.stopMiningLaser();
+      }
+    });
+
+    // Sound toggle
+    soundBtn.addEventListener('click', () => {
+      const isMuted = sound.toggleMute();
+      soundIcon.innerHTML = isMuted
+        ? '<path stroke-linecap="round" stroke-linejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/><path stroke-linecap="round" stroke-linejoin="round" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/>'
+        : '<path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072M11 5L6 9H2v6h4l5 4V5z"/>';
+      showToast(isMuted ? "Sound muted" : "Sound enabled");
+    });
+
+    respawnBtn.addEventListener('click', emergencyRespawn);
+
+    // Fast Warp Shortcuts
+    document.getElementById('warpSpace').addEventListener('click', () => enterDeepSpace());
+    document.getElementById('warpTerra').addEventListener('click', () => transitionToPlanet(PLANETS[0]));
+    document.getElementById('warpInferno').addEventListener('click', () => transitionToPlanet(PLANETS[1]));
+    document.getElementById('warpCryo').addEventListener('click', () => transitionToPlanet(PLANETS[2]));
+
+    /* ==========================================================================
+       TRANSITIONS & INTERACTION LOGIC
+       ========================================================================== */
+    function transitionToPlanet(planet) {
+      currentPlanet = planet;
+      currentMode = 'PLANET_FLIGHT';
+      ship.x = planet.width * 0.3;
+      ship.y = 80;
+      ship.vx = 0;
+      ship.vy = 1.5;
+      ship.angle = 0;
+      ship.landed = false;
+      showToast(`Entering ${planet.name} Atmosphere! Approach surface to land.`);
+      sound.playHatch();
+    }
+
+    function enterDeepSpace() {
+      currentPlanet = null;
+      currentMode = 'SPACE';
+      ship.x = 0;
+      ship.y = 0;
+      ship.vx = 0;
+      ship.vy = 0;
+      ship.landed = false;
+      showToast("Entering Deep Space. Asteroid Belts & Navigation active.");
+      sound.playHatch();
+    }
+
+    function handleHatchInteract() {
+      if (currentMode === 'PLANET_FLIGHT') {
+        // Can only disembark if the ship is landed or hovering very gently right near terrain
+        if (ship.landed || (Math.abs(ship.vy) < 1.2 && Math.abs(ship.vx) < 1.2)) {
+          currentMode = 'ASTRONAUT';
+          ship.landed = true;
+          ship.vx = 0;
+          ship.vy = 0;
+
+          // Egress astronaut directly to the side of ship landing gear
+          astronaut.x = ship.x + ship.width + 10;
+          astronaut.y = ship.y;
+          astronaut.vx = 0;
+          astronaut.vy = 0;
+          astronaut.onGround = true;
+
+          sound.playHatch();
+          showToast("Disembarked! Hold Left Mouse to mine & dig terrain.");
+          createParticleBurst(astronaut.x, astronaut.y, 20, '#38bdf8');
+        } else {
+          showToast("Speed too high! Decelerate and touch down gently to land.");
+        }
+      } else if (currentMode === 'ASTRONAUT') {
+        // Check proximity to ship
+        const d = Math.hypot((astronaut.x + astronaut.width / 2) - (ship.x + ship.width / 2), (astronaut.y + astronaut.height / 2) - (ship.y + ship.height / 2));
+        if (d < 90) {
+          currentMode = 'PLANET_FLIGHT';
+          ship.landed = false;
+          ship.vy = -3.8; // Initial vertical lift-off blast
+          sound.playHatch();
+          sound.stopMiningLaser();
+          showToast("Boarded Starship! Lift-off thrusters engaged.");
+          createParticleBurst(ship.x + ship.width / 2, ship.y + ship.height, 30, '#f97316');
+        } else {
+          showToast("Move closer to the parked spaceship hatch to board!");
+        }
+      }
+    }
+
+    function emergencyRespawn() {
+      ship.hull = ship.maxHull;
+      ship.shield = ship.maxShield;
+      astronaut.oxygen = astronaut.maxOxygen;
+      astronaut.fuel = astronaut.maxFuel;
+      sound.stopMiningLaser();
+      sound.stopEngine();
+      enterDeepSpace();
+      showToast("Emergency beacon responded. Full repairs completed.");
+    }
+
+    function fireShipLaser() {
+      sound.playLaserShot();
+      const gunX = currentMode === 'SPACE' 
+        ? ship.x + Math.cos(ship.angle) * 26 
+        : ship.x + ship.width + 4;
+      const gunY = currentMode === 'SPACE' 
+        ? ship.y + Math.sin(ship.angle) * 26 
+        : ship.y + ship.height / 2;
+
+      const spd = 16;
+      const lvx = currentMode === 'SPACE' ? Math.cos(ship.angle) * spd + ship.vx : spd + ship.vx;
+      const lvy = currentMode === 'SPACE' ? Math.sin(ship.angle) * spd + ship.vy : ship.vy;
+
+      projectiles.push({
+        x: gunX,
+        y: gunY,
+        vx: lvx,
+        vy: lvy,
+        life: 55,
+        color: '#38bdf8'
+      });
+    }
+
+    function createParticleBurst(x, y, count = 15, color = '#f97316') {
+      for (let i = 0; i < count; i++) {
+        const ang = Math.random() * Math.PI * 2;
+        const spd = Math.random() * 4.5 + 1.0;
+        fxParticles.push({
+          x,
+          y,
+          vx: Math.cos(ang) * spd,
+          vy: Math.sin(ang) * spd,
+          life: 1.0,
+          decay: Math.random() * 0.04 + 0.02,
+          size: Math.random() * 3 + 1.5,
+          color
+        });
+      }
+    }
+
+    /* ==========================================================================
+       REAL-TIME DESTRUCTIBLE MINING SYSTEM (Offscreen Bitmap Carving)
+       ========================================================================== */
+    function performTerrainMining(worldX, worldY, blastRadius = 26) {
+      if (!currentPlanet || !currentPlanet.deformCtx) return;
+      const ctxP = currentPlanet.deformCtx;
+
+      // Check bounds
+      if (worldX < 0 || worldX >= currentPlanet.width || worldY < 0 || worldY >= currentPlanet.height) return;
+
+      // Sample pixels before clearing to analyze mined minerals
+      try {
+        const sampleSize = Math.floor(blastRadius * 1.4);
+        const startX = Math.max(0, Math.floor(worldX - sampleSize / 2));
+        const startY = Math.max(0, Math.floor(worldY - sampleSize / 2));
+        const imgData = ctxP.getImageData(startX, startY, sampleSize, sampleSize);
+        const data = imgData.data;
+
+        let minedCopper = 0;
+        let minedCrystal = 0;
+        let minedGold = 0;
+        let rockCrumbled = false;
+
+        // Sample every 4th pixel for performance
+        for (let i = 0; i < data.length; i += 16) {
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+          const a = data[i + 3];
+
+          if (a > 100) {
+            rockCrumbled = true;
+            // Check mineral color matches
+            if (r > 200 && g > 100 && b < 80) minedCopper++;
+            else if (r < 100 && g > 160 && b > 220) minedCrystal++;
+            else if (r > 200 && g > 160 && b < 60) minedGold++;
+          }
+        }
+
+        if (rockCrumbled) {
+          sound.playDebrisCrumble();
+
+          // Drop vacuumable ore tokens
+          if (minedCopper > 3) spawnOreDrop(worldX, worldY, 'iron', '#f97316');
+          if (minedCrystal > 3) spawnOreDrop(worldX, worldY, 'crystal', '#38bdf8');
+          if (minedGold > 2) spawnOreDrop(worldX, worldY, 'gold', '#eab308');
+
+          // Carve out crater from canvas using 'destination-out'
+          ctxP.globalCompositeOperation = 'destination-out';
+          ctxP.beginPath();
+          ctxP.arc(worldX, worldY, blastRadius, 0, Math.PI * 2);
+          ctxP.fill();
+          ctxP.globalCompositeOperation = 'source-over';
+
+          // Emit debris fragments
+          for (let d = 0; d < 8; d++) {
+            debrisParticles.push({
+              x: worldX + (Math.random() - 0.5) * blastRadius,
+              y: worldY + (Math.random() - 0.5) * blastRadius,
+              vx: (Math.random() - 0.5) * 5,
+              vy: -Math.random() * 4 - 1.5,
+              size: Math.random() * 3.5 + 1.5,
+              life: 1.0,
+              decay: 0.035,
+              color: currentPlanet.terrainTop
+            });
+          }
+        }
+      } catch (err) {
+        // Catch bounds if any
+      }
+    }
+
+    function spawnOreDrop(x, y, type, color) {
+      oreDrops.push({
+        x,
+        y,
+        vx: (Math.random() - 0.5) * 4,
+        vy: -Math.random() * 4 - 2,
+        type,
+        color,
+        size: 7,
+        value: type === 'gold' ? 3 : (type === 'crystal' ? 2 : 1)
+      });
+    }
+
+    // Helper: test if a world coordinate (x, y) is solid terrain
+    function isTerrainSolid(planet, x, y) {
+      if (!planet || !planet.deformCtx) return false;
+      if (x < 0 || x >= planet.width || y < 0 || y >= planet.height) return false;
+      const pixel = planet.deformCtx.getImageData(Math.floor(x), Math.floor(y), 1, 1).data;
+      return pixel[3] > 60; // Has alpha
+    }
+
+    /* ==========================================================================
+       MAIN GAME UPDATE LOOP
+       ========================================================================== */
+    function update() {
+      // Convert screen mouse to current camera world coordinates
+      mouse.worldX = mouse.screenX + camera.x;
+      mouse.worldY = mouse.screenY + camera.y;
+
+      // 1. UPDATE PARTICLES & CRUMBLING DEBRIS
+      for (let i = fxParticles.length - 1; i >= 0; i--) {
+        const p = fxParticles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= p.decay;
+        if (p.life <= 0) fxParticles.splice(i, 1);
+      }
+
+      for (let i = debrisParticles.length - 1; i >= 0; i--) {
+        const d = debrisParticles[i];
+        d.x += d.vx;
+        d.y += d.vy;
+        d.vy += 0.22; // Gravity on rock bits
+        d.life -= d.decay;
+        if (d.life <= 0) debrisParticles.splice(i, 1);
+      }
+
+      // 2. UPDATE ORE DROPS (Vacuum Magnet toward Astronaut or Ship)
+      const collector = currentMode === 'ASTRONAUT' ? astronaut : ship;
+      const colCenterX = collector.x + collector.width / 2;
+      const colCenterY = collector.y + collector.height / 2;
+
+      for (let i = oreDrops.length - 1; i >= 0; i--) {
+        const ore = oreDrops[i];
+        ore.x += ore.vx;
+        ore.y += ore.vy;
+        ore.vx *= 0.94;
+        ore.vy += 0.2; // Gravity
+
+        // Magnet attraction within 160px
+        const dist = Math.hypot(colCenterX - ore.x, colCenterY - ore.y);
+        if (dist < 180) {
+          const pull = (180 - dist) * 0.055;
+          ore.vx += ((colCenterX - ore.x) / dist) * pull;
+          ore.vy += ((colCenterY - ore.y) / dist) * pull;
+        }
+
+        // Collection radius
+        if (dist < 26) {
+          inventory[ore.type] += ore.value;
+          sound.playOrePickup();
+          showToast(`Vacuumed +${ore.value} ${ore.type.toUpperCase()}`);
+          createParticleBurst(ore.x, ore.y, 8, ore.color);
+          oreDrops.splice(i, 1);
+        }
+      }
+
+      // 3. UPDATE SPACE FLIGHT MODE
+      if (currentMode === 'SPACE') {
+        sound.stopMiningLaser();
+        let thrusting = false;
+
+        // Free 360-degree Newtonian flight in space
+        if (keys.left) ship.angle -= ship.turnSpeed;
+        if (keys.right) ship.angle += ship.turnSpeed;
+
+        if (keys.up) {
+          ship.vx += Math.cos(ship.angle) * ship.thrustPower;
+          ship.vy += Math.sin(ship.angle) * ship.thrustPower;
+          thrusting = true;
+        }
+        if (keys.down) {
+          // Retro-thrusters
+          ship.vx -= Math.cos(ship.angle) * (ship.thrustPower * 0.5);
+          ship.vy -= Math.sin(ship.angle) * (ship.thrustPower * 0.5);
+          thrusting = true;
+        }
+
+        if (thrusting) {
+          sound.startEngine();
+          fxParticles.push({
+            x: ship.x - Math.cos(ship.angle) * 22,
+            y: ship.y - Math.sin(ship.angle) * 22,
+            vx: -Math.cos(ship.angle) * (Math.random() * 4 + 3) + (Math.random() - 0.5) * 1.5,
+            vy: -Math.sin(ship.angle) * (Math.random() * 4 + 3) + (Math.random() - 0.5) * 1.5,
+            life: 0.8,
+            decay: 0.06,
+            size: Math.random() * 3 + 2,
+            color: Math.random() > 0.4 ? '#38bdf8' : '#f97316'
+          });
+        } else {
+          sound.stopEngine();
+        }
+
+        ship.vx *= ship.friction;
+        ship.vy *= ship.friction;
+        ship.x += ship.vx;
+        ship.y += ship.vy;
+
+        // Camera smoothly follows ship
+        camera.x = ship.x - canvas.width / 2;
+        camera.y = ship.y - canvas.height / 2;
+
+        // Asteroids update
+        asteroids.forEach((ast) => {
+          ast.x += ast.vx;
+          ast.y += ast.vy;
+          ast.angle += ast.rotSpeed;
+
+          // Recycle far asteroids
+          if (Math.hypot(ast.x - ship.x, ast.y - ship.y) > 4000) {
+            ast.x = ship.x + (Math.random() - 0.5) * 3500;
+            ast.y = ship.y + (Math.random() - 0.5) * 3500;
+          }
+
+          // Check ship crash with asteroid
+          const dist = Math.hypot(ship.x - ast.x, ship.y - ast.y);
+          if (dist < ast.radius + 18) {
+            if (ship.shield > 0) ship.shield = Math.max(0, ship.shield - 20);
+            else ship.hull = Math.max(0, ship.hull - 18);
+            sound.playExplosion(false);
+            createParticleBurst(ship.x, ship.y, 16, '#ef4444');
+            showToast("Asteroid Impact!");
+            ship.vx = -ship.vx * 0.6;
+            ship.vy = -ship.vy * 0.6;
+          }
+        });
+
+        // Planetary Gravitational Well & Atmosphere Entry Detection
+        PLANETS.forEach((planet) => {
+          const pDist = Math.hypot(ship.x - planet.spaceX, ship.y - planet.spaceY);
+          // Gravity pull
+          if (pDist < planet.radius * 4.2) {
+            const pull = (planet.radius * 4.2 - pDist) * 0.00035;
+            ship.vx += ((planet.spaceX - ship.x) / pDist) * pull;
+            ship.vy += ((planet.spaceY - ship.y) / pDist) * pull;
+          }
+
+          // Atmosphere Entry Boundary
+          if (pDist < planet.radius + 20) {
+            transitionToPlanet(planet);
+          }
+        });
+      }
+
+      // 4. UPDATE PLANET FLIGHT MODE
+      else if (currentMode === 'PLANET_FLIGHT') {
+        const planet = currentPlanet;
+        let thrusting = false;
+
+        // Side-scroller planetary flight controls
+        if (keys.left) {
+          ship.vx -= 0.35;
+          thrusting = true;
+        }
+        if (keys.right) {
+          ship.vx += 0.35;
+          thrusting = true;
+        }
+        if (keys.up) {
+          ship.vy -= 0.52; // Overcome planetary gravity
+          thrusting = true;
+        }
+        if (keys.down) {
+          ship.vy += 0.25;
+        }
+
+        // Apply planetary gravity
+        ship.vy += planet.gravity * 0.5;
+
+        if (thrusting) {
+          sound.startEngine();
+          fxParticles.push({
+            x: ship.x,
+            y: ship.y + ship.height,
+            vx: (Math.random() - 0.5) * 2,
+            vy: Math.random() * 4 + 2,
+            life: 0.6,
+            decay: 0.06,
+            size: 3,
+            color: '#38bdf8'
+          });
+        } else {
+          sound.stopEngine();
+        }
+
+        ship.vx *= 0.95;
+        ship.vy *= 0.97;
+        ship.x += ship.vx;
+        ship.y += ship.vy;
+
+        // Boundary checks
+        if (ship.x < 40) { ship.x = 40; ship.vx = 0; }
+        if (ship.x > planet.width - ship.width - 40) { ship.x = planet.width - ship.width - 40; ship.vx = 0; }
+
+        // Exit planetary atmosphere into space if flying way up high
+        if (ship.y < -120) {
+          ship.y = planet.spaceY + planet.radius + 30;
+          ship.x = planet.spaceX;
+          enterDeepSpace();
+          return;
+        }
+
+        // Terrain Collision & Smooth Touchdown detection
+        const gearLeftX = ship.x + 8;
+        const gearRightX = ship.x + ship.width - 8;
+        const gearY = ship.y + ship.height;
+
+        const hitLeft = isTerrainSolid(planet, gearLeftX, gearY);
+        const hitRight = isTerrainSolid(planet, gearRightX, gearY);
+
+        if (hitLeft || hitRight) {
+          const speed = Math.hypot(ship.vx, ship.vy);
+          if (speed < 2.4) {
+            // Gentle landing touchdown
+            ship.landed = true;
+            ship.vy = 0;
+            ship.vx = 0;
+            ship.y -= 1; // Sit atop ground
+          } else {
+            // Hard crash
+            ship.hull = Math.max(0, ship.hull - Math.floor(speed * 6));
+            sound.playExplosion(true);
+            createParticleBurst(ship.x + ship.width / 2, gearY, 20, '#ef4444');
+            showToast("Rough Landing! Ship damaged.");
+            ship.vy = -2.0;
+          }
+        } else {
+          ship.landed = false;
+        }
+
+        // Camera tracks spaceship horizontally & vertically
+        camera.x = ship.x - canvas.width * 0.45;
+        camera.y = Math.max(0, Math.min(planet.height - canvas.height, ship.y - canvas.height * 0.55));
+      }
+
+      // 5. UPDATE ASTRONAUT EVA MODE & REAL-TIME TERRAIN DIGGING
+      else if (currentMode === 'ASTRONAUT') {
+        sound.stopEngine();
+        const planet = currentPlanet;
+
+        // Left / Right walking
+        let walking = false;
+        if (keys.left) {
+          astronaut.vx = -astronaut.walkSpeed;
+          astronaut.facing = -1;
+          walking = true;
+        } else if (keys.right) {
+          astronaut.vx = astronaut.walkSpeed;
+          astronaut.facing = 1;
+          walking = true;
+        } else {
+          astronaut.vx *= 0.72;
+        }
+
+        if (walking) astronaut.walkCycle += 0.28;
+
+        // Jump & Jetpack
+        if (keys.up || (keys.space && !astronaut.onGround)) {
+          if (astronaut.onGround) {
+            astronaut.vy = -astronaut.jumpForce;
+            astronaut.onGround = false;
+            createParticleBurst(astronaut.x + astronaut.width / 2, astronaut.y + astronaut.height, 6, '#cbd5e1');
+          } else if (astronaut.fuel > 0) {
+            // Jetpack burn
+            astronaut.vy -= 0.58;
+            astronaut.fuel = Math.max(0, astronaut.fuel - 0.4);
+            fxParticles.push({
+              x: astronaut.x + astronaut.width / 2 + (Math.random() - 0.5) * 4,
+              y: astronaut.y + astronaut.height,
+              vx: (Math.random() - 0.5) * 1.5,
+              vy: Math.random() * 3 + 2,
+              life: 0.5,
+              decay: 0.08,
+              size: 2.5,
+              color: '#38bdf8'
+            });
+          }
+        }
+
+        // Gravity
+        astronaut.vy += planet.gravity;
+        astronaut.x += astronaut.vx;
+        astronaut.y += astronaut.vy;
+
+        // Terrain collision for astronaut body
+        const footX = astronaut.x + astronaut.width / 2;
+        const footY = astronaut.y + astronaut.height;
+
+        if (isTerrainSolid(planet, footX, footY)) {
+          astronaut.y = footY - 1 - astronaut.height;
+          astronaut.vy = 0;
+          astronaut.onGround = true;
+
+          // Refuel jetpack while on ground
+          if (astronaut.fuel < astronaut.maxFuel) {
+            astronaut.fuel = Math.min(astronaut.maxFuel, astronaut.fuel + 0.8);
+          }
+        } else {
+          astronaut.onGround = false;
+        }
+
+        // Slowly consume oxygen in alien biome
+        astronaut.oxygen = Math.max(0, astronaut.oxygen - 0.02);
+
+        // MOUSE MINING DRILL ACTION
+        if (mouse.down) {
+          astronaut.isMining = true;
+          // Dig at crosshair location
+          performTerrainMining(mouse.worldX, mouse.worldY, 28);
+
+          // Spawn mining beam sparks
+          fxParticles.push({
+            x: mouse.worldX + (Math.random() - 0.5) * 12,
+            y: mouse.worldY + (Math.random() - 0.5) * 12,
+            vx: (Math.random() - 0.5) * 4,
+            vy: (Math.random() - 0.5) * 4,
+            life: 0.4,
+            decay: 0.08,
+            size: 2.5,
+            color: '#a855f7'
+          });
+        } else {
+          astronaut.isMining = false;
+        }
+
+        // Camera tracks astronaut
+        camera.x = astronaut.x - canvas.width * 0.48;
+        camera.y = Math.max(0, Math.min(planet.height - canvas.height, astronaut.y - canvas.height * 0.55));
+      }
+
+      // 6. UPDATE SHIP LASER PROJECTILES
+      for (let i = projectiles.length - 1; i >= 0; i--) {
+        const p = projectiles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= 1;
+
+        let hit = false;
+
+        // In space: hit asteroids
+        if (currentMode === 'SPACE') {
+          for (let a = asteroids.length - 1; a >= 0; a--) {
+            const ast = asteroids[a];
+            if (Math.hypot(p.x - ast.x, p.y - ast.y) < ast.radius) {
+              hit = true;
+              ast.hp -= 1;
+              createParticleBurst(p.x, p.y, 8, '#38bdf8');
+
+              if (ast.hp <= 0) {
+                sound.playExplosion(ast.radius > 22);
+                createParticleBurst(ast.x, ast.y, Math.floor(ast.radius * 1.1), '#94a3b8');
+
+                // Drop space ores
+                spawnOreDrop(ast.x, ast.y, ast.radius > 24 ? 'gold' : 'iron', '#f97316');
+
+                if (ast.radius > 24) {
+                  spawnAsteroid(ast.x + 6, ast.y - 6, ast.radius * 0.55);
+                  spawnAsteroid(ast.x - 6, ast.y + 6, ast.radius * 0.55);
+                }
+                asteroids.splice(a, 1);
+              }
+              break;
+            }
+          }
+        } else if (currentPlanet) {
+          // On planet: laser blasts into landscape and excavates a small hole
+          if (isTerrainSolid(currentPlanet, p.x, p.y)) {
+            hit = true;
+            performTerrainMining(p.x, p.y, 18);
+          }
+        }
+
+        if (hit || p.life <= 0) projectiles.splice(i, 1);
+      }
+
+      // Auto shield recharge
+      if (ship.shield < ship.maxShield) {
+        ship.shield = Math.min(ship.maxShield, ship.shield + 0.06);
+      }
+
+      // Hull or Oxygen critical failure
+      if (ship.hull <= 0 || astronaut.oxygen <= 0) {
+        sound.playExplosion(true);
+        emergencyRespawn();
+      }
+
+      updateHUD();
+    }
+
+    /* ==========================================================================
+       HUD TELEMETRY UPDATE
+       ========================================================================== */
+    function updateHUD() {
+      invIron.textContent = inventory.iron;
+      invCrystal.textContent = inventory.crystal;
+      invGold.textContent = inventory.gold;
+
+      if (currentMode === 'SPACE') {
+        modeTitle.textContent = "ORBITAL FLIGHT";
+        modeDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse";
+        sectorInfo.textContent = "LOCATION: DEEP SPACE SECTOR";
+        actionLabel.textContent = "FIRE";
+
+        vital1Label.textContent = "Hull Integrity";
+        vital1Val.textContent = `${Math.round(ship.hull)}%`;
+        vital1Bar.style.width = `${Math.max(0, ship.hull)}%`;
+
+        vital2Label.textContent = "Deflector Shield";
+        vital2Val.textContent = `${Math.round(ship.shield)}%`;
+        vital2Bar.style.width = `${Math.max(0, ship.shield)}%`;
+
+        // Find nearest planet for compass
+        let nearestP = PLANETS[0];
+        let minDist = Infinity;
+        PLANETS.forEach(p => {
+          const d = Math.hypot(ship.x - p.spaceX, ship.y - p.spaceY);
+          if (d < minDist) { minDist = d; nearestP = p; }
+        });
+
+        const dx = nearestP.spaceX - ship.x;
+        const dy = nearestP.spaceY - ship.y;
+        const angleDeg = Math.round(Math.atan2(dy, dx) * 180 / Math.PI);
+        navTarget.textContent = `${nearestP.name} [${Math.round(minDist)}km, ${angleDeg}°]`;
+
+        actionBanner.style.opacity = '0';
+      } else if (currentMode === 'PLANET_FLIGHT') {
+        modeTitle.textContent = "PLANETARY LANDER";
+        modeDot.className = "w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse";
+        sectorInfo.textContent = `LOCATION: ${currentPlanet.name.toUpperCase()} ATMOSPHERE`;
+        actionLabel.textContent = "FIRE";
+
+        vital1Label.textContent = "Hull Integrity";
+        vital1Val.textContent = `${Math.round(ship.hull)}%`;
+        vital1Bar.style.width = `${Math.max(0, ship.hull)}%`;
+
+        vital2Label.textContent = "Lander Thrust";
+        vital2Val.textContent = `${Math.round(ship.shield)}%`;
+        vital2Bar.style.width = `${Math.max(0, ship.shield)}%`;
+
+        navTarget.textContent = ship.landed ? "TOUCHDOWN STABLE. Press [E] to exit" : "Descent speed: " + (Math.hypot(ship.vx, ship.vy) * 10).toFixed(1) + " m/s";
+
+        if (ship.landed || (Math.abs(ship.vy) < 1.2 && Math.abs(ship.vx) < 1.2)) {
+          actionBanner.style.opacity = '1';
+          actionBannerText.textContent = "Press [E] to Disembark Astronaut";
+        } else {
+          actionBanner.style.opacity = '0';
+        }
+      } else if (currentMode === 'ASTRONAUT') {
+        modeTitle.textContent = "ASTRONAUT EVA";
+        modeDot.className = "w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse";
+        sectorInfo.textContent = `SURFACE: ${currentPlanet.name.toUpperCase()} - ${currentPlanet.desc}`;
+        actionLabel.textContent = "MINE";
+
+        vital1Label.textContent = "Oxygen Reserve";
+        vital1Val.textContent = `${Math.round(astronaut.oxygen)}%`;
+        vital1Bar.style.width = `${Math.max(0, astronaut.oxygen)}%`;
+        vital1Bar.className = astronaut.oxygen < 30 ? "h-full bg-rose-500 animate-pulse" : "h-full bg-sky-400";
+
+        vital2Label.textContent = "Jetpack Fuel";
+        vital2Val.textContent = `${Math.round(astronaut.fuel)}%`;
+        vital2Bar.style.width = `${Math.max(0, astronaut.fuel)}%`;
+        vital2Bar.className = "h-full bg-amber-400";
+
+        navTarget.textContent = "Plasma Drill Ready: Aim & Hold Left Mouse to Mine Terrain";
+
+        const distToShip = Math.hypot((astronaut.x + astronaut.width / 2) - (ship.x + ship.width / 2), (astronaut.y + astronaut.height / 2) - (ship.y + ship.height / 2));
+        if (distToShip < 90) {
+          actionBanner.style.opacity = '1';
+          actionBannerText.textContent = "Press [E] to Enter Cockpit & Launch";
+        } else {
+          actionBanner.style.opacity = '0';
+        }
+      }
+    }
+
+    /* ==========================================================================
+       RENDER SCENE & GRAPHICS
+       ========================================================================== */
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // 1. BACKGROUND SKY & STARFIELD
+      if (currentMode === 'SPACE') {
+        ctx.fillStyle = '#03050c';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Parallax stars
+        starfield.forEach((s) => {
+          const sx = (s.x - camera.x * s.layer) % (canvas.width + 400);
+          const px = sx < -50 ? sx + canvas.width + 400 : sx;
+          const sy = (s.y - camera.y * s.layer) % (canvas.height + 400);
+          const py = sy < -50 ? sy + canvas.height + 400 : sy;
+
+          ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha})`;
+          ctx.fillRect(px, py, s.size, s.size);
+        });
+
+        // Distant Glowing Planets in Orbit
+        PLANETS.forEach((planet) => {
+          const screenX = planet.spaceX - camera.x;
+          const screenY = planet.spaceY - camera.y;
+
+          // Atmospheric Halo
+          const grad = ctx.createRadialGradient(screenX, screenY, planet.radius * 0.6, screenX, screenY, planet.radius * 1.5);
+          grad.addColorStop(0, planet.terrainTop + '55');
+          grad.addColorStop(1, 'transparent');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(screenX, screenY, planet.radius * 1.5, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Planet Sphere
+          ctx.fillStyle = planet.terrainRock;
+          ctx.beginPath();
+          ctx.arc(screenX, screenY, planet.radius, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Planet Name Tag
+          ctx.fillStyle = "#f8fafc";
+          ctx.font = "bold 13px 'Chakra Petch', sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText(planet.name, screenX, screenY - planet.radius - 16);
+          ctx.fillStyle = "#94a3b8";
+          ctx.font = "10px monospace";
+          ctx.fillText("[ENTER ORBIT]", screenX, screenY + planet.radius + 20);
+        });
+
+      } else {
+        // Planetary Sky Gradient
+        const skyGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        skyGrad.addColorStop(0, currentPlanet.skyColors[0]);
+        skyGrad.addColorStop(1, currentPlanet.skyColors[1]);
+        ctx.fillStyle = skyGrad;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Distant mountain parallax
+        ctx.fillStyle = currentPlanet.terrainDeep + '66';
+        ctx.beginPath();
+        ctx.moveTo(0, canvas.height);
+        for (let x = 0; x <= canvas.width + 50; x += 60) {
+          const h = canvas.height - 240 + Math.sin((x + camera.x * 0.25) * 0.006) * 55;
+          ctx.lineTo(x, h);
+        }
+        ctx.lineTo(canvas.width, canvas.height);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      ctx.save();
+      ctx.translate(-camera.x, -camera.y);
+
+      // 2. RENDER DESTRUCTIBLE PLANETARY TERRAIN (When in planet mode)
+      if (currentPlanet && currentPlanet.deformCanvas) {
+        ctx.drawImage(currentPlanet.deformCanvas, 0, 0);
+      }
+
+      // 3. RENDER DEEP SPACE ASTEROIDS
+      if (currentMode === 'SPACE') {
+        asteroids.forEach((ast) => {
+          ctx.save();
+          ctx.translate(ast.x, ast.y);
+          ctx.rotate(ast.angle);
+
+          ctx.fillStyle = "#334155";
+          ctx.strokeStyle = "#94a3b8";
+          ctx.lineWidth = 2;
+
+          ctx.beginPath();
+          ast.points.forEach((pt, idx) => {
+            if (idx === 0) ctx.moveTo(pt.x, pt.y);
+            else ctx.lineTo(pt.x, pt.y);
+          });
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.restore();
+        });
+      }
+
+      // 4. RENDER CRUMBLING DEBRIS & PARTICLES
+      debrisParticles.forEach((d) => {
+        ctx.fillStyle = d.color;
+        ctx.globalAlpha = Math.max(0, d.life);
+        ctx.fillRect(d.x - d.size / 2, d.y - d.size / 2, d.size, d.size);
+      });
+
+      fxParticles.forEach((p) => {
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = Math.max(0, p.life);
+        ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+      });
+      ctx.globalAlpha = 1.0;
+
+      // 5. RENDER ORE DROPS
+      oreDrops.forEach((ore) => {
+        ctx.fillStyle = ore.color;
+        ctx.shadowColor = ore.color;
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.arc(ore.x, ore.y, ore.size / 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      });
+
+      // 6. RENDER SHIP LASERS
+      projectiles.forEach((p) => {
+        ctx.fillStyle = p.color;
+        ctx.shadowColor = p.color;
+        ctx.shadowBlur = 10;
+        ctx.fillRect(p.x - 6, p.y - 2, 12, 4);
+        ctx.shadowBlur = 0;
+      });
+
+      // 7. RENDER SPACESHIP
+      ctx.save();
+      ctx.translate(ship.x + (currentMode === 'SPACE' ? 0 : ship.width / 2), ship.y + (currentMode === 'SPACE' ? 0 : ship.height / 2));
+      if (currentMode === 'SPACE') ctx.rotate(ship.angle);
+
+      // Main Hull
+      ctx.fillStyle = '#f8fafc';
+      ctx.beginPath();
+      ctx.moveTo(22, 0);
+      ctx.lineTo(-18, -14);
+      ctx.lineTo(-10, 0);
+      ctx.lineTo(-18, 14);
+      ctx.closePath();
+      ctx.fill();
+
+      // Wing Trim & Thruster Ports
+      ctx.strokeStyle = '#0284c7';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(-10, -8);
+      ctx.lineTo(14, 0);
+      ctx.lineTo(-10, 8);
+      ctx.stroke();
+
+      // Cockpit Dome
+      ctx.fillStyle = '#38bdf8';
+      ctx.beginPath();
+      ctx.arc(6, 0, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Deploy Landing Gear struts when near ground or landed
+      if (currentMode !== 'SPACE') {
+        ctx.strokeStyle = '#64748b';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(-14, 12);
+        ctx.lineTo(-18, 18);
+        ctx.moveTo(10, 12);
+        ctx.lineTo(14, 18);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+
+      // 8. RENDER ASTRONAUT & MINING PLASMA BEAM
+      if (currentMode === 'ASTRONAUT') {
+        ctx.save();
+        ctx.translate(astronaut.x, astronaut.y);
+
+        const legWiggle = Math.sin(astronaut.walkCycle) * 4;
+
+        // Life Support Jetpack Backpack
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(astronaut.facing === 1 ? -4 : astronaut.width - 2, 6, 6, 14);
+
+        // EVA Suit Torso
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(2, 6, astronaut.width - 4, 16);
+
+        // Legs
+        ctx.fillStyle = '#cbd5e1';
+        ctx.fillRect(3, 22, 5, 8 + legWiggle);
+        ctx.fillRect(astronaut.width - 8, 22, 5, 8 - legWiggle);
+
+        // Helmet & Reflective Gold Visor
+        ctx.fillStyle = '#f8fafc';
+        ctx.beginPath();
+        ctx.arc(astronaut.width / 2, 4, 8, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#f59e0b';
+        const vX = astronaut.facing === 1 ? astronaut.width / 2 + 1 : astronaut.width / 2 - 7;
+        ctx.fillRect(vX, 0, 6, 7);
+
+        // Handheld Plasma Drill
+        ctx.fillStyle = '#a855f7';
+        const gunX = astronaut.facing === 1 ? astronaut.width : -4;
+        ctx.fillRect(gunX, 12, 8, 4);
+
+        ctx.restore();
+
+        // Draw Interactive Mouse Mining Plasma Beam
+        if (mouse.down) {
+          const drillOriginX = astronaut.x + (astronaut.facing === 1 ? astronaut.width + 4 : -4);
+          const drillOriginY = astronaut.y + 14;
+
+          ctx.strokeStyle = '#c084fc';
+          ctx.lineWidth = 3.5;
+          ctx.shadowColor = '#e879f9';
+          ctx.shadowBlur = 14;
+          ctx.beginPath();
+          ctx.moveTo(drillOriginX, drillOriginY);
+          ctx.lineTo(mouse.worldX, mouse.worldY);
+          ctx.stroke();
+
+          // Core bright white inner laser
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(drillOriginX, drillOriginY);
+          ctx.lineTo(mouse.worldX, mouse.worldY);
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+        }
+      }
+
+      ctx.restore(); // End camera space
+
+      // 9. SCREEN SPACE TARGET RETICLE (While astronaut aims mining tool)
+      if (currentMode === 'ASTRONAUT') {
+        ctx.strokeStyle = mouse.down ? '#e879f9' : '#38bdf8';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.arc(mouse.screenX, mouse.screenY, 14, 0, Math.PI * 2);
+        ctx.moveTo(mouse.screenX - 20, mouse.screenY);
+        ctx.lineTo(mouse.screenX - 6, mouse.screenY);
+        ctx.moveTo(mouse.screenX + 6, mouse.screenY);
+        ctx.lineTo(mouse.screenX + 20, mouse.screenY);
+        ctx.moveTo(mouse.screenX, mouse.screenY - 20);
+        ctx.lineTo(mouse.screenX, mouse.screenY - 6);
+        ctx.moveTo(mouse.screenX, mouse.screenY + 6);
+        ctx.lineTo(mouse.screenX, mouse.screenY + 20);
+        ctx.stroke();
+      }
+    }
+
+    /* ==========================================================================
+       START RUNTIME LOOP
+       ========================================================================== */
+    function gameLoop() {
+      update();
+      render();
+      requestAnimationFrame(gameLoop);
+    }
+
+    window.onload = function() {
+      enterDeepSpace();
+      requestAnimationFrame(gameLoop);
+    };
+  </script>
+</body>
+</html>
