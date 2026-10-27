@@ -33,7 +33,6 @@ The catalog is populated from the `games` array and renders 45 slots. Each entry
 
 - `number`: unique slot number
 - `title`: visible game title
-- `description`: one-line summary
 - `creator`: creator credit
 - `laptop` / `mobile`: support indicators and filter values
 - `href`: relative path to the playable HTML file; omit it for an unfilled placeholder

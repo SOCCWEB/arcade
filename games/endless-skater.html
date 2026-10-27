@@ -530,6 +530,7 @@
       // --- AUDIO SYNTHESIZER (Web Audio API) ---
       let audioCtx = null;
       let soundEnabled = true;
+      let lastGrindSoundAt = -1;
 
       function initAudio() {
         if (!audioCtx) {
@@ -574,17 +575,32 @@
             osc.start(now);
             osc.stop(now + 0.15);
           } else if (type === 'grind') {
-            // Scratchy noise
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(180 + Math.random() * 80, now);
-            gain.gain.setValueAtTime(0.12, now);
-            gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start(now);
-            osc.stop(now + 0.08);
+            // Soft, spaced metallic rail resonance instead of a scratchy buzz.
+            if (now - lastGrindSoundAt < 0.2) return;
+            lastGrindSoundAt = now;
+            const railTone = audioCtx.createOscillator();
+            const railGain = audioCtx.createGain();
+            railTone.type = 'triangle';
+            railTone.frequency.setValueAtTime(560 + Math.random() * 70, now);
+            railTone.frequency.exponentialRampToValueAtTime(430 + Math.random() * 50, now + 0.15);
+            railGain.gain.setValueAtTime(0.026, now);
+            railGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+            railTone.connect(railGain);
+            railGain.connect(audioCtx.destination);
+            railTone.start(now);
+            railTone.stop(now + 0.16);
+
+            const metalOvertone = audioCtx.createOscillator();
+            const overtoneGain = audioCtx.createGain();
+            metalOvertone.type = 'sine';
+            metalOvertone.frequency.setValueAtTime(1180 + Math.random() * 100, now);
+            metalOvertone.frequency.exponentialRampToValueAtTime(940 + Math.random() * 80, now + 0.11);
+            overtoneGain.gain.setValueAtTime(0.007, now);
+            overtoneGain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+            metalOvertone.connect(overtoneGain);
+            overtoneGain.connect(audioCtx.destination);
+            metalOvertone.start(now);
+            metalOvertone.stop(now + 0.13);
           } else if (type === 'land') {
             // Solid wooden board slap
             const osc = audioCtx.createOscillator();
@@ -951,8 +967,13 @@
           }
         }
 
-        // Clean up objects that are far behind skater
-        while (worldObjects.length > 0 && worldObjects[0].x + 400 < skater.worldX - width) {
+        // Retain each object until its full footprint has passed behind the view.
+        // Keep the active rail even longer so a long grind can never lose its surface mid-trick.
+        while (worldObjects.length > 0) {
+          const oldest = worldObjects[0];
+          const objectEnd = oldest.x + (oldest.width || 400);
+          const activeGrindRail = state.isGrinding && state.currentGrindRail === oldest;
+          if (activeGrindRail || objectEnd >= skater.worldX - width - 100) break;
           worldObjects.shift();
         }
       }

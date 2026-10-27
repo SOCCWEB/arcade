@@ -1,20 +1,20 @@
 const laptopIcon = '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="2.5" width="10" height="8" rx="1.1"></rect><path d="M1.7 12.5h12.6l-.8 1H2.5z"></path></svg>';
 const mobileIcon = '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="4.4" y="1.5" width="7.2" height="13" rx="1.4"></rect><path d="M6.8 3.3h2.4M7.3 12.6h1.4"></path></svg>';
 const games = [
-  {number:1,title:'Endless Skater',featured:true,description:'Skate through endless streets, land tricks, and rack up points as you unlock new spots.',creator:'KC',laptop:true,mobile:true,art:'🛹',color:'#a9d94d',href:'games/endless-skater.html'},
-  {number:2,title:'Potato Wars',featured:true,description:'Battle the alien potato, leap between platforms, collect coins, and unleash potato slams.',creator:'OP',laptop:true,mobile:true,art:'🥔',color:'#e79a51',href:'games/potato-wars.html'},
-  {number:3,title:'MineWorld',description:'Mine resources, craft gear, and battle bosses across Woodman Park, the Deep Forest, and Space.',creator:'LC',laptop:true,mobile:true,art:'⛏️',color:'#4ea66e',href:'games/mine-world.html'},
-  {number:4,title:"Crabby's Ocean Quest",description:'Help Crabby eat fish, dodge sharks, and explore an endless ocean full of alien surprises.',creator:'MH',laptop:true,mobile:true,art:'🦀',color:'#38afc1',href:'games/crabbys-ocean-quest.html'},
-  {number:5,title:'Donut Mania',description:'Choose a bunny or dragon and race to catch the most falling donuts in one minute.',creator:'EF',laptop:true,mobile:true,art:'🍩',color:'#df78b6',href:'games/donut-mania.html'},
-  {number:6,title:'Bunny Hops',featured:true,description:'Help a bouncy bunny knock apples from a tree and collect red and golden fruit.',creator:'AL',laptop:true,mobile:true,art:'🐰',color:'#91c958',href:'games/bunny-hops.html'},
-  {number:7,title:'Stickgirl Candy Adventure',description:'Guide Stickgirl through candy-filled platforms, collect sweets, and take on King Candy.',creator:'MH',laptop:true,mobile:false,art:'🍭',color:'#ae75dc',href:'games/stickgirl-candy-adventure.html'},
-  {number:8,title:'Astro Explorer',featured:true,description:'Explore destructible alien planets, mine resources, and uncover ancient technology.',creator:'CM',laptop:true,mobile:true,art:'🪐',color:'#587ad3',href:'games/astro-explorer.html'},
-  {number:9,title:'FortMorning',description:'Gather wood, build defenses, and battle to be the last player standing.',creator:'AC',laptop:true,mobile:false,art:'🪓',color:'#72a936',href:'games/fortmorning.html'},
-  {number:10,title:'Pineapple Head',description:'Collect fruit, grow your empire, and expand from New Hampshire to the cosmos.',creator:'ML',laptop:true,mobile:true,art:'🍍',color:'#e5b83e',href:'games/pineapple-head.html'},
-  {number:11,title:'La Festa Simulator',featured:true,featuredOrder:1,description:'Run a busy pizzeria shift as chef, server, or another member of the team.',creator:'JP',laptop:true,mobile:true,art:'🍕',color:'#ca5946',href:'games/la-festa-simulator.html'},
-  {number:12,title:'Bobby Game',description:'Mine blocks, gather power, and battle a giant pirate turtle across a blocky adventure.',creator:'CB',laptop:true,mobile:false,art:'⛏️',color:'#56a6b5',href:'games/bobby-game.html'},
-  {number:13,title:'BasketBall Showdown',description:'Drive, pass, and shoot in a top-down basketball game for one or two local players.',creator:'MS',laptop:true,mobile:false,art:'🏀',color:'#5680c5',href:'games/basketball-showdown.html'},
-  ...Array.from({length:32},(_,i)=>({number:i+14,title:`Game slot ${String(i+14).padStart(2,'0')}`,description:'A little adventure goes here',creator:'SOCC Creator',laptop:true,mobile:true}))
+  {number:1,title:'Endless Skater',featured:true,creator:'KC',laptop:true,mobile:true,art:'🛹',color:'#a9d94d',href:'games/endless-skater.html'},
+  {number:2,title:'Potato Wars',featured:true,creator:'OP',laptop:true,mobile:true,art:'🥔',color:'#e79a51',href:'games/potato-wars.html'},
+  {number:3,title:'MineWorld',creator:'LC',laptop:true,mobile:true,art:'⛏️',color:'#4ea66e',href:'games/mine-world.html'},
+  {number:4,title:"Crabby's Ocean Quest",creator:'MH',laptop:true,mobile:true,art:'🦀',color:'#38afc1',href:'games/crabbys-ocean-quest.html'},
+  {number:5,title:'Donut Mania',creator:'EF',laptop:true,mobile:true,art:'🍩',color:'#df78b6',href:'games/donut-mania.html'},
+  {number:6,title:'Bunny Hops',featured:true,creator:'AL',laptop:true,mobile:true,art:'🐰',color:'#91c958',href:'games/bunny-hops.html'},
+  {number:7,title:'Stickgirl Candy Adventure',creator:'MH',laptop:true,mobile:false,art:'🍭',color:'#ae75dc',href:'games/stickgirl-candy-adventure.html'},
+  {number:8,title:'Astro Explorer',featured:true,creator:'CM',laptop:true,mobile:true,art:'🪐',color:'#587ad3',href:'games/astro-explorer.html'},
+  {number:9,title:'FortMorning',creator:'AC',laptop:true,mobile:false,art:'🪓',color:'#72a936',href:'games/fortmorning.html'},
+  {number:10,title:'Pineapple Head',creator:'ML',laptop:true,mobile:true,art:'🍍',color:'#e5b83e',href:'games/pineapple-head.html'},
+  {number:11,title:'La Festa Simulator',featured:true,featuredOrder:1,creator:'JP',laptop:true,mobile:true,art:'🍕',color:'#ca5946',href:'games/la-festa-simulator.html'},
+  {number:12,title:'Bobby Game',creator:'CB',laptop:true,mobile:false,art:'⛏️',color:'#56a6b5',href:'games/bobby-game.html'},
+  {number:13,title:'BasketBall Showdown',creator:'MS',laptop:true,mobile:false,art:'🏀',color:'#5680c5',href:'games/basketball-showdown.html'},
+  ...Array.from({length:32},(_,i)=>({number:i+14,title:`Game slot ${String(i+14).padStart(2,'0')}`,creator:'SOCC Creator',laptop:true,mobile:true}))
 ];
 const newest = [
   {number:13,icon:'🏀',title:'BasketBall Showdown',art:'🏀',color:'#5680c5',href:'games/basketball-showdown.html'},
@@ -35,7 +35,7 @@ function renderGames(){
   gameGrid.innerHTML=games.filter(g=>value==='all'||g[value]).map(g=>{
     const supportedDevices=[g.laptop?'laptop':'',g.mobile?'mobile':''].filter(Boolean).join(' and ');
     const deviceIcons=`${g.laptop?`<span class="support-icon" title="Laptop supported">${laptopIcon}</span>`:''}${g.mobile?`<span class="support-icon" title="Mobile supported">${mobileIcon}</span>`:''}`;
-    const card=`<div class="game-thumb" style="--game-art-color:${g.color||'#302b59'}"><span class="slot-number">SLOT ${String(g.number).padStart(2,'0')}</span><span class="thumb-placeholder ${g.href?'game-art-playable':''}" aria-hidden="true">${g.href?g.art:'＋'}</span></div><div class="game-info"><div class="game-title-row"><span class="game-title">${g.title}</span><span class="support-icons" aria-label="Supported on ${supportedDevices}">${deviceIcons}</span></div><p class="game-description">${g.description}</p><div class="game-byline"><span class="creator"><span class="creator-dot">✦</span>${g.creator}</span><span>${g.href?'PLAY ▶':'♡ 0'}</span></div></div>`;
+    const card=`<div class="game-thumb" style="--game-art-color:${g.color||'#302b59'}"><span class="slot-number">SLOT ${String(g.number).padStart(2,'0')}</span><span class="thumb-placeholder ${g.href?'game-art-playable':''}" aria-hidden="true">${g.href?g.art:'＋'}</span></div><div class="game-info"><div class="game-title-row"><span class="game-title">${g.title}</span><span class="support-icons" aria-label="Supported on ${supportedDevices}">${deviceIcons}</span></div><div class="game-byline"><span class="creator"><span class="creator-dot">✦</span>${g.creator}</span><span>${g.href?'PLAY ▶':'♡ 0'}</span></div></div>`;
     return g.href?`<div class="game-card-shell"><a class="game-card game-card-link" href="${g.href}" aria-label="Play ${g.title} by ${g.creator}">${card}</a>${gameDownloadMenu(g)}</div>`:`<article class="game-card" aria-label="${g.title} placeholder">${card}</article>`;
   }).join('');
 }

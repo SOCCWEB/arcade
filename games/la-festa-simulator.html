@@ -96,6 +96,70 @@
       border-bottom: 4px dashed #94a3b8;
       box-shadow: 0 8px 20px rgba(0,0,0,0.45);
     }
+    /* Portrait phone play gets a two-row HUD, reserved touch-control area, and clearer controls. */
+    @media (max-width: 640px) and (orientation: portrait) {
+      body.mobile-gameplay #canvasViewport {
+        flex: 0 0 calc(100% - 170px) !important;
+        height: calc(100% - 170px) !important;
+      }
+      body.mobile-gameplay #hudBar {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-content: center;
+        justify-content: space-between;
+        gap: 2px !important;
+        height: 78px !important;
+        padding: 4px 5px !important;
+      }
+      body.mobile-gameplay #hudBar > div:first-child { order: 1; gap: 4px !important; }
+      body.mobile-gameplay #hudBar > div:last-child { order: 2; gap: 3px !important; }
+      body.mobile-gameplay #hudObjectiveBox {
+        order: 3;
+        flex: 0 0 100%;
+        width: 100%;
+        max-width: none;
+        height: 28px !important;
+        margin-top: 2px;
+        padding: 0 8px !important;
+        font-size: 10px !important;
+      }
+      body.mobile-gameplay #hudCash,
+      body.mobile-gameplay #hudTimer { font-size: 10px !important; }
+      body.mobile-gameplay #btnSwitchRoleModal,
+      body.mobile-gameplay #btnEndShiftEarly,
+      body.mobile-gameplay #btnMuteAudio {
+        min-height: 30px;
+        padding: 4px 6px !important;
+        font-size: 9px !important;
+        white-space: nowrap;
+      }
+      body.mobile-gameplay #kitchenTicketsPanel {
+        top: 82px !important;
+        left: 7px !important;
+        width: 260px !important;
+        transform: scale(0.9) !important;
+        transform-origin: top left !important;
+        opacity: 0.98 !important;
+      }
+      body.mobile-gameplay .kitchen-ticket-paper { padding-top: 8px; padding-bottom: 8px; }
+      body.mobile-gameplay #ticketPanelTitle { font-size: 12px !important; }
+      body.mobile-gameplay #kitchenTicketsList > div { padding-top: 5px; padding-bottom: 5px; }
+      body.mobile-gameplay #kitchenTicketsList > div > div > div:first-child { font-size: 11px !important; }
+      body.mobile-gameplay #kitchenTicketsList > div > div > div:last-child { font-size: 10px !important; }
+      body.mobile-gameplay #touchControls { bottom: max(12px, env(safe-area-inset-bottom)) !important; }
+      body.mobile-gameplay .dpad-btn {
+        background: rgba(20, 14, 12, 0.78);
+        border-color: rgba(255, 202, 94, 0.7);
+        color: #fff7e6;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.45);
+      }
+      body.mobile-gameplay .touch-action-overlay-btn {
+        background: rgba(130, 65, 9, 0.86);
+        border-color: rgba(255, 213, 91, 0.9);
+        color: #fff9e8;
+        box-shadow: 0 3px 12px rgba(0,0,0,0.5);
+      }
+    }
     /* Scrollbar hide */
     .no-scrollbar::-webkit-scrollbar {
       display: none;
@@ -156,7 +220,7 @@
   </div>
 
   <!-- CHEF KITCHEN TICKETS OVERLAY (Moved lower to top-20 so it NEVER overlaps the top header bar, styled like lined kitchen ticket paper!) -->
-  <div id="kitchenTicketsPanel" class="hidden fixed top-12 left-1.5 z-10 pointer-events-none flex flex-col gap-1 w-[210px] sm:w-[285px] opacity-80 sm:opacity-100 scale-[0.68] sm:scale-100 origin-top-left">
+  <div id="kitchenTicketsPanel" class="hidden fixed top-12 left-1.5 z-10 pointer-events-none flex flex-col gap-1 w-[260px] sm:w-[285px] opacity-80 sm:opacity-100 scale-[0.9] sm:scale-100 origin-top-left">
     <div class="kitchen-ticket-paper rounded-lg pl-7 pr-3 py-2 shadow-xl">
       <div class="flex items-center justify-between text-xs font-black uppercase tracking-wider text-red-800 mb-1.5">
         <span id="ticketPanelTitle">🧾 KITCHEN TICKETS</span>
@@ -789,7 +853,7 @@
         tablesServed: 0
       },
       introTimer: 0,
-      introDuration: 5.8, // seconds of first-person walking into doors + zoom out
+      introDuration: 5.8, // Desktop keeps the full cinematic; phones use a quick entrance.
       cameraX: 0,
       cameraY: 0,
 
@@ -1384,6 +1448,10 @@
     function startShiftWithRole(role) {
       SoundFX.init();
       SoundFX.pop();
+      state.isPhoneDevice = detectPhoneDevice();
+      state.introDuration = state.isPhoneDevice ? 2.4 : 5.8;
+      document.body.classList.remove('mobile-gameplay');
+      resizeCanvas();
       state.cash = 0;
       state.stats = { slicesServed: 0, pizzasBaked: 0, checksCashed: 0, tablesServed: 0 };
       state.shiftTimeLeft = state.shiftDuration;
@@ -1418,6 +1486,7 @@
       } else {
         tc.classList.add('hidden');
       }
+      document.body.classList.toggle('mobile-gameplay', state.mode === 'play' && state.isPhoneDevice && window.innerHeight > window.innerWidth);
       resizeCanvas();
     }
 
@@ -3205,15 +3274,22 @@
       });
     }
 
+    function getIntroPhaseBoundaries() {
+      return state.isPhoneDevice
+        ? { exteriorEnd: 0.8, interiorEnd: 1.45 }
+        : { exteriorEnd: 2.3, interiorEnd: 4.3 };
+    }
+
     // --- MAIN UPDATE LOOP ---
     let spawnAccum = 0;
     function updateGame(dt) {
       if (state.mode === 'intro') {
         state.introTimer += dt;
         const caption = document.getElementById('introCaptionText');
-        if (state.introTimer < 2.0) {
+        const introPhases = getIntroPhaseBoundaries();
+        if (state.introTimer < introPhases.exteriorEnd) {
           caption.textContent = 'Approaching La Festa Brick & Brew Pizzeria (300 Central Ave)...';
-        } else if (state.introTimer < 4.0) {
+        } else if (state.introTimer < introPhases.interiorEnd) {
           caption.textContent = 'Stepping through the inner glass double doors into the restaurant...';
         } else {
           caption.textContent = 'Zooming out to Top-Down Gameplay Perspective...';
@@ -3454,9 +3530,10 @@
       const t = state.introTimer;
       ctx.save();
 
-      if (t < 2.3) {
+      const introPhases = getIntroPhaseBoundaries();
+      if (t < introPhases.exteriorEnd) {
         // PHASE 1: Walking up to the Exterior Red-Brick Building ("La Festa Brick Oven Pizzeria")
-        const zoom = 1 + (t / 2.3) * 0.85;
+        const zoom = 1 + (t / introPhases.exteriorEnd) * 0.85;
         const walkBob = Math.sin(t * 11) * 6;
         ctx.translate(w / 2, h / 2 + walkBob);
         ctx.scale(zoom, zoom);
@@ -3536,9 +3613,9 @@
         ctx.lineWidth = 3;
         ctx.strokeRect(w * 0.44 - openAmt * 0.4, h * 0.47, w * 0.06 - openAmt * 0.5, h * 0.33);
         ctx.strokeRect(w * 0.50 + openAmt * 0.9, h * 0.47, w * 0.06 - openAmt * 0.5, h * 0.33);
-      } else if (t < 4.3) {
+      } else if (t < introPhases.interiorEnd) {
         // PHASE 2: Inside Vestibule -> Second Set of Inner Glass Double Doors Opening into Main Room
-        const p2 = (t - 2.3) / 2.0; // 0..1
+        const p2 = (t - introPhases.exteriorEnd) / (introPhases.interiorEnd - introPhases.exteriorEnd); // 0..1
         const zoom = 1 + p2 * 0.75;
         const walkBob = Math.sin(t * 11) * 5;
         ctx.translate(w / 2, h / 2 + walkBob);
@@ -3592,9 +3669,11 @@
         ctx.fillRect(w * 0.78 - rightW, h * 0.18, rightW, h * 0.62);
         ctx.strokeRect(w * 0.78 - rightW, h * 0.18, rightW, h * 0.62);
       } else {
-        // PHASE 3: Stepping into Main Room & Smoothly Zooming Out to Top-Down Gameplay View
-        const p3 = Math.min(1, (t - 4.3) / 1.5);
-        renderTopDownWorld(ctx, w, h, 1 + (1 - p3) * 0.65);
+        // PHASE 3: A short top-down reveal. Phones use the same final viewport as gameplay for a seamless handoff.
+        const phase3Duration = Math.max(0.1, state.introDuration - introPhases.interiorEnd);
+        const p3 = Math.min(1, (t - introPhases.interiorEnd) / phase3Duration);
+        const zoomOut = state.isPhoneDevice ? 1 + (1 - p3) * 0.03 : 1 + (1 - p3) * 0.65;
+        renderTopDownWorld(ctx, w, h, zoomOut);
       }
 
       ctx.restore();
@@ -3840,9 +3919,11 @@
     }
 
     let pendingThoughtBubbles = null;
+    let pendingThoughtBubbleBounds = null;
     function drawCloudThoughtBubble(ctx, anchorX, anchorY, bubbleX, bubbleY, bubbleW, bubbleH, renderContentFn) {
       if (pendingThoughtBubbles) {
-        if (bubbleX < 32 || bubbleX > 892 || bubbleY < 12 || bubbleY > 736) return;
+        const bounds = pendingThoughtBubbleBounds;
+        if (bounds && (bubbleX < bounds.left || bubbleX > bounds.right || bubbleY < bounds.top || bubbleY > bounds.bottom)) return;
         pendingThoughtBubbles.push({ anchorX, anchorY, bubbleX, bubbleY, bubbleW, bubbleH, renderContentFn });
         return;
       }
@@ -4174,42 +4255,64 @@
     function renderTopDownWorld(ctx, w, h, extraZoom = 1) {
       ctx.save();
       pendingThoughtBubbles = [];
+      pendingThoughtBubbleBounds = null;
 
-      // Fit the ENTIRE active room (x: 32..892, width 860; y: 12..736, height 724) so the WHOLE screen is visible AND fills the maximum possible screen area!
-      const hudOffset = state.mode === 'play' ? (w < 640 ? 44 : 48) : 0;
-      const availW = w;
-      const availH = Math.max(200, h - hudOffset);
       const roomOriginX = 32;
       const roomOriginY = 12;
       const roomW = 860;
       const roomH = 724;
+      const portraitViewport = w < h;
+      const mobileIntroWorld = portraitViewport && state.isPhoneDevice && state.mode === 'intro' && state.introTimer > getIntroPhaseBoundaries().interiorEnd;
+      const mobilePhoneViewport = portraitViewport && state.isPhoneDevice;
+      const hudOffset = mobilePhoneViewport && (state.mode === 'play' || mobileIntroWorld) ? 78 : (state.mode === 'play' ? (w < 640 ? 44 : 48) : 0);
+      const availW = w;
+      const bottomControlReserve = portraitViewport && state.isPhoneDevice && (state.mode === 'play' || mobileIntroWorld) ? 170 : 0;
+      const availH = Math.max(200, h - hudOffset - bottomControlReserve);
+      let cameraOffsetX = state.cameraX;
+      let cameraOffsetY = state.cameraY;
+      let visibleWorldLeft = roomOriginX + cameraOffsetX;
+      let visibleWorldTop = roomOriginY + cameraOffsetY;
+      let visibleWorldWidth;
+      let visibleWorldHeight;
 
-      const isMobileOrPortrait = state.isPhoneDevice || w < 860 || w < h;
-
-      if (isMobileOrPortrait) {
-        // Scale X so 100% of the room width (Kitchen + Pizza Counter + Red Rope Queue + High-Tops + Welcome Area) fits on screen,
-        // and Scale Y so 100% of the room height fills the entire screen height below the HUD bar!
-        const scaleX = (availW / roomW) * extraZoom;
-        const scaleY = (availH / roomH) * extraZoom;
-        state.spriteAspectY = Math.max(0.56, Math.min(1, scaleX / scaleY));
-
+      if (portraitViewport) {
+        // Follow the player through the wide restaurant instead of shrinking every station to fit.
+        // Target roughly 460 world units across, while preserving the whole room vertically when possible.
+        const mobileScale = Math.max(availH / roomH, availW / 460) * extraZoom;
+        visibleWorldWidth = availW / mobileScale;
+        visibleWorldHeight = availH / mobileScale;
+        visibleWorldLeft = Math.max(roomOriginX, Math.min(1575 - visibleWorldWidth, state.player.x - visibleWorldWidth / 2));
+        visibleWorldTop = Math.max(roomOriginY, Math.min(736 - visibleWorldHeight, state.player.y - visibleWorldHeight / 2));
+        cameraOffsetX = visibleWorldLeft - roomOriginX;
+        cameraOffsetY = visibleWorldTop - roomOriginY;
+        state.cameraX = cameraOffsetX;
+        state.cameraY = cameraOffsetY;
+        state.spriteAspectY = 1;
         ctx.translate(0, hudOffset);
-        ctx.scale(scaleX, scaleY);
-        ctx.translate(-(roomOriginX + state.cameraX), -roomOriginY);
+        ctx.scale(mobileScale, mobileScale);
+        ctx.translate(-visibleWorldLeft, -visibleWorldTop);
+        pendingThoughtBubbleBounds = {
+          left: visibleWorldLeft + 8, right: visibleWorldLeft + visibleWorldWidth - 8,
+          top: visibleWorldTop + 8, bottom: visibleWorldTop + visibleWorldHeight - 8
+        };
       } else {
         state.spriteAspectY = 1;
         const scaleX = (availW / roomW) * extraZoom;
         const scaleY = (availH / roomH) * extraZoom;
-        // On desktop/landscape, use uniform or near-uniform scaling that fills the viewport cleanly
         const uniformScale = Math.min(scaleX, scaleY);
         const finalScaleX = Math.min(scaleX, uniformScale * 1.18);
         const finalScaleY = Math.min(scaleY, uniformScale * 1.12);
         const offsetX = (availW - roomW * finalScaleX) / 2;
         const offsetY = hudOffset + (availH - roomH * finalScaleY) / 2;
-
+        visibleWorldWidth = availW / finalScaleX;
+        visibleWorldHeight = availH / finalScaleY;
         ctx.translate(offsetX, offsetY);
         ctx.scale(finalScaleX, finalScaleY);
-        ctx.translate(-(roomOriginX + state.cameraX), -roomOriginY);
+        ctx.translate(-(roomOriginX + cameraOffsetX), -(roomOriginY + cameraOffsetY));
+        pendingThoughtBubbleBounds = {
+          left: roomOriginX + cameraOffsetX + 8, right: roomOriginX + cameraOffsetX + visibleWorldWidth - 8,
+          top: roomOriginY + cameraOffsetY + 8, bottom: roomOriginY + cameraOffsetY + visibleWorldHeight - 8
+        };
       }
 
       // 1. MAIN FOYER & DINING SLATE-BLUE QUARRY TILE FLOOR (Authentic Photo 2 & 3 aesthetic)
@@ -5402,7 +5505,9 @@
       // Draw every request bubble above characters and furniture; greedily shift crowded bubbles apart.
       const placedBubbleRects = [];
       const queuedBubbles = pendingThoughtBubbles || [];
+      const bubbleBounds = pendingThoughtBubbleBounds || { left: 44, right: 876, top: 28, bottom: 728 };
       pendingThoughtBubbles = null;
+      pendingThoughtBubbleBounds = null;
       queuedBubbles.forEach(item => {
         const candidates = [[0,0]];
         for (let ring = 1; ring <= 10; ring++) {
@@ -5411,8 +5516,8 @@
         }
         let chosen = candidates[0];
         for (const [dx,dy] of candidates) {
-          const x = Math.max(44 + item.bubbleW / 2, Math.min(876 - item.bubbleW / 2, item.bubbleX + dx));
-          const y = Math.max(28 + item.bubbleH / 2, Math.min(728 - item.bubbleH / 2, item.bubbleY + dy));
+          const x = Math.max(bubbleBounds.left + item.bubbleW / 2, Math.min(bubbleBounds.right - item.bubbleW / 2, item.bubbleX + dx));
+          const y = Math.max(bubbleBounds.top + item.bubbleH / 2, Math.min(bubbleBounds.bottom - item.bubbleH / 2, item.bubbleY + dy));
           const rect = { left:x-item.bubbleW/2-4, right:x+item.bubbleW/2+4, top:y-item.bubbleH/2-4, bottom:y+item.bubbleH/2+4 };
           const overlaps = placedBubbleRects.some(other => rect.left < other.right && rect.right > other.left && rect.top < other.bottom && rect.bottom > other.top);
           if (!overlaps) { chosen = [x-item.bubbleX,y-item.bubbleY]; break; }
@@ -5436,13 +5541,16 @@
 
     function resizeCanvas() {
       const vp = document.getElementById('canvasViewport');
-      gameCanvas.width = vp ? vp.clientWidth : window.innerWidth;
-      gameCanvas.height = vp ? vp.clientHeight : window.innerHeight;
+      const cssWidth = vp ? vp.clientWidth : window.innerWidth;
+      const cssHeight = vp ? vp.clientHeight : window.innerHeight;
+      // Keep portrait gameplay responsive on phones while retaining crisp desktop rendering.
+      const maxDpr = state.isPhoneDevice ? 1.25 : 2;
+      const dpr = Math.min(maxDpr, window.devicePixelRatio || 1);
+      gameCanvas.width = Math.max(1, Math.round(cssWidth * dpr));
+      gameCanvas.height = Math.max(1, Math.round(cssHeight * dpr));
+      gameCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
-    window.addEventListener('resize', () => {
-      updateMobileControlsVisibility();
-      resizeCanvas();
-    });
+    window.addEventListener('resize', () => updateMobileControlsVisibility());
     resizeCanvas();
 
     let lastTime = performance.now();
@@ -5454,11 +5562,13 @@
 
         updateGame(dt);
 
-        gameCtx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+        const renderWidth = gameCanvas.clientWidth || window.innerWidth;
+        const renderHeight = gameCanvas.clientHeight || window.innerHeight;
+        gameCtx.clearRect(0, 0, renderWidth, renderHeight);
         if (state.mode === 'intro') {
-          renderIntroSequence(gameCtx, gameCanvas.width, gameCanvas.height);
+          renderIntroSequence(gameCtx, renderWidth, renderHeight);
         } else {
-          renderTopDownWorld(gameCtx, gameCanvas.width, gameCanvas.height, 1);
+          renderTopDownWorld(gameCtx, renderWidth, renderHeight, 1);
         }
       } catch (err) {
         console.error('Frame error recovered:', err);
