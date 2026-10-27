@@ -602,18 +602,36 @@
             metalOvertone.start(now);
             metalOvertone.stop(now + 0.13);
           } else if (type === 'land') {
-            // Solid wooden board slap
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'square';
-            osc.frequency.setValueAtTime(90, now);
-            osc.frequency.exponentialRampToValueAtTime(30, now + 0.1);
-            gain.gain.setValueAtTime(0.35, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start(now);
-            osc.stop(now + 0.1);
+            // Dry board clack: a small wooden transient over a light, higher-pitched deck knock.
+            const noiseBuffer = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * 0.045), audioCtx.sampleRate);
+            const noiseData = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < noiseData.length; i++) noiseData[i] = (Math.random() * 2 - 1) * (1 - i / noiseData.length);
+            const clack = audioCtx.createBufferSource();
+            const clackFilter = audioCtx.createBiquadFilter();
+            const clackGain = audioCtx.createGain();
+            clack.buffer = noiseBuffer;
+            clackFilter.type = 'bandpass';
+            clackFilter.frequency.setValueAtTime(1450, now);
+            clackFilter.Q.setValueAtTime(0.7, now);
+            clackGain.gain.setValueAtTime(0.075, now);
+            clackGain.gain.exponentialRampToValueAtTime(0.001, now + 0.045);
+            clack.connect(clackFilter);
+            clackFilter.connect(clackGain);
+            clackGain.connect(audioCtx.destination);
+            clack.start(now);
+            clack.stop(now + 0.045);
+
+            const deck = audioCtx.createOscillator();
+            const deckGain = audioCtx.createGain();
+            deck.type = 'triangle';
+            deck.frequency.setValueAtTime(185, now);
+            deck.frequency.exponentialRampToValueAtTime(92, now + 0.085);
+            deckGain.gain.setValueAtTime(0.16, now);
+            deckGain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+            deck.connect(deckGain);
+            deckGain.connect(audioCtx.destination);
+            deck.start(now);
+            deck.stop(now + 0.09);
           } else if (type === 'coin') {
             // Cash register / points chime
             const osc = audioCtx.createOscillator();

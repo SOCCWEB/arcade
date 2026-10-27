@@ -3143,40 +3143,117 @@
         if (bot.cooldown > 0) return;
 
         if (bot.role === 'server') {
-          // Bot Slice Server serves front customer in line periodically
-          if (state.sliceQueue.length > 0) {
-            const cust = state.sliceQueue[0];
-            const slot = state.counterSlots.find(s => s.pizzaType.id === cust.pizzaType.id && s.slices >= cust.slicesWanted);
-            if (slot) {
-              slot.slices -= cust.slicesWanted;
-              state.sliceQueue.shift();
-              moveCustomerToCashier(cust);
-              state.stats.slicesServed += cust.slicesWanted;
-              state.cash += 6;
-              bot.targetX = 335;
-              bot.targetY = slot.y;
-              bot.statusText = `Served ${cust.slicesWanted}x ${cust.pizzaType.short}`;
-              bot.cooldown = 6.5;
+          // Heated orders use the same register-side waiting and shared-dropoff flow as player orders.
+          if (bot.serverJob) {
+            bot.serverJob.timer -= dt;
+            const job = bot.serverJob;
+            if (job.timer <= 0 && state.pizzaDropoffItems.length + job.customer.slicesWanted <= 8) {
+              for (let i = 0; i < job.customer.slicesWanted; i++) {
+                state.pizzaDropoffItems.push({ kind: 'slice', pizzaType: job.customer.pizzaType, heated: true, customerId: job.customer.id });
+              }
+              job.customer.heatReady = true;
+              job.customer.holding = { kind: 'slices', pizzaType: job.customer.pizzaType, count: job.customer.slicesWanted, heated: true };
+              state.stats.slicesServed += job.customer.slicesWanted;
+              bot.serverJob = null;
+              bot.statusText = `Dropped off ${job.customer.pizzaType.short} slices`;
+              bot.cooldown = 0.6;
+              releaseReadyHeatedCustomers();
               refreshKitchenTickets();
+              updateHUD();
+            } else if (job.timer <= 0) {
+              bot.statusText = 'Waiting for dropoff space';
+              bot.serverJob.timer = 0;
             } else {
-              // Ensure slot gets stocked
-              const anySlot = state.counterSlots[0];
-              anySlot.pizzaType = cust.pizzaType;
-              anySlot.slices = 6;
-              bot.cooldown = 4.0;
+              bot.statusText = `Heating ${job.customer.pizzaType.short} slices`;
             }
-          } else {
-            bot.cooldown = 3.5;
+            return;
           }
+
+          const hotCust = state.sliceQueue.slice(0, 3).find(c => c.wantsHeated);
+          if (hotCust && state.heatWaitCustomers.length < WORLD.heatWaitSpots.length) {
+            const neededDropoffSpace = hotCust.slicesWanted;
+            if (state.pizzaDropoffItems.length + neededDropoffSpace <= 8) {
+              const hotSlots = state.counterSlots.filter(s => s.pizzaType.id === hotCust.pizzaType.id && s.slices > 0);
+              const hotAvailable = hotSlots.reduce((sum, slot) => sum + slot.slices, 0);
+              if (hotAvailable >= hotCust.slicesWanted) {
+                let hotSlicesRemaining = hotCust.slicesWanted;
+                hotSlots.forEach(slot => {
+                  const take = Math.min(slot.slices, hotSlicesRemaining);
+                  slot.slices -= take;
+                  hotSlicesRemaining -= take;
+                });
+                const queueIndex = state.sliceQueue.indexOf(hotCust);
+                if (queueIndex >= 0) state.sliceQueue.splice(queueIndex, 1);
+                const spot = WORLD.heatWaitSpots[state.heatWaitCustomers.length];
+                hotCust.targetX = spot.x;
+                hotCust.targetY = spot.y;
+                hotCust.waitingForHeatedSlices = true;
+                hotCust.heatReady = false;
+                state.heatWaitCustomers.push(hotCust);
+                bot.serverJob = { customer: hotCust, timer: hotCust.slicesWanted * 4.8 };
+                bot.targetX = 95;
+                bot.targetY = 455;
+                bot.statusText = `Heating ${hotCust.pizzaType.short} slices`;
+                bot.cooldown = 0;
+                refreshKitchenTickets();
+              } else {
+                bot.statusText = `Waiting on ${hotCust.pizzaType.short} restock`;
+                bot.targetX = 335;
+                bot.targetY = hotCust.y;
+                bot.cooldown = 0.8;
+              }
+            } else {
+              bot.statusText = 'Making room at Pizza Dropoff';
+              bot.cooldown = 0.8;
+            }
+            return;
+          }
+
+          const cust = state.sliceQueue[0];
+          if (!cust || cust.wantsHeated) {
+            bot.statusText = cust ? 'Waiting for Pizza Dropoff space' : 'Slice line clear';
+            bot.targetX = 335;
+            bot.targetY = 390;
+            bot.cooldown = 0.8;
+            return;
+          }
+          const matchingSlots = state.counterSlots.filter(s => s.pizzaType.id === cust.pizzaType.id && s.slices > 0);
+          const available = matchingSlots.reduce((sum, slot) => sum + slot.slices, 0);
+          if (available < cust.slicesWanted) {
+            bot.statusText = `Waiting on ${cust.pizzaType.short} restock`;
+            bot.targetX = 335;
+            bot.targetY = cust.y;
+            bot.cooldown = 0.8;
+            return;
+          }
+          let remaining = cust.slicesWanted;
+          matchingSlots.forEach(slot => {
+            const take = Math.min(slot.slices, remaining);
+            slot.slices -= take;
+            remaining -= take;
+          });
+          state.sliceQueue.shift();
+          moveCustomerToCashier(cust, false);
+          const speedBonus = Math.round((cust.patience / 100) * 6);
+          state.cash += cust.slicesWanted * 4.5 + speedBonus;
+          state.stats.slicesServed += cust.slicesWanted;
+          bot.targetX = 335;
+          bot.targetY = cust.y;
+          bot.statusText = `Served ${cust.slicesWanted}x ${cust.pizzaType.short}`;
+          bot.cooldown = 0.8;
+          refreshKitchenTickets();
+          updateHUD();
         } else if (bot.role === 'cashier') {
-          // 2 Cashier Bots (Cashier Bot 1 tends Register 1 [zoneId 0], Cashier Bot 2 tends Register 2 [zoneId 1], and helps the other if free)
+          // Each cashier claims an order once so both bots cannot serve the same drink/check.
           const myZone = bot.cashierZoneId !== undefined ? bot.cashierZoneId : 0;
           const activeSlot =
-            state.cashierSlots.find(s => s.zoneId === myZone && s.customer && !s.customer.alreadyPaid) ||
-            state.cashierSlots.find(s => s.customer && !s.customer.alreadyPaid);
+            state.cashierSlots.find(s => s.customer && !s.customer.alreadyPaid && s.customer.aiCashierBot === bot.name) ||
+            state.cashierSlots.find(s => s.zoneId === myZone && s.customer && !s.customer.alreadyPaid && (!s.customer.aiCashierBot || s.customer.aiCashierBot === bot.name)) ||
+            state.cashierSlots.find(s => s.customer && !s.customer.alreadyPaid && !s.customer.aiCashierBot);
 
           if (activeSlot) {
             const cust = activeSlot.customer;
+            cust.aiCashierBot = bot.name;
             // If customer requested a drink and hasn't received it yet, Cashier Bot grabs the right drink from the cooler first!
             if (cust.wantsDrink && !cust.drinkFulfilled) {
               cust.drinkFulfilled = true;
@@ -3184,7 +3261,7 @@
               bot.targetX = activeSlot.zoneId === 0 ? 320 : activeSlot.regX;
               bot.targetY = activeSlot.zoneId === 0 ? activeSlot.regY : 84;
               bot.statusText = `Serving ${cust.wantsDrink.label} Drink`;
-              bot.cooldown = 2.6;
+              bot.cooldown = 1.0;
             } else {
               bot.holding = null;
               bot.targetX = activeSlot.zoneId === 0 ? 320 : activeSlot.regX;
@@ -3195,11 +3272,12 @@
                 cust.alreadyPaid = true;
                 bot.statusText = 'Cashed Out (Waiting on Slices)!';
               } else {
+                state.pizzaDropoffItems = state.pizzaDropoffItems.filter(item => item.customerId !== cust.id);
                 spawnLeavingCustomer(cust, cust.x, cust.y, 'Paid! 👋');
                 activeSlot.customer = null;
                 bot.statusText = 'Cashed Out Customer!';
               }
-              bot.cooldown = 5.5;
+              bot.cooldown = 1.4;
             }
             refreshKitchenTickets();
           } else {
@@ -3208,13 +3286,14 @@
             bot.targetX = myZone === 0 ? 315 : 520;
             bot.targetY = myZone === 0 ? 255 : 84;
             bot.facingAngle = myZone === 0 ? 0 : Math.PI / 2;
-            bot.cooldown = 2.5;
+            bot.cooldown = 0.5;
           }
         } else if (bot.role === 'waiter') {
           // Bot Waiter seats waiting groups (including 2-person parties at High-Tops!), delivers food, or buses dirty tables
           const dirtyTbl = state.tables.find(t => t.status === 'dirty');
           const checkTbl = state.tables.find(t => t.status === 'check_ready');
-          const orderTbl = state.tables.find(t => t.status === 'ordered');
+          const orderTbl = state.tables.find(t => t.status === 'ordered' &&
+            getRemainingTablePizzas(t).some(pizza => state.pizzaDropoffItems.some(item => item.kind === 'whole' && item.pizzaType.id === pizza.id)));
           const nextGrp = state.waitingGroups[0];
           const emptyTbl = nextGrp
             ? [...state.tables]
@@ -3238,14 +3317,24 @@
             bot.statusText = `Settled ${checkTbl.label}`;
             bot.cooldown = 6.0;
           } else if (orderTbl) {
-            orderTbl.deliveredPizzas = [...(orderTbl.wantedPizzas || [orderTbl.wantedPizza])];
+            const remainingPizzas = getRemainingTablePizzas(orderTbl);
+            const readyPizza = remainingPizzas.find(pizza => state.pizzaDropoffItems.some(item => item.kind === 'whole' && item.pizzaType.id === pizza.id));
+            const dropoffIndex = state.pizzaDropoffItems.findIndex(item => item.kind === 'whole' && item.pizzaType.id === readyPizza.id);
+            if (dropoffIndex >= 0) {
+              state.pizzaDropoffItems.splice(dropoffIndex, 1);
+              orderTbl.deliveredPizzas = [...(orderTbl.deliveredPizzas || []), readyPizza];
+            }
             orderTbl.deliveredDrinks = [...(orderTbl.wantedDrinks || [orderTbl.wantedDrink])];
-            orderTbl.pizzaDelivered = true;
+            orderTbl.pizzaDelivered = getRemainingTablePizzas(orderTbl).length === 0;
             orderTbl.drinkDelivered = true;
-            orderTbl.status = 'eating';
-            orderTbl.eatTimer = 10;
-            bot.statusText = `Served ${orderTbl.label}`;
-            bot.cooldown = 6.5;
+            if (orderTbl.pizzaDelivered) {
+              orderTbl.status = 'eating';
+              orderTbl.eatTimer = 10;
+              bot.statusText = `Served ${orderTbl.label}`;
+            } else {
+              bot.statusText = `Delivered pizza to ${orderTbl.label}`;
+            }
+            bot.cooldown = 1.2;
             refreshKitchenTickets();
           } else if (state.waitingGroups.length > 0 && emptyTbl) {
             const grp = state.waitingGroups.shift();

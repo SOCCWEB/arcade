@@ -50,6 +50,27 @@
       color: #e2e8f0;
       box-shadow: 0 2px 0 #0f172a;
     }
+    #landscapeGate { display: none; }
+    body.mobile-landscape-required #landscapeGate { display: flex; }
+    #mobileGameControls { display: none; }
+    body.mobile-touch-game #mobileGameControls { display: flex; }
+    @media (max-width: 900px) and (orientation: landscape) {
+      body.mobile-touch-game { height: 100dvh; min-height: 0; overflow: hidden; padding: 4px !important; }
+      body.mobile-touch-game > header { gap: 2px; margin: 0; flex: 0 0 auto; }
+      body.mobile-touch-game > header > div:first-child { padding: 3px 6px; }
+      body.mobile-touch-game > header > div:first-child h1 { font-size: 12px; }
+      body.mobile-touch-game > header > div:first-child #btn-mode,
+      body.mobile-touch-game > header > div:first-child #btn-sound,
+      body.mobile-touch-game > header > div:first-child #btn-pause,
+      body.mobile-touch-game > header > div:first-child #btn-reset { padding: 3px 6px; font-size: 10px; }
+      body.mobile-touch-game > header > div:nth-child(2) { padding: 3px; }
+      body.mobile-touch-game > header .font-score { font-size: 1.8rem; }
+      body.mobile-touch-game > header .w-10.h-10 { width: 1.75rem; height: 1.75rem; border-width: 2px; font-size: 9px; }
+      body.mobile-touch-game main { flex: 1 1 auto; min-height: 0; margin: 2px 0 0; }
+      body.mobile-touch-game main > div { width: 100%; height: auto; max-height: 100%; aspect-ratio: 11 / 6.2; border-radius: 10px; }
+      body.mobile-touch-game > footer { display: none; }
+    }
+    .mobile-player-controls button { touch-action: none; user-select: none; -webkit-user-select: none; }
   </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-between p-2 sm:p-4 bg-slate-950">
@@ -232,6 +253,30 @@
       </div>
     </div>
   </main>
+
+  <div id="mobileGameControls" class="fixed bottom-1 left-1 right-1 z-30 items-end justify-between gap-2 pointer-events-none">
+    <div id="mobileP1Controls" class="mobile-player-controls flex items-center gap-1 rounded-xl border border-red-500/50 bg-slate-950/75 p-1 pointer-events-auto">
+      <span class="text-[9px] font-black text-red-300 px-1">P1</span>
+      <button data-key="KeyA" class="w-10 h-10 rounded-lg bg-red-950 text-white border border-red-500 font-bold">◀</button>
+      <button data-key="KeyD" class="w-10 h-10 rounded-lg bg-red-950 text-white border border-red-500 font-bold">▶</button>
+      <button data-key="KeyW" class="h-10 px-2 rounded-lg bg-orange-600 text-white border border-orange-300 text-[10px] font-black">SHOOT</button>
+      <button data-key="Space" class="h-10 px-2 rounded-lg bg-emerald-700 text-white border border-emerald-300 text-[10px] font-black">PASS</button>
+    </div>
+    <div id="mobileP2Controls" class="mobile-player-controls flex items-center gap-1 rounded-xl border border-blue-500/50 bg-slate-950/75 p-1 pointer-events-auto">
+      <span class="text-[9px] font-black text-blue-300 px-1">P2</span>
+      <button data-key="ArrowLeft" class="w-10 h-10 rounded-lg bg-blue-950 text-white border border-blue-500 font-bold">◀</button>
+      <button data-key="ArrowRight" class="w-10 h-10 rounded-lg bg-blue-950 text-white border border-blue-500 font-bold">▶</button>
+      <button data-key="ArrowUp" class="h-10 px-2 rounded-lg bg-sky-700 text-white border border-sky-300 text-[10px] font-black">SHOOT</button>
+      <button data-key="Enter" class="h-10 px-2 rounded-lg bg-emerald-700 text-white border border-emerald-300 text-[10px] font-black">PASS</button>
+    </div>
+  </div>
+
+  <div id="landscapeGate" class="fixed inset-0 z-[100] bg-slate-950/95 text-center text-white p-6 flex-col items-center justify-center gap-4">
+    <div class="text-6xl">📱 ↻</div>
+    <h2 class="text-2xl font-black text-amber-300">Turn your phone sideways</h2>
+    <p class="max-w-sm text-slate-200">Hoop Showdown is designed for landscape play. Rotate your device to continue.</p>
+    <button id="tryLandscapeBtn" class="px-5 py-3 rounded-xl bg-amber-400 text-slate-950 font-extrabold">Try landscape mode</button>
+  </div>
 
   <!-- BOTTOM CONTROLS BAR (DYNAMIC FOR 1P OR 2P) -->
   <footer class="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-2 mt-1">
@@ -600,6 +645,55 @@
         keysReleased['Alt'] = true;
       }
     });
+
+    function setVirtualKey(code, isDown) {
+      if (isDown) {
+        if (!keysDown[code]) keysPressed[code] = true;
+        keysDown[code] = true;
+      } else {
+        keysDown[code] = false;
+        keysReleased[code] = true;
+      }
+    }
+
+    document.querySelectorAll('.mobile-player-controls button[data-key]').forEach(button => {
+      const code = button.dataset.key;
+      const press = (e) => {
+        e.preventDefault();
+        sound.init();
+        setVirtualKey(code, true);
+        if (button.setPointerCapture && e.pointerId !== undefined) button.setPointerCapture(e.pointerId);
+      };
+      const release = (e) => {
+        if (e) e.preventDefault();
+        setVirtualKey(code, false);
+      };
+      button.addEventListener('pointerdown', press);
+      button.addEventListener('pointerup', release);
+      button.addEventListener('pointercancel', release);
+      button.addEventListener('lostpointercapture', release);
+    });
+
+    const isMobileTouch = () => (navigator.maxTouchPoints > 0 || (window.matchMedia && matchMedia('(pointer: coarse)').matches)) && window.innerWidth <= 1024;
+    function updateMobilePresentation() {
+      const mobileTouch = isMobileTouch();
+      document.body.classList.toggle('mobile-touch-game', mobileTouch);
+      document.body.classList.toggle('mobile-landscape-required', mobileTouch && window.innerHeight > window.innerWidth);
+    }
+    updateMobilePresentation();
+    window.addEventListener('resize', updateMobilePresentation);
+    window.addEventListener('orientationchange', updateMobilePresentation);
+    document.getElementById('tryLandscapeBtn').addEventListener('click', async () => {
+      try {
+        if (screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape');
+      } catch (_) { /* Most mobile browsers require manual rotation. */ }
+      updateMobilePresentation();
+    });
+
+    function updateMobilePlayerControls(is1P) {
+      const p2Controls = document.getElementById('mobileP2Controls');
+      if (p2Controls) p2Controls.classList.toggle('hidden', is1P);
+    }
 
     function resetInputFrame() {
       for (const k in keysPressed) delete keysPressed[k];
@@ -1422,7 +1516,7 @@
         this.ball = new Ball();
 
         // Game Mode: '2P' (Local 2-Player) or '1P' (Single Player vs CPU Bots)
-        this.gameMode = '2P';
+        this.gameMode = isMobileTouch() ? '1P' : '2P';
 
         // 2v2 Players with distinct human looks & skin tones
         // Red 1 (P1): warm bronze skin, red signature headband, #23
@@ -1516,6 +1610,7 @@
 
       updateModeUI() {
         const is1P = this.gameMode === '1P';
+        updateMobilePlayerControls(is1P);
 
         // Top button
         document.getElementById('mode-icon').textContent = is1P ? '🤖' : '👥';

@@ -23,6 +23,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            touch-action: none;
         }
 
         canvas {
@@ -32,6 +33,7 @@
             /* Maximize canvas while keeping aspect ratio roughly 16:9 */
             max-width: 100%;
             max-height: 100%;
+            touch-action: none;
         }
 
         #ui-layer {
@@ -88,6 +90,16 @@
             pointer-events: none;
             font-size: 18px;
         }
+        #mobile-controls { display: none; position: absolute; left: 10px; right: 10px; bottom: 10px; z-index: 5; justify-content: space-between; align-items: flex-end; pointer-events: none; }
+        #mobile-controls > div { display: flex; gap: 8px; pointer-events: auto; }
+        .mobile-game-btn { width: 58px; height: 58px; border-radius: 18px; border: 3px solid white; color: white; background: rgba(15,23,42,.68); font-weight: 900; font-size: 20px; touch-action: none; user-select: none; -webkit-user-select: none; }
+        .mobile-game-btn.action { width: 68px; font-size: 12px; background: rgba(225,29,72,.9); }
+        @media (max-width: 800px) and (pointer: coarse) {
+            #mobile-controls { display: flex; }
+            #controls-hint { display: none; }
+            #ui-layer { top: 8px; left: 8px; font-size: 15px; letter-spacing: 0; }
+            #game-over-screen { padding: 12px; box-sizing: border-box; }
+        }
     </style>
 </head>
 <body>
@@ -106,6 +118,17 @@
         <h1 id="game-over-title" class="text-6xl mb-4" style="text-shadow: 4px 4px 0 #000;">GAME OVER</h1>
         <p id="final-score" class="text-3xl mb-8" style="text-shadow: 2px 2px 0 #000;">Score: 0</p>
         <button class="candy-btn" onclick="resetGame()">PLAY AGAIN</button>
+    </div>
+
+    <div id="mobile-controls" aria-label="Touch controls">
+        <div>
+            <button id="btn-mobile-left" class="mobile-game-btn" aria-label="Move left">◀</button>
+            <button id="btn-mobile-right" class="mobile-game-btn" aria-label="Move right">▶</button>
+        </div>
+        <div>
+            <button id="btn-mobile-jump" class="mobile-game-btn action" aria-label="Jump">JUMP</button>
+            <button id="btn-mobile-fire" class="mobile-game-btn action" aria-label="Fire laser">FIRE</button>
+        </div>
     </div>
 </div>
 
@@ -152,17 +175,43 @@
         jump: false
     };
 
+    function jumpPlayer() {
+        if (player.jumps < player.maxJumps) {
+            player.vy = player.jumpForce;
+            player.grounded = false;
+            player.jumps++;
+        }
+        keys.jump = true;
+    }
+
+    function fireLaserToward(worldX, worldY) {
+        if (gameState !== 'playing') return;
+        const startX = player.x + player.width / 2;
+        const startY = player.y - player.height / 2 + 10;
+        const angle = Math.atan2(worldY - startY, worldX - startX);
+        lasers.push({ x: startX, y: startY, vx: Math.cos(angle) * 15, vy: Math.sin(angle) * 15, life: 60 });
+    }
+
+    const bindHoldButton = (id, onPress, onRelease = () => {}) => {
+        const button = document.getElementById(id);
+        const press = e => { e.preventDefault(); if (button.setPointerCapture) button.setPointerCapture(e.pointerId); onPress(); };
+        const release = e => { if (e) e.preventDefault(); onRelease(); };
+        button.addEventListener('pointerdown', press);
+        button.addEventListener('pointerup', release);
+        button.addEventListener('pointercancel', release);
+        button.addEventListener('lostpointercapture', release);
+    };
+    bindHoldButton('btn-mobile-left', () => { keys.left = true; }, () => { keys.left = false; });
+    bindHoldButton('btn-mobile-right', () => { keys.right = true; }, () => { keys.right = false; });
+    bindHoldButton('btn-mobile-jump', jumpPlayer);
+    bindHoldButton('btn-mobile-fire', () => fireLaserToward(player.x + (player.facingRight ? 1000 : -1000), player.y));
+    window.addEventListener('blur', () => { keys.left = false; keys.right = false; keys.jump = false; });
+
     window.addEventListener('keydown', (e) => {
         if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = true;
         if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = true;
         if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space') {
-            // Double jump logic
-            if (player.jumps < player.maxJumps) {
-                player.vy = player.jumpForce;
-                player.grounded = false;
-                player.jumps++;
-            }
-            keys.jump = true;
+            jumpPlayer();
         }
     });
 
@@ -172,26 +221,14 @@
         if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space') keys.jump = false;
     });
 
-    // Mouse click for Laser Eyes
-    canvas.addEventListener('mousedown', (e) => {
-        if (gameState !== 'playing') return;
+    // Tap/click the play area to aim and fire; touch controls also include a facing-direction fire button.
+    canvas.addEventListener('pointerdown', (e) => {
         const rect = canvas.getBoundingClientRect();
         const scaleX = canvas.width / rect.width;
         const scaleY = canvas.height / rect.height;
         const mouseX = (e.clientX - rect.left) * scaleX + cameraX;
         const mouseY = (e.clientY - rect.top) * scaleY;
-        
-        const startX = player.x + player.width / 2;
-        const startY = player.y - player.height / 2 + 10; // Eye level
-        const angle = Math.atan2(mouseY - startY, mouseX - startX);
-        
-        lasers.push({
-            x: startX,
-            y: startY,
-            vx: Math.cos(angle) * 15,
-            vy: Math.sin(angle) * 15,
-            life: 60 // Bullet lives for 60 frames
-        });
+        fireLaserToward(mouseX, mouseY);
     });
 
     // --- LEVEL DESIGN ---

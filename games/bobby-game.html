@@ -59,6 +59,7 @@
             text-align: center;
             display: none;
             pointer-events: auto;
+            z-index: 20;
             border: 4px solid #fff;
             box-shadow: 0 0 30px rgba(0,0,0,0.8);
         }
@@ -100,6 +101,21 @@
             background: linear-gradient(90deg, #ff4757, #ff6b81);
             transition: width 0.2s;
         }
+        #mobile-controls { display: none; }
+        @media (max-width: 800px) and (pointer: coarse) {
+            #mobile-controls { display: flex; }
+            #ui-layer { padding: 8px; }
+            .ui-box { font-size: 13px; padding: 6px 9px; margin-bottom: 4px; }
+            #ui-layer .ui-box.text-sm { max-width: 48vw; font-size: 10px; line-height: 1.2; }
+        }
+        .mobile-control-btn {
+            touch-action: none; user-select: none; -webkit-user-select: none;
+            width: 54px; height: 54px; border-radius: 13px;
+            border: 2px solid rgba(255,255,255,.65); background: rgba(15,23,42,.82);
+            color: white; font-weight: 900; font-size: 22px; margin: 0; padding: 0;
+        }
+        .mobile-control-btn.action { width: auto; height: 44px; padding: 0 9px; font-size: 11px; background: rgba(190,24,93,.9); }
+        #mobile-controls > div { pointer-events: auto; }
     </style>
 </head>
 <body>
@@ -124,6 +140,19 @@
             <div id="boss-health-bar">
                 <div id="boss-health-fill"></div>
             </div>
+        </div>
+    </div>
+
+    <div id="mobile-controls" class="fixed inset-x-0 bottom-2 z-10 items-end justify-between px-3 pointer-events-none">
+        <div class="grid grid-cols-3 gap-1.5 pointer-events-auto">
+            <span></span><button class="mobile-control-btn" data-key="ArrowUp">▲</button><span></span>
+            <button class="mobile-control-btn" data-key="ArrowLeft">◀</button><button class="mobile-control-btn" data-key="ArrowDown">▼</button><button class="mobile-control-btn" data-key="ArrowRight">▶</button>
+        </div>
+        <div class="grid grid-cols-2 gap-1.5 pointer-events-auto max-w-[55vw]">
+            <button class="mobile-control-btn action" data-action="KeyE">MINE</button>
+            <button class="mobile-control-btn action" data-action="KeyT">THROW</button>
+            <button class="mobile-control-btn action" data-action="KeyQ">SLAM</button>
+            <button class="mobile-control-btn action" data-action="KeyF">LASER</button>
         </div>
     </div>
 
@@ -177,6 +206,24 @@
 
     window.addEventListener('keydown', e => { keys[e.code] = true; handleSinglePress(e.code); });
     window.addEventListener('keyup', e => keys[e.code] = false);
+    document.querySelectorAll('#mobile-controls [data-key], #mobile-controls [data-action]').forEach(button => {
+        const code = button.dataset.key || button.dataset.action;
+        button.addEventListener('pointerdown', e => {
+            e.preventDefault();
+            if (button.setPointerCapture) button.setPointerCapture(e.pointerId);
+            keys[code] = true;
+            if (button.dataset.action) handleSinglePress(code);
+        });
+        const release = e => { if (e) e.preventDefault(); keys[code] = false; };
+        button.addEventListener('pointerup', release);
+        button.addEventListener('pointercancel', release);
+        button.addEventListener('lostpointercapture', release);
+    });
+    window.addEventListener('blur', () => {
+        document.querySelectorAll('#mobile-controls [data-key], #mobile-controls [data-action]').forEach(button => {
+            keys[button.dataset.key || button.dataset.action] = false;
+        });
+    });
 
     // Level map
     let map = [];
