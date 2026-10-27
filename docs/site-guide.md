@@ -44,7 +44,7 @@ Each playable catalog tile has a game-specific backing color and icon. Placehold
 
 ### Submitting a game
 
-The form offers 42 preset thumbnail icons and eight backing colors with a live preview. It validates a single `.html` or `.htm` selection, then opens a prefilled email draft to `hello@socc.games` containing the entered details and thumbnail choices. Because GitHub Pages serves static files, submissions are not uploaded or published automatically. The selected HTML file must be attached manually to the email before sending.
+The form offers 42 preset thumbnail icons and eight backing colors with a live preview. It validates a single `.html` or `.htm` selection, then opens a prefilled email draft to `kids@socclab.org` containing the entered details and thumbnail choices. Because GitHub Pages serves static files, submissions are not uploaded or published automatically. The selected HTML file must be attached manually to the email before sending.
 
 ### Launch animation
 

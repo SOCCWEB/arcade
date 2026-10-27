@@ -247,7 +247,7 @@
               </div>
               <h3 class="mt-1.5 sm:mt-2 font-extrabold text-sm sm:text-lg text-white group-hover:text-orange-300">Chef</h3>
               <p class="mt-1 text-[11px] sm:text-xs text-stone-300 leading-snug sm:leading-relaxed">
-                Grab dough from freezer, prep &amp; top pizzas, bake in the dual steel ovens, and stock the 2×4 counter or dine-in pass.
+                Grab dough from the Dough Cooler, prep &amp; bake pizzas, then stock the 2×4 counter or shared Pizza Dropoff.
               </p>
             </div>
             <div class="mt-2.5 sm:mt-3 pt-2 border-t border-white/10 flex items-center justify-between text-[11px] sm:text-xs font-extrabold text-orange-300">
@@ -265,7 +265,7 @@
               </div>
               <h3 class="mt-1.5 sm:mt-2 font-extrabold text-sm sm:text-lg text-white group-hover:text-amber-300">Slice Server</h3>
               <p class="mt-1 text-[11px] sm:text-xs text-stone-300 leading-snug sm:leading-relaxed">
-                Grab up to 2 slices (FIFO) from the 2×4 counter, heat in the dual ovens if requested, and pass slices to customers!
+                Grab up to 2 slices (FIFO) from the 2×4 counter, heat requested slices in the dual ovens, then drop them at Pizza Dropoff for checkout!
               </p>
             </div>
             <div class="mt-2.5 sm:mt-3 pt-2 border-t border-white/10 flex items-center justify-between text-[11px] sm:text-xs font-extrabold text-amber-300">
@@ -283,7 +283,7 @@
               </div>
               <h3 class="mt-1.5 sm:mt-2 font-extrabold text-sm sm:text-lg text-white group-hover:text-emerald-300">Cashier</h3>
               <p class="mt-1 text-[11px] sm:text-xs text-stone-300 leading-snug sm:leading-relaxed">
-                Ring up customers at the 2 front registers, grab cold drinks from the cooler, and solve receipt math to cash out!
+                Ring up customers at the 2 front registers, grab drinks from the Drink Cooler, and solve receipt math to cash out!
               </p>
             </div>
             <div class="mt-2.5 sm:mt-3 pt-2 border-t border-white/10 flex items-center justify-between text-[11px] sm:text-xs font-extrabold text-emerald-300">
@@ -750,7 +750,9 @@
       entryZonePurple: { x: 675, y: 545, w: 175, h: 175 },  // Purple Entry Zone (bottom right of main room)
 
       // Interactive Kitchen Stations (inside Orange Kitchen):
-      fridgeStation: { x: 55, y: 165, w: 85, h: 95, label: 'Fridge (Dough & Drinks)' },
+      doughCooler: { x: 55, y: 165, w: 78, h: 95, label: 'Dough Cooler' },
+      drinkCooler: { x: 146, y: 165, w: 78, h: 95, label: 'Drink Cooler' },
+      trashCan: { x: 285, y: 640, w: 48, h: 58, label: 'Kitchen Trash' },
       prepTable: { x: 175, y: 390, w: 110, h: 125, label: 'Dough Prep Table' },
       brickOvens: [
         { id: 0, x: 50, y: 300, w: 78, h: 95, label: 'Dual Deck Oven #1 (2 Ovens)' },
@@ -758,7 +760,8 @@
         { id: 2, x: 50, y: 530, w: 78, h: 95, label: 'Dual Deck Oven #3 (2 Ovens)' }
       ],
       kitchenSink: { x: 55, y: 640, w: 95, h: 68, label: 'Dish Sink' },
-      dineInPassCounter: { x: 245, y: 140, w: 110, h: 45, label: 'Dine-In Pickup Pass' },
+      pizzaDropoff: { x: 245, y: 140, w: 110, h: 45, label: 'Pizza Dropoff' },
+      heatWaitSpots: [{x:650,y:210},{x:650,y:270},{x:650,y:330},{x:650,y:390},{x:650,y:450},{x:650,y:510}],
 
       // Dining Tables: 5 Sideroom Tables (X: 960..1520) + 2 High-Top 2-Top Tables (to the left of Welcome Area & right of Red Rope!)
       sideroomTables: [
@@ -808,8 +811,9 @@
       // 2x6 Grid of Pizzas on the wide vertical Brown Pizza Counter (12 slots total)
       counterSlots: [],
 
-      // Dine-In Pickup Pass Pizzas (cooked whole pizzas waiting for Waiter)
-      dineInPassPizzas: [],
+      // Shared corner dropoff: each whole pizza or slice occupies one of 8 spots.
+      pizzaDropoffItems: [],
+      heatWaitCustomers: [],
 
       // Kitchen Tickets (needed pizzas for counter or dine-in tables)
       kitchenTickets: [],
@@ -931,7 +935,8 @@
         ]
       }));
 
-      state.dineInPassPizzas = [];
+      state.pizzaDropoffItems = [];
+      state.heatWaitCustomers = [];
       state.sliceQueue = [];
       state.leavingCustomers = [];
       state.waitingGroups = [];
@@ -1077,7 +1082,7 @@
           remainingPizzas.forEach((pz, pIdx) => {
             tickets.push({
               id: 'tbl_' + t.id + '_' + pIdx,
-              dest: 'Dine-In Pass',
+              dest: 'Pizza Dropoff',
               tableId: t.id,
               pizzaType: pz,
               priority: 1
@@ -1151,22 +1156,18 @@
         roleTasks = state.kitchenTickets.map((tk, idx) => ({
           title: `#${idx + 1} ${tk.pizzaType.name}`,
           sub: `➔ Bake for ${tk.dest}`,
-          border: tk.dest === 'Dine-In Pass' ? 'border-purple-600' : 'border-red-600',
+          border: tk.dest === 'Pizza Dropoff' ? 'border-purple-600' : 'border-red-600',
           dot: tk.pizzaType.color
         }));
       } else if (role === 'server') {
         if (titleEl) titleEl.textContent = '🍕 SLICE SERVER TICKETS';
-        // 1. Register customers waiting for heated slices from the oven
-        state.cashierSlots.forEach((cs, cIdx) => {
-          if (cs.customer && cs.customer.waitingForHeatedSlices) {
-            const c = cs.customer;
-            roleTasks.push({
-              title: `Reg #${cIdx + 1}: ${c.slicesWanted}x ${c.pizzaType.short} 🔥`,
-              sub: '➔ Take from Oven & Press Q at Reg',
-              border: 'border-orange-600',
-              dot: c.pizzaType.color
-            });
-          }
+        // Customers staged beside the cashier area for hot orders.
+        state.heatWaitCustomers.forEach(c => {
+          roleTasks.push({
+            title: `Dropoff: ${c.slicesWanted}x ${c.pizzaType.short} 🔥`,
+            sub: c.heatReady ? '➔ Customer is joining a register' : '➔ Heat slices, then deposit at Pizza Dropoff',
+            border: 'border-orange-600', dot: c.pizzaType.color
+          });
         });
         // 2. Front 3 customers in the red-rope slice queue
         state.sliceQueue.slice(0, 3).forEach((c, idx) => {
@@ -1193,7 +1194,7 @@
           if (c.alreadyPaid && c.waitingForHeatedSlices) {
             roleTasks.push({
               title: `Reg #${idx + 1}: Cashed Out ✓`,
-              sub: '➔ Waiting on Server heated slices',
+              sub: '➔ Waiting for Slice Server to use Pizza Dropoff',
               border: 'border-emerald-600',
               dot: '#22c55e'
             });
@@ -1227,10 +1228,10 @@
           });
         });
         // 2. Dine-in pizzas ready on the heated pass
-        if (state.dineInPassPizzas.length > 0) {
+        if (state.pizzaDropoffItems.some(item => item.kind === 'whole')) {
           roleTasks.push({
-            title: `Pass Ready: ${state.dineInPassPizzas.map(p => p.short).join(', ')}`,
-            sub: '➔ Pick up from Heated Pass (E)',
+            title: `Pizza Dropoff Ready: ${state.pizzaDropoffItems.filter(item => item.kind === 'whole').map(item => item.pizzaType.short).join(', ')}`,
+            sub: '➔ Pick up from Pizza Dropoff (E)',
             border: 'border-orange-600',
             dot: '#f97316'
           });
@@ -1497,7 +1498,7 @@
           objText.textContent = `Holding Raw ${hold.pizzaType.short} Pizza → Press E at Brick Oven to bake`;
         } else if (hold.kind === 'cooked_pizza') {
           holdIcon.textContent = '🔥';
-          objText.textContent = `Holding Hot ${hold.pizzaType.short} Pie → Tap E for Col 1 or Hold E for Col 2 on Counter (or Dine-In Pass)`;
+          objText.textContent = `Holding Hot ${hold.pizzaType.short} Pie → Tap E for Col 1 or Hold E for Col 2 on Counter (or Pizza Dropoff)`;
         } else if (hold.kind === 'waiter_tray') {
           holdIcon.textContent = '🍽️';
           const pNames = hold.pizzas.map(p => p.short).join(' + ');
@@ -1536,9 +1537,9 @@
           objText.textContent = nearPrompt;
         } else {
           const roleHints = {
-            chef: 'Chef Only: Grab Dough at Fridge (E) → Prep Table → Brick Oven → Stock 2×6 Counter / Dine-In Pass',
+            chef: 'Chef Only: Grab Dough at Dough Cooler (E) → Prep Table → Brick Oven → Stock 2×6 Counter / Pizza Dropoff',
             server: 'Slice Server Only: Check Front 3 Line Customers → Grab Slices from 2×6 Counter → Heat in Oven → Serve',
-            cashier: 'Cashier Only: Ring Up Customers at Registers → Grab Fridge Drink if asked → Solve Receipt Math',
+            cashier: 'Cashier Only: Ring Up Customers at Registers → Grab Drink Cooler drink if asked → Solve Receipt Math',
             waiter: 'Waiter Only: Greet Party on Welcome Carpet → Seat in Sideroom → Serve Pizzas/Drinks → Cash Out & Bus Dishes'
           };
           objText.textContent = roleHints[state.playerRole];
@@ -1671,23 +1672,27 @@
       const hold = state.player.holding;
       const role = state.playerRole;
 
-      // 1. Walk-In Freezer / Cooler Station (Chef: Dough | Cashier & Waiter: Beverage Cooler)
-      const fc = rectCenter(WORLD.fridgeStation);
-      if (dist(px, py, fc.x, fc.y) < 88) {
-        if (role === 'chef' && !hold) return 'Press E at Walk-In Freezer: Grab Fresh Pizza Dough';
-        if (role === 'cashier' && !hold) return 'Press E at Beverage Cooler: Grab Cold Drink';
-        if (role === 'waiter' && canWaiterAddDrink(hold)) {
-          return 'Press E at Beverage Cooler: Grab Drink (Waiter can carry 1 Pie + 2 Drinks!)';
-        }
-        if (role === 'server') return '🔒 Walk-In Freezer/Cooler (Chef Dough / Cashier & Waiter Drinks Only)';
+      // 1. Separate Dough and Drink coolers
+      const doughCenter = rectCenter(WORLD.doughCooler);
+      const drinkCenter = rectCenter(WORLD.drinkCooler);
+      if (dist(px, py, doughCenter.x, doughCenter.y) < 88) {
+        if (role === 'chef' && !hold) return 'Press E at Dough Cooler: Grab Fresh Pizza Dough';
+        if (role !== 'chef') return '🔒 Dough Cooler (Chef Only)';
       }
+      if (dist(px, py, drinkCenter.x, drinkCenter.y) < 88) {
+        if (role === 'cashier' && !hold) return 'Press E at Drink Cooler: Grab Cold Drink';
+        if (role === 'waiter' && canWaiterAddDrink(hold)) return 'Press E at Drink Cooler: Grab Drink';
+        if (role !== 'cashier' && role !== 'waiter') return '🔒 Drink Cooler (Cashier & Waiter Only)';
+      }
+      const trashCenter = rectCenter(WORLD.trashCan);
+      if (dist(px, py, trashCenter.x, trashCenter.y) < 82) return hold ? 'Press E at Kitchen Trash: Throw Away Held Item' : 'Kitchen Trash (hold an item, then press E)';
 
       // 2. Dough Prep Table (Chef Only — MUST hold dough from freezer first!)
       const pc = rectCenter(WORLD.prepTable);
       if (dist(px, py, pc.x, pc.y) < 92) {
         if (role === 'chef') {
           if (hold && hold.kind === 'dough') return 'Press E at Marble Prep Table: Place Dough & Start Pizza Minigame!';
-          if (!hold) return '⚠️ Grab Fresh Dough from the Walk-In Freezer first before using Prep Table!';
+          if (!hold) return '⚠️ Grab Fresh Dough from the Dough Cooler first before using Prep Table!';
         } else {
           return '🔒 Pizza Prep Table (Chef Role Only)';
         }
@@ -1711,13 +1716,13 @@
           }
           if (openDeck && hold && hold.kind === 'slices' && role === 'server') {
             const items = getHeldSliceItems(hold);
-            return `Press E at ${WORLD.brickOvens[i].label} (${openDeck.label}): Heat ${items.length} Slice(s) (${items.length * 3}s) — Customer moves to Cashier!`;
+            return `Press E at ${WORLD.brickOvens[i].label} (${openDeck.label}): Heat ${items.length} Slice(s) (${(items.length * 4.8).toFixed(1)}s) — deposit at Pizza Dropoff!`;
           }
           if (doneDeckForRole && !hold) {
             if (doneDeckForRole.item.kind === 'whole') {
               return `Press E at ${WORLD.brickOvens[i].label} (${doneDeckForRole.label}): Take Out Hot ${doneDeckForRole.item.pizzaType.short} Pizza!`;
             } else {
-              return `Press E at ${WORLD.brickOvens[i].label} (${doneDeckForRole.label}): Take Out Heated Slices (Deliver to Register with Q!)`;
+              return `Press E at ${WORLD.brickOvens[i].label} (${doneDeckForRole.label}): Take Out Heated Slices (Drop off at Pizza Dropoff)`;
             }
           }
           if (anyDoneDeck && !hold) {
@@ -1742,18 +1747,18 @@
         }
       }
 
-      // 5. Dine-In Pickup Pass (Chef places cooked pizza | Waiter picks up up to 2 pizzas or 1 pizza + 2 drinks)
-      const dc = rectCenter(WORLD.dineInPassCounter);
+      // 5. Shared Pizza Dropoff with 8 total item spaces
+      const dc = rectCenter(WORLD.pizzaDropoff);
       if (dist(px, py, dc.x, dc.y) < 88) {
-        if (role === 'chef' && hold && hold.kind === 'cooked_pizza') {
-          return 'Press E at Heated Pass: Place Whole Pizza for Waiter';
+        if ((role === 'chef' && hold && hold.kind === 'cooked_pizza') || (role === 'server' && hold && hold.kind === 'slices' && hold.heated)) {
+          return `Press E at Pizza Dropoff: Deposit item(s) (${state.pizzaDropoffItems.length}/8)`;
         }
-        if (role === 'waiter' && state.dineInPassPizzas.length > 0 && canWaiterAddPizza(hold)) {
-          return `Press E at Heated Pass: Pick Up ${state.dineInPassPizzas[0].name} (Can carry 2 Pies or 1 Pie + 2 Drinks)`;
+        if (role === 'waiter' && state.pizzaDropoffItems.some(item => item.kind === 'whole') && canWaiterAddPizza(hold)) {
+          const item = state.pizzaDropoffItems.find(entry => entry.kind === 'whole');
+          return `Press E at Pizza Dropoff: Pick Up ${item.pizzaType.name}`;
         }
-        if (role !== 'chef' && role !== 'waiter') {
-          return '🔒 Dine-In Pickup Pass (Chef & Waiter Only)';
-        }
+        if (role === 'waiter' || role === 'chef' || role === 'server') return `Pizza Dropoff (${state.pizzaDropoffItems.length}/8)`;
+        return '🔒 Pizza Dropoff (Chef, Slice Server & Waiter)';
       }
 
       // 6. Front 3 Customers in Slice Line (Slice Server stands across the counter and presses Q to pass slices!)
@@ -1786,16 +1791,16 @@
         }
       }
 
-      // 8. Cashier Slots (Cashier rings up with E | Slice Server delivers heated slices to waiting register customer with Q!)
+      // 8. Cashier Slots (Cashier rings up with E after heated orders reach the Pizza Dropoff)
       for (const cSlot of state.cashierSlots) {
         if (cSlot.customer && (dist(px, py, cSlot.regX, cSlot.regY) < 105 || dist(px, py, cSlot.x, cSlot.y) < 105 || dist(px, py, cSlot.plateX, cSlot.plateY) < 95)) {
           const cust = cSlot.customer;
           if (role === 'server') {
             if (cust.waitingForHeatedSlices && hold && hold.kind === 'slices' && doesHeldSlicesMatchCustomer(hold, cust, true)) {
-              return `Press Q at Register Counter: Deliver Heated ${cust.pizzaType.short} Slice(s) to Customer!`;
+              return `Take heated ${cust.pizzaType.short} slices to Pizza Dropoff (E).`;
             }
             if (cust.waitingForHeatedSlices) {
-              return `Customer at Register is waiting for ${cust.slicesWanted}x Heated ${cust.pizzaType.short} Slice(s) from Oven (Deliver with Q)!`;
+              return `Customer is waiting beside the registers. Deposit ${cust.slicesWanted}x heated ${cust.pizzaType.short} at Pizza Dropoff.`;
             }
             return '🔒 Front POS Register (Cashier Role Only)';
           }
@@ -1922,7 +1927,7 @@
       return false;
     }
 
-    // --- PASS SLICES TO CUSTOMER WITH 'Q' (LINE CUSTOMER OR WAITING REGISTER CUSTOMER) ---
+    // --- PASS COLD SLICES TO LINE CUSTOMERS WITH Q ---
     function triggerPassSliceQ() {
       if (state.mode !== 'play' || state.activeMinigame) return;
       const px = state.player.x;
@@ -1931,71 +1936,6 @@
       const role = state.playerRole;
 
       if (role === 'server' && hold && hold.kind === 'slices') {
-        // 1. Check if near a Cashier Slot customer waiting for their heated slices
-        for (const cSlot of state.cashierSlots) {
-          const cust = cSlot.customer;
-          if (cust && cust.waitingForHeatedSlices && (dist(px, py, cSlot.x, cSlot.y) < 115 || dist(px, py, cSlot.plateX, cSlot.plateY) < 105 || dist(px, py, cSlot.regX, cSlot.regY) < 105)) {
-            if (!doesHeldSlicesMatchCustomer(hold, cust, true)) {
-              SoundFX.error();
-              showToast(`This customer needs ${cust.slicesWanted}x HEATED ${cust.pizzaType.short} slice(s)!`);
-              return;
-            }
-            consumeHeldSlicesForCustomer(hold, cust, true);
-            cust.waitingForHeatedSlices = false;
-            cust.holding = {
-              kind: 'slices',
-              pizzaType: cust.pizzaType,
-              count: cust.slicesWanted,
-              heated: true,
-              withDrink: cust.drinkFulfilled ? cust.wantsDrink : null
-            };
-            state.stats.slicesServed += cust.slicesWanted;
-            const pay = cust.slicesWanted * 5.0 + 4.5;
-            addCash(pay, `Delivered Heated ${cust.pizzaType.short} Slice(s) to Register Counter!`);
-
-            // If customer already paid the cashier, they now walk out happily!
-            if (cust.alreadyPaid) {
-              spawnLeavingCustomer(cust, cust.x, cust.y, '🍕 Hot & Paid! 😋');
-              cSlot.customer = null;
-            }
-            refreshKitchenTickets();
-            updateHUD();
-            return;
-          }
-        }
-
-        // 2. Check if across the counter from (or near) one of the Front 3 Customers in the Slice Queue
-        // Also broaden register heated-slice delivery across the counter so standing on the kitchen side of the register works too!
-        for (const cSlot of state.cashierSlots) {
-          const cust = cSlot.customer;
-          const acrossRegCounter = cust && cust.waitingForHeatedSlices && (
-            dist(px, py, cSlot.x, cSlot.y) < 175 ||
-            dist(px, py, cSlot.plateX, cSlot.plateY) < 145 ||
-            dist(px, py, cSlot.regX, cSlot.regY) < 145
-          );
-          if (acrossRegCounter && doesHeldSlicesMatchCustomer(hold, cust, true)) {
-            consumeHeldSlicesForCustomer(hold, cust, true);
-            cust.waitingForHeatedSlices = false;
-            cust.holding = {
-              kind: 'slices',
-              pizzaType: cust.pizzaType,
-              count: cust.slicesWanted,
-              heated: true,
-              withDrink: cust.drinkFulfilled ? cust.wantsDrink : null
-            };
-            state.stats.slicesServed += cust.slicesWanted;
-            const pay = cust.slicesWanted * 5.0 + 4.5;
-            addCash(pay, `Delivered Heated ${cust.pizzaType.short} Slice(s) to Register Counter!`);
-            if (cust.alreadyPaid) {
-              spawnLeavingCustomer(cust, cust.x, cust.y, '🍕 Hot & Paid! 😋');
-              cSlot.customer = null;
-            }
-            refreshKitchenTickets();
-            updateHUD();
-            return;
-          }
-        }
-
         // Find any front-3 customer across the counter (px: 285..545) whose order matches what the Server is holding first!
         let targetCustIdx = -1;
         for (let i = 0; i < Math.min(3, state.sliceQueue.length); i++) {
@@ -2025,9 +1965,9 @@
             showToast(`Customer wants ${cust.slicesWanted}x ${cust.pizzaType.short} slice(s)!`);
             return;
           }
-          if (cust.wantsHeated && !doesHeldSlicesMatchCustomer(hold, cust, true)) {
+          if (cust.wantsHeated) {
             SoundFX.error();
-            showToast('Customer wants their slices HEATED! Put them in the Steel Oven (E) — customer will head to Cashier.');
+            showToast(hold.heated ? 'Place heated slices at Pizza Dropoff (E) to send the customer to a register.' : 'Customer wants heated slices! Use an oven (E), then Pizza Dropoff.');
             return;
           }
           consumeHeldSlicesForCustomer(hold, cust, cust.wantsHeated);
@@ -2096,12 +2036,11 @@
             return;
           }
 
-          // 2. Put unheated slices into an open deck of this Dual Oven (Slice Server Only: 3s per slice)
-          // ALSO immediately moves the matching front-3 customer who requested heated slices to the Cashier Register!
+          // 2. Put unheated slices into an open deck of this Dual Oven (Slice Server Only: 4.8s per slice)
           if (openDeck && hold && hold.kind === 'slices') {
             if (role !== 'server') return denyWrongRole('Slice Server', 'reheat pizza slices in the oven');
             const items = getHeldSliceItems(hold);
-            const heatSeconds = items.length * 3;
+            const heatSeconds = items.length * 4.8;
             openDeck.item = {
               kind: 'slices',
               items,
@@ -2114,21 +2053,22 @@
             state.player.holding = null;
             SoundFX.pop();
 
-            // Check if one of the front 3 customers in line wanted these slices heated and there's an open cashier slot
-            const openCashier = state.cashierSlots.find(s => !s.customer);
+            // Move one matching heated-slice customer to a staging spot beside the registers.
+            const matchingCustomer = getMatchingHeatWaitCustomer(items);
             let movedCustMsg = '';
-            if (openCashier) {
-              const custIdx = state.sliceQueue.slice(0, 3).findIndex(c =>
-                c.wantsHeated &&
-                items.filter(it => it.pizzaType.id === c.pizzaType.id).length >= c.slicesWanted
-              );
-              if (custIdx !== -1) {
-                const [cust] = state.sliceQueue.splice(custIdx, 1);
-                moveCustomerToCashier(cust, true); // waitingForHeatedSlices = true!
-                movedCustMsg = ' Customer moved to Cashier to pay while slices heat!';
-              }
+            if (matchingCustomer) {
+              const queueIndex = state.sliceQueue.indexOf(matchingCustomer);
+              if (queueIndex >= 0) state.sliceQueue.splice(queueIndex, 1);
+              const spot = WORLD.heatWaitSpots[state.heatWaitCustomers.length];
+              matchingCustomer.targetX = spot.x;
+              matchingCustomer.targetY = spot.y;
+              matchingCustomer.heatReady = false;
+              matchingCustomer.waitingForHeatedSlices = true;
+              state.heatWaitCustomers.push(matchingCustomer);
+              openDeck.item.customerId = matchingCustomer.id;
+              movedCustMsg = ' Customer is waiting beside the registers until dropoff.';
             }
-            showToast(`Heating ${items.length} slice(s) in ${openDeck.label} (${heatSeconds}s)!${movedCustMsg}`);
+            showToast(`Heating ${items.length} slice(s) in ${openDeck.label} (${heatSeconds.toFixed(1)}s).${movedCustMsg}`);
             refreshKitchenTickets();
             updateHUD();
             return;
@@ -2154,10 +2094,11 @@
                 items: heatedItems,
                 pizzaType: heatedItems[0].pizzaType,
                 count: heatedItems.length,
-                heated: true
+                heated: true,
+                dropoffCustomerId: targetDoneDeck.item.customerId || null
               };
               targetDoneDeck.doorOpenTimer = 1.2;
-              showToast(`Slices heated from ${targetDoneDeck.label}! Walk to the Register Counter and press Q to deliver them!`);
+              showToast(`Slices heated from ${targetDoneDeck.label}! Take them to Pizza Dropoff and press E!`);
             }
             targetDoneDeck.item = null;
             SoundFX.ding();
@@ -2180,42 +2121,31 @@
           return;
         } else {
           SoundFX.error();
-          showToast('Grab fresh dough from the Walk-In Freezer first, then bring it to the Prep Table!');
+          showToast('Grab fresh dough from the Dough Cooler first, then bring it to the Prep Table!');
           return;
         }
       }
 
-      // 3. Check Walk-In Freezer / Cooler Station (Chef: Dough | Cashier & Waiter: Randomized Drink Cooler)
-      const fc = rectCenter(WORLD.fridgeStation);
-      if (dist(px, py, fc.x, fc.y) < 90) {
-        if (role === 'chef') {
-          if (hold) {
-            showToast('Your hands are full! Place or clear what you are holding first.');
-            return;
-          }
-          state.player.holding = { kind: 'dough' };
-          SoundFX.pop();
-          showToast('Grabbed fresh dough from Walk-In Freezer! Bring it to the Prep Table.');
-          updateHUD();
-          return;
-        } else if (role === 'cashier') {
-          if (hold) {
-            showToast('Deliver the drink you are holding first!');
-            return;
-          }
-          openFridgeMinigame();
-          return;
-        } else if (role === 'waiter') {
-          if (!canWaiterAddDrink(hold)) {
-            SoundFX.error();
-            showToast('Waiter Tray Full! You can carry 1 Pizza + 2 Drinks (or 2 Pizzas with no drinks).');
-            return;
-          }
-          openFridgeMinigame();
-          return;
-        } else {
-          return denyWrongRole('Chef (Dough) or Cashier/Waiter (Drinks)', 'use the freezer/cooler');
-        }
+      // 3. Separate Dough Cooler and Drink Cooler
+      const doughCenter = rectCenter(WORLD.doughCooler);
+      const drinkCenter = rectCenter(WORLD.drinkCooler);
+      if (dist(px, py, doughCenter.x, doughCenter.y) < 90) {
+        if (role !== 'chef') return denyWrongRole('Chef', 'grab dough from the Dough Cooler');
+        if (hold) { showToast('Your hands are full! Place or throw away what you are holding first.'); return; }
+        state.player.holding = { kind: 'dough' };
+        SoundFX.pop(); showToast('Grabbed fresh dough from the Dough Cooler! Bring it to the Prep Table.'); updateHUD(); return;
+      }
+      if (dist(px, py, drinkCenter.x, drinkCenter.y) < 90) {
+        if (role === 'cashier') { if (hold) { showToast('Your hands are full! Deliver or throw away what you are holding first.'); return; } openFridgeMinigame(); return; }
+        if (role === 'waiter') { if (!canWaiterAddDrink(hold)) { SoundFX.error(); showToast('Waiter Tray Full! You can carry 1 Pizza + 2 Drinks (or 2 Pizzas with no drinks).'); return; } openFridgeMinigame(); return; }
+        return denyWrongRole('Cashier or Waiter', 'grab drinks from the Drink Cooler');
+      }
+
+      // Kitchen trash clears any item currently in the player's hands.
+      const trashCenter = rectCenter(WORLD.trashCan);
+      if (dist(px, py, trashCenter.x, trashCenter.y) < 82) {
+        if (!hold) { showToast('Kitchen Trash: hold any item and press E to throw it away.'); return; }
+        state.player.holding = null; SoundFX.pop(); showToast('Item tossed in the kitchen trash.'); updateHUD(); return;
       }
 
       // 4. Check Kitchen Sink (Waiter Only: Wash Dishes)
@@ -2232,40 +2162,30 @@
         }
       }
 
-      // 5. Check Dine-In Pickup Pass Counter (Chef places cooked pie | Waiter picks up up to 2 pies or 1 pie + 2 drinks)
-      const dc = rectCenter(WORLD.dineInPassCounter);
+      // 5. Shared Pizza Dropoff: a whole pie or each slice uses one of 8 spaces.
+      const dc = rectCenter(WORLD.pizzaDropoff);
       if (dist(px, py, dc.x, dc.y) < 90) {
-        if (role === 'chef') {
-          if (hold && hold.kind === 'cooked_pizza') {
-            state.dineInPassPizzas.push(hold.pizzaType);
-            state.player.holding = null;
-            addCash(22, `Placed ${hold.pizzaType.name} on Dine-In Pickup Pass`);
-            refreshKitchenTickets();
-            return;
-          } else {
-            showToast('Chef: Bring a hot baked pizza from the oven to place on the Dine-In Pass!');
-            return;
-          }
-        } else if (role === 'waiter') {
-          if (state.dineInPassPizzas.length > 0) {
-            if (!canWaiterAddPizza(hold)) {
-              SoundFX.error();
-              showToast('Waiter Tray Full! You can carry at most 2 Pizzas (no drinks) OR 1 Pizza + 2 Drinks.');
-              return;
-            }
-            const pType = state.dineInPassPizzas.shift();
-            addPizzaToWaiterTray(pType);
-            SoundFX.pop();
-            showToast(`Added ${pType.name} to Waiter Tray!`);
-            updateHUD();
-            return;
-          } else {
-            showToast('No dine-in pizzas on the pass yet—Chef is baking them!');
-            return;
-          }
-        } else {
-          return denyWrongRole('Chef or Waiter', 'use the Dine-In Pickup Pass');
+        if (role === 'chef' && hold && hold.kind === 'cooked_pizza') {
+          if (state.pizzaDropoffItems.length >= 8) { SoundFX.error(); showToast('Pizza Dropoff is full (8/8). Waiter needs to clear a whole pizza first.'); return; }
+          state.pizzaDropoffItems.push({ kind: 'whole', pizzaType: hold.pizzaType, heated: true });
+          state.player.holding = null; SoundFX.pop(); showToast(`${hold.pizzaType.name} dropped at Pizza Dropoff (${state.pizzaDropoffItems.length}/8).`); refreshKitchenTickets(); updateHUD(); return;
         }
+        if (role === 'server' && hold && hold.kind === 'slices') {
+          if (!hold.heated) { showToast('Heat the slices in an oven before placing them at Pizza Dropoff.'); return; }
+          dropSlicesAtPizzaDropoff(hold); refreshKitchenTickets(); return;
+        }
+        if (role === 'waiter') {
+          const pieIndex = state.pizzaDropoffItems.findIndex(item => item.kind === 'whole');
+          if (pieIndex >= 0) {
+            if (!canWaiterAddPizza(hold)) { SoundFX.error(); showToast('Waiter Tray Full! You can carry at most 2 Pizzas (no drinks) OR 1 Pizza + 2 Drinks.'); return; }
+            const [item] = state.pizzaDropoffItems.splice(pieIndex, 1);
+            addPizzaToWaiterTray(item.pizzaType); SoundFX.pop(); showToast(`Added ${item.pizzaType.name} to Waiter Tray!`); updateHUD(); return;
+          }
+          showToast('No whole pizzas at Pizza Dropoff yet. Waiter collects whole pies for dine-in tables.'); return;
+        }
+        if (role === 'chef') { showToast('Chef: Drop off a finished whole pizza here.'); return; }
+        if (role === 'server') { showToast('Slice Server: Drop off heated slices here.'); return; }
+        return denyWrongRole('Chef, Slice Server, or Waiter', 'use Pizza Dropoff');
       }
 
       // 6. Check 2x4 Pizza Counter Slots (Tap E -> Column 1 [colIdx=0], Hold E -> Column 2 [colIdx=1])
@@ -2291,10 +2211,10 @@
       // 8. Check Cashier Slots (Cashier Role Only — Must deliver the RIGHT drink before starting the Receipt Math minigame!)
       for (const cSlot of state.cashierSlots) {
         if (cSlot.customer && (dist(px, py, cSlot.regX, cSlot.regY) < 95 || dist(px, py, cSlot.x, cSlot.y) < 95)) {
-          if (role !== 'cashier') return denyWrongRole('Cashier', 'ring up customers at the register (Slice Server: Press Q to deliver heated slices)');
+          if (role !== 'cashier') return denyWrongRole('Cashier', 'ring up customers at the register');
           const cust = cSlot.customer;
           if (cust.alreadyPaid) {
-            showToast('Customer already paid! Waiting on Slice Server to deliver their heated slices to the counter.');
+            showToast('Customer is ready for checkout.');
             return;
           }
           if (cust.wantsDrink && !cust.drinkFulfilled) {
@@ -2467,6 +2387,46 @@
       });
     }
 
+    function getMatchingHeatWaitCustomer(items) {
+      return state.sliceQueue.slice(0, 3).find(c => c.wantsHeated &&
+        items.filter(it => it.pizzaType.id === c.pizzaType.id).length >= c.slicesWanted &&
+        state.heatWaitCustomers.length < WORLD.heatWaitSpots.length);
+    }
+
+    function releaseReadyHeatedCustomers() {
+      state.heatWaitCustomers = state.heatWaitCustomers.filter(cust => {
+        if (!cust.heatReady) return true;
+        if (!state.cashierSlots.some(s => !s.customer)) return true;
+        moveCustomerToCashier(cust, false);
+        return false;
+      });
+    }
+
+    function dropSlicesAtPizzaDropoff(hold) {
+      const items = getHeldSliceItems(hold);
+      if (state.pizzaDropoffItems.length + items.length > 8) {
+        SoundFX.error();
+        showToast(`Pizza Dropoff is full (${state.pizzaDropoffItems.length}/8). Make room before dropping these slices.`);
+        return false;
+      }
+      const cust = hold.dropoffCustomerId ? state.heatWaitCustomers.find(c => c.id === hold.dropoffCustomerId) : null;
+      let assigned = 0;
+      items.forEach(it => {
+        const matched = cust && assigned < cust.slicesWanted && it.pizzaType.id === cust.pizzaType.id;
+        state.pizzaDropoffItems.push({ kind: 'slice', pizzaType: it.pizzaType, heated: true, customerId: matched ? cust.id : null });
+        if (matched) assigned++;
+      });
+      state.player.holding = null;
+      if (cust && assigned >= cust.slicesWanted) {
+        cust.heatReady = true;
+        cust.holding = { kind: 'slices', pizzaType: cust.pizzaType, count: cust.slicesWanted, heated: true };
+        state.stats.slicesServed += cust.slicesWanted;
+        releaseReadyHeatedCustomers();
+        showToast(`Heated ${cust.pizzaType.short} slices dropped off! Customer is heading to a register.`);
+      } else showToast(`Dropped ${items.length} heated slice(s) at Pizza Dropoff (${state.pizzaDropoffItems.length}/8).`);
+      SoundFX.pop(); updateHUD(); return true;
+    }
+
     function moveCustomerToCashier(cust, waitingForHeatedSlices = false) {
       const heldSlices = waitingForHeatedSlices
         ? null
@@ -2491,13 +2451,11 @@
           facingAngle: -Math.PI / 2
         };
       } else {
-        cust.holding = heldSlices || {
-          kind: 'slices',
-          pizzaType: cust.pizzaType,
-          count: cust.slicesWanted,
-          heated: true
-        };
-        spawnLeavingCustomer(cust, cust.x, cust.y, '🍕 Yum!');
+        cust.holding = heldSlices || { kind: 'slices', pizzaType: cust.pizzaType, count: cust.slicesWanted, heated: true };
+        if (!waitingForHeatedSlices) {
+          cust.heatReady = true;
+          if (!state.heatWaitCustomers.some(c => c.id === cust.id)) state.heatWaitCustomers.push(cust);
+        } else spawnLeavingCustomer(cust, cust.x, cust.y, '🍕 Yum!');
       }
     }
 
@@ -2734,7 +2692,7 @@
 
       hint.textContent = wantedColor
         ? `Customer requested: ${wantedColor.label} (${wantedColor.name}) — Positions randomized!`
-        : `Pick any cold drink from the randomized cooler shelves!`;
+        : `Pick any cold drink from the Drink Cooler!`;
 
       // Build 12 randomized drink slots (3 of each of the 4 colors, shuffled every time)
       const bottles = [];
@@ -2771,7 +2729,7 @@
             state.activeMinigame = null;
             document.getElementById('fridgeMinigameModal').classList.add('hidden');
             SoundFX.pop();
-            showToast(`Grabbed ${drink.name} (${drink.label}) from cooler!`);
+            showToast(`Grabbed ${drink.name} (${drink.label}) from Drink Cooler!`);
           }
           updateHUD();
         });
@@ -2843,10 +2801,12 @@
             addCash(earned, 'Customer Cashed Out! Waiting at Register for Heated Slices from Oven.');
           } else {
             if (cust) {
+              state.pizzaDropoffItems = state.pizzaDropoffItems.filter(item => item.customerId !== cust.id);
               spawnLeavingCustomer(cust, cust.x, cust.y, `+$${earned.toFixed(0)} Paid! 😋`);
             }
             ctx.targetObj.customer = null;
             addCash(earned, penalty > 0 ? 'Cashier Check Complete (Reduced for wrong/missing drink)' : 'Cashier Transaction Complete!');
+          releaseReadyHeatedCustomers();
           }
         } else if (ctx.type === 'waiter') {
           const tbl = ctx.targetObj;
@@ -2914,9 +2874,9 @@
       });
       if (needed.length === 0) return null;
 
-      // Subtract pizzas already sitting on the Heated Dine-In Pass or already carried by the Waiter
+      // Subtract pizzas already sitting on the Heated Pizza Dropoff or already carried by the Waiter
       const accountedFor = [
-        ...state.dineInPassPizzas,
+        ...state.pizzaDropoffItems.filter(item => item.kind === 'whole').map(item => item.pizzaType),
         ...getWaiterHeldPizzas(state.player.holding)
       ];
       state.bots.forEach(b => {
@@ -2960,7 +2920,7 @@
     }
 
     function updateChefBot(bot, dt) {
-      // Fast, responsive 4-stage kitchen workflow: Freezer -> Prep Table -> Dual Oven -> Heated Dine-In Pass / Counter
+      // Fast, responsive 4-stage kitchen workflow: Freezer -> Prep Table -> Dual Oven -> Heated Pizza Dropoff / Counter
       const speed = 215;
       const dx = bot.targetX - bot.x;
       const dy = bot.targetY - bot.y;
@@ -3049,7 +3009,7 @@
       }
 
       if (bot.chefStage === 'baking') {
-        // Pull piping-hot cooked pizza from Dual Oven and head to Dine-In Pass or Pizza Counter
+        // Pull piping-hot cooked pizza from Dual Oven and head to Pizza Dropoff or Pizza Counter
         const ov = state.ovens[bot.ovenIdx || 0];
         if (ov && ov.decks[0]) ov.decks[0].doorOpenTimer = 0.8;
         bot.holding = { kind: 'cooked_pizza', pizzaType: bot.job.pizzaType };
@@ -3063,7 +3023,7 @@
         if (bot.job.dest === 'dine_in') {
           bot.targetX = 295;
           bot.targetY = 198;
-          bot.statusText = `To Dine-In Pass (${bot.job.pizzaType.short})`;
+          bot.statusText = `To Pizza Dropoff (${bot.job.pizzaType.short})`;
         } else {
           const slot = bot.job.slot || state.counterSlots[0];
           bot.targetX = 330;
@@ -3075,12 +3035,9 @@
 
       if (bot.chefStage === 'deliver') {
         if (bot.job.dest === 'dine_in') {
-          // If the pass already has 6 pizzas, remove one that isn't needed by any active table so needed pizzas always fit
-          if (state.dineInPassPizzas.length >= 6) {
-            state.dineInPassPizzas.shift();
-          }
-          state.dineInPassPizzas.push(bot.job.pizzaType);
-          bot.statusText = `Pass Ready: ${bot.job.pizzaType.short}!`;
+          // AI chef uses an open shared dropoff slot when one is available.
+          if (state.pizzaDropoffItems.length < 8) state.pizzaDropoffItems.push({ kind: 'whole', pizzaType: bot.job.pizzaType, heated: true });
+          bot.statusText = `Dropoff Ready: ${bot.job.pizzaType.short}!`;
         } else {
           const slot = bot.job.slot || state.counterSlots[0];
           slot.pizzaType = bot.job.pizzaType;
@@ -3344,6 +3301,21 @@
           cust.patience = Math.max(20, cust.patience - dt * 0.8);
         }
       });
+
+      // Heated-order customers wait beside the registers, then join only after their slices are deposited.
+      state.heatWaitCustomers.forEach((cust, idx) => {
+        const spot = WORLD.heatWaitSpots[idx] || { x: 650, y: 210 + idx * 54 };
+        cust.targetX = spot.x; cust.targetY = spot.y;
+        const dx = spot.x - cust.x, dy = spot.y - cust.y;
+        const d = Math.hypot(dx, dy);
+        if (d > 2) {
+          const step = Math.min(d, 145 * dt);
+          cust.x += dx / d * step; cust.y += dy / d * step;
+          cust.walkPhase = (cust.walkPhase || 0) + dt * 10;
+          cust.facingAngle = Math.atan2(dy, dx);
+        }
+      });
+      releaseReadyHeatedCustomers();
 
       // Smoothly animate customers walking up the counter column to their Cashier Slot
       state.cashierSlots.forEach(cs => {
@@ -3867,7 +3839,13 @@
       ctx.restore();
     }
 
+    let pendingThoughtBubbles = null;
     function drawCloudThoughtBubble(ctx, anchorX, anchorY, bubbleX, bubbleY, bubbleW, bubbleH, renderContentFn) {
+      if (pendingThoughtBubbles) {
+        if (bubbleX < 32 || bubbleX > 892 || bubbleY < 12 || bubbleY > 736) return;
+        pendingThoughtBubbles.push({ anchorX, anchorY, bubbleX, bubbleY, bubbleW, bubbleH, renderContentFn });
+        return;
+      }
       ctx.save();
       // Thought trail circles leading from person's head to cloud bubble
       const midX = anchorX + (bubbleX - anchorX) * 0.45;
@@ -4195,6 +4173,7 @@
     // --- TOP-DOWN RESTAURANT & SIDEROOM RENDERER ---
     function renderTopDownWorld(ctx, w, h, extraZoom = 1) {
       ctx.save();
+      pendingThoughtBubbles = [];
 
       // Fit the ENTIRE active room (x: 32..892, width 860; y: 12..736, height 724) so the WHOLE screen is visible AND fills the maximum possible screen area!
       const hudOffset = state.mode === 'play' ? (w < 640 ? 44 : 48) : 0;
@@ -4747,29 +4726,32 @@
       ctx.fillRect(892, 362, 16, 42);
       ctx.strokeRect(892, 362, 16, 42);
 
-      // 10. DETAILED KITCHEN EQUIPMENT (Walk-In Freezer, Marble Prep Table + Topping Rail, Flat Steel Double-Layer Deck Ovens, Triple Sink, Heated Pass)
-      // Walk-In Stainless Freezer/Cooler & Glass Drink Fridge
-      const fr = WORLD.fridgeStation;
-      ctx.fillStyle = '#cbd5e1';
-      ctx.fillRect(fr.x, fr.y, fr.w, fr.h);
-      ctx.strokeStyle = '#475569';
-      ctx.lineWidth = 3;
-      ctx.strokeRect(fr.x, fr.y, fr.w, fr.h);
-      // Glass beverage window showing colorful drinks inside
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(fr.x + 8, fr.y + 10, fr.w - 16, 42);
-      ['#ef4444', '#3b82f6', '#22c55e', '#eab308'].forEach((col, cIdx) => {
-        ctx.fillStyle = col;
-        ctx.fillRect(fr.x + 13 + cIdx * 15, fr.y + 16, 10, 14);
-        ctx.fillRect(fr.x + 13 + cIdx * 15, fr.y + 34, 10, 14);
-      });
-      ctx.fillStyle = '#0f172a';
-      ctx.font = 'bold 9.5px Inter, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('FREEZER / COOLER', fr.x + fr.w / 2, fr.y + 68);
-      ctx.font = '8.5px Inter, sans-serif';
-      ctx.fillStyle = '#334155';
-      ctx.fillText('Dough & Drinks (E)', fr.x + fr.w / 2, fr.y + 82);
+      // 10. DETAILED KITCHEN EQUIPMENT
+      // Separate stainless Dough Cooler and glass-front Drink Cooler.
+      const doughFr = WORLD.doughCooler;
+      ctx.fillStyle = '#cbd5e1'; ctx.fillRect(doughFr.x, doughFr.y, doughFr.w, doughFr.h);
+      ctx.strokeStyle = '#475569'; ctx.lineWidth = 3; ctx.strokeRect(doughFr.x, doughFr.y, doughFr.w, doughFr.h);
+      ctx.fillStyle = '#f8fafc'; ctx.fillRect(doughFr.x + 8, doughFr.y + 10, doughFr.w - 16, 42);
+      ctx.fillStyle = '#fbbf24'; ctx.beginPath(); ctx.ellipse(doughFr.x + doughFr.w / 2, doughFr.y + 31, 17, 12, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#d97706'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = '#0f172a'; ctx.font = 'bold 8.5px Inter, sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText('DOUGH COOLER', doughFr.x + doughFr.w / 2, doughFr.y + 68);
+      ctx.font = '8px Inter, sans-serif'; ctx.fillStyle = '#334155'; ctx.fillText('(Chef · E)', doughFr.x + doughFr.w / 2, doughFr.y + 82);
+
+      const drinkFr = WORLD.drinkCooler;
+      ctx.fillStyle = '#cbd5e1'; ctx.fillRect(drinkFr.x, drinkFr.y, drinkFr.w, drinkFr.h);
+      ctx.strokeStyle = '#475569'; ctx.lineWidth = 3; ctx.strokeRect(drinkFr.x, drinkFr.y, drinkFr.w, drinkFr.h);
+      ctx.fillStyle = '#0f172a'; ctx.fillRect(drinkFr.x + 7, drinkFr.y + 9, drinkFr.w - 14, 43);
+      ['#ef4444','#3b82f6','#22c55e','#eab308'].forEach((col,i) => { ctx.fillStyle = col; ctx.fillRect(drinkFr.x + 11 + i * 14, drinkFr.y + 16, 9, 13); ctx.fillRect(drinkFr.x + 11 + i * 14, drinkFr.y + 34, 9, 12); });
+      ctx.fillStyle = '#0f172a'; ctx.font = 'bold 8.5px Inter, sans-serif'; ctx.fillText('DRINK COOLER', drinkFr.x + drinkFr.w / 2, drinkFr.y + 68);
+      ctx.font = '8px Inter, sans-serif'; ctx.fillStyle = '#334155'; ctx.fillText('(Cashier / Waiter)', drinkFr.x + drinkFr.w / 2, drinkFr.y + 82);
+
+      // Kitchen trash can for discarding any held item.
+      const tr = WORLD.trashCan;
+      ctx.fillStyle = '#475569'; ctx.beginPath(); ctx.roundRect(tr.x + 4, tr.y + 9, tr.w - 8, tr.h - 9, 5); ctx.fill();
+      ctx.fillStyle = '#94a3b8'; ctx.fillRect(tr.x, tr.y + 5, tr.w, 7);
+      ctx.fillStyle = '#cbd5e1'; ctx.fillRect(tr.x + 12, tr.y + 18, 4, 27); ctx.fillRect(tr.x + 23, tr.y + 18, 4, 27); ctx.fillRect(tr.x + 34, tr.y + 18, 4, 27);
+      ctx.fillStyle = '#0f172a'; ctx.font = 'bold 8px Inter, sans-serif'; ctx.fillText('TRASH (E)', tr.x + tr.w / 2, tr.y + 55);
 
       // Marble Pizza Prep Table with Refrigerated Gastronorm Topping Pans
       const pt = WORLD.prepTable;
@@ -5005,8 +4987,8 @@
       ctx.font = 'bold 9px Inter, sans-serif';
       ctx.fillText('DISH SINK (Waiter)', sk.x + sk.w / 2, sk.y + 58);
 
-      // Stainless Heated Dine-In Pass Shelf with Warm Heat Lamp Glow
-      const dp = WORLD.dineInPassCounter;
+      // Stainless Heated Pizza Dropoff Shelf with Warm Heat Lamp Glow
+      const dp = WORLD.pizzaDropoff;
       ctx.fillStyle = '#64748b';
       ctx.fillRect(dp.x, dp.y, dp.w, dp.h);
       ctx.strokeStyle = '#fbbf24';
@@ -5015,13 +4997,14 @@
       // Warm infrared heat lamp bar
       ctx.fillStyle = 'rgba(249, 115, 22, 0.35)';
       ctx.fillRect(dp.x + 6, dp.y + 6, dp.w - 12, dp.h - 12);
-      // Draw mini Whole Pizza Pie icons waiting on the Heated Dine-In Pass
-      state.dineInPassPizzas.slice(0, 4).forEach((pzType, pIdx) => {
-        drawWholePizzaPieIcon(ctx, dp.x + 20 + pIdx * 23, dp.y + 17, pzType.id, 9);
+      // Draw mini Whole Pizza Pie icons waiting on the Heated Pizza Dropoff
+      state.pizzaDropoffItems.slice(0, 4).forEach((item, pIdx) => {
+        if (item.kind === 'whole') drawWholePizzaPieIcon(ctx, dp.x + 18 + pIdx * 22, dp.y + 17, item.pizzaType.id, 9);
+        else drawSingleSliceIcon(ctx, dp.x + 18 + pIdx * 22, dp.y + 17, item.pizzaType.id);
       });
       ctx.fillStyle = '#fef3c7';
       ctx.font = 'bold 9px Inter, sans-serif';
-      ctx.fillText(`DINE-IN PASS (${state.dineInPassPizzas.length})`, dp.x + dp.w / 2, dp.y + 38);
+      ctx.fillText(`PIZZA DROPOFF ${state.pizzaDropoffItems.length}/8`, dp.x + dp.w / 2, dp.y + 39);
 
       // 11. SIDEROOM DINING AREA (X: 918..1575, textured olive carpet, craft brew bar in top-right corner, wood tables with napkin caddies)
       ctx.fillStyle = '#233127'; // Deep woven forest/olive carpet from Photo 3
@@ -5270,6 +5253,11 @@
         }
       });
 
+      // Heated slice customers stage to the right of the cashier area while their order is being prepared.
+      state.heatWaitCustomers.forEach(cust => {
+        drawPersonSprite(ctx, { x: cust.x, y: cust.y, shirt: cust.shirt, hair: cust.hair || '#451a03', skin: cust.skin || '#fed7aa', facingAngle: cust.facingAngle || Math.PI, walkPhase: cust.walkPhase || 0, holding: null, roleHat: null });
+      });
+
       // 14. DRAW CUSTOMERS AT CASHIER REGISTERS WITH CLOUD THOUGHT BUBBLES (Drink Cup Icon + Receipt Icon)
       state.cashierSlots.forEach(cs => {
         if (!cs.customer) return;
@@ -5410,6 +5398,34 @@
       ctx.fillText('YOU', p.x, p.y - 30);
 
       // (Removed gray circle over Register 2)
+
+      // Draw every request bubble above characters and furniture; greedily shift crowded bubbles apart.
+      const placedBubbleRects = [];
+      const queuedBubbles = pendingThoughtBubbles || [];
+      pendingThoughtBubbles = null;
+      queuedBubbles.forEach(item => {
+        const candidates = [[0,0]];
+        for (let ring = 1; ring <= 10; ring++) {
+          const x = ring * 42, y = ring * 32;
+          candidates.push([0,-y],[0,y],[-x,0],[x,0],[-x,-y],[x,-y],[-x,y],[x,y]);
+        }
+        let chosen = candidates[0];
+        for (const [dx,dy] of candidates) {
+          const x = Math.max(44 + item.bubbleW / 2, Math.min(876 - item.bubbleW / 2, item.bubbleX + dx));
+          const y = Math.max(28 + item.bubbleH / 2, Math.min(728 - item.bubbleH / 2, item.bubbleY + dy));
+          const rect = { left:x-item.bubbleW/2-4, right:x+item.bubbleW/2+4, top:y-item.bubbleH/2-4, bottom:y+item.bubbleH/2+4 };
+          const overlaps = placedBubbleRects.some(other => rect.left < other.right && rect.right > other.left && rect.top < other.bottom && rect.bottom > other.top);
+          if (!overlaps) { chosen = [x-item.bubbleX,y-item.bubbleY]; break; }
+        }
+        const [dx,dy] = chosen;
+        const bx = item.bubbleX + dx, by = item.bubbleY + dy;
+        drawCloudThoughtBubble(ctx, item.anchorX, item.anchorY, bx, by, item.bubbleW, item.bubbleH, (cx,cy) => {
+          ctx.save(); ctx.translate(cx,cy); ctx.scale(1.12,1.12); ctx.translate(-cx,-cy);
+          item.renderContentFn(cx,cy);
+          ctx.restore();
+        });
+        placedBubbleRects.push({ left:bx-item.bubbleW/2-4, right:bx+item.bubbleW/2+4, top:by-item.bubbleH/2-4, bottom:by+item.bubbleH/2+4 });
+      });
 
       ctx.restore();
     }
