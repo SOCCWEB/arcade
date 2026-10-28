@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Bobby - 2D Platformer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -116,7 +116,15 @@
         }
         .mobile-control-btn.action { width: auto; height: 44px; padding: 0 9px; font-size: 11px; background: rgba(190,24,93,.9); }
         #mobile-controls > div { pointer-events: auto; }
-    </style>
+
+        @media (pointer: coarse) {
+            #mobile-controls { position: fixed; left: max(8px, env(safe-area-inset-left)); right: max(8px, env(safe-area-inset-right)); bottom: calc(8px + env(safe-area-inset-bottom)); box-sizing: border-box; }
+        }
+        @media (pointer: coarse) and (max-width: 360px) {
+            .mobile-control-btn { width: 48px; height: 48px; }
+            .mobile-control-btn.action { padding: 0 6px; font-size: 10px; }
+        }
+</style>
 </head>
 <body>
 

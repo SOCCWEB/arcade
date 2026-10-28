@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
   <title>Crabby's Ocean Quest — SOCC Arcade</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <style>
@@ -79,7 +79,13 @@
     .alien-glow {
       animation: alienGlow 2.5s infinite ease-in-out;
     }
-  </style>
+
+    @media (pointer: coarse) {
+      body { min-height: 100dvh; }
+      canvas { height: 100vh; height: 100dvh; }
+      #touchControls { display: flex !important; position: fixed; left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right)); bottom: calc(12px + env(safe-area-inset-bottom)); }
+    }
+</style>
 </head>
 <body class="w-screen h-screen relative bg-slate-900 select-none overflow-hidden">
 

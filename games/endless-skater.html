@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
   <title>Endless Skater — SOCC Arcade</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -68,7 +68,12 @@
       40% { transform: translateY(-10px) scale(1) rotate(-1deg); }
       100% { opacity: 0; transform: translateY(-40px) scale(0.9) rotate(0deg); }
     }
-  </style>
+
+    @media (pointer: coarse) {
+      body.h-screen, #game-container { height: 100vh; height: 100dvh; min-height: 0; }
+      #touch-controls { bottom: calc(12px + env(safe-area-inset-bottom)); left: max(8px, env(safe-area-inset-left)); right: max(8px, env(safe-area-inset-right)); padding-left: 0; padding-right: 0; }
+    }
+</style>
 </head>
 <body class="bg-slate-950 text-white w-screen h-screen m-0 p-0 overflow-hidden">
 

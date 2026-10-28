@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Stickgirl Candy Adventure — SOCC Arcade</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -11,6 +11,8 @@
         body {
             margin: 0;
             overflow: hidden;
+            height: 100vh;
+            height: 100dvh;
             background-color: #87CEEB; /* Sky blue */
             font-family: 'Fredoka One', cursive;
             user-select: none;
@@ -20,6 +22,7 @@
             position: relative;
             width: 100vw;
             height: 100vh;
+            height: 100dvh;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -90,7 +93,7 @@
             pointer-events: none;
             font-size: 18px;
         }
-        #mobile-controls { display: none; position: absolute; left: 10px; right: 10px; bottom: 10px; z-index: 5; justify-content: space-between; align-items: flex-end; pointer-events: none; }
+        #mobile-controls { display: none; position: fixed; left: max(10px, env(safe-area-inset-left)); right: max(10px, env(safe-area-inset-right)); bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 20; justify-content: space-between; align-items: flex-end; pointer-events: none; }
         #mobile-controls > div { display: flex; gap: 8px; pointer-events: auto; }
         .mobile-game-btn { width: 58px; height: 58px; border-radius: 18px; border: 3px solid white; color: white; background: rgba(15,23,42,.68); font-weight: 900; font-size: 20px; touch-action: none; user-select: none; -webkit-user-select: none; }
         .mobile-game-btn.action { width: 68px; font-size: 12px; background: rgba(225,29,72,.9); }

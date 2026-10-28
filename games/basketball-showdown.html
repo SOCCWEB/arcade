@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>2D Basketball Showdown - 1P & 2P Local</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <style>
@@ -71,7 +71,11 @@
       body.mobile-touch-game > footer { display: none; }
     }
     .mobile-player-controls button { touch-action: none; user-select: none; -webkit-user-select: none; }
-  </style>
+
+    @media (pointer: coarse) {
+      #mobileGameControls { position: fixed; left: max(8px, env(safe-area-inset-left)); right: max(8px, env(safe-area-inset-right)); bottom: calc(8px + env(safe-area-inset-bottom)); box-sizing: border-box; }
+    }
+</style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-between p-2 sm:p-4 bg-slate-950">
 

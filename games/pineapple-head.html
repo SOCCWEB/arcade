@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
   <title>Pineapple Head & Flower Man: New Hampshire & Cosmic Empire</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -69,7 +69,11 @@
     ::-webkit-scrollbar-thumb:hover {
       background: rgba(16, 185, 129, 0.7);
     }
-  </style>
+
+    @media (pointer: coarse) {
+      #touch-controls { display: flex !important; padding-top: max(16px, env(safe-area-inset-top)); padding-bottom: max(16px, env(safe-area-inset-bottom)); padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+    }
+</style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col overflow-x-hidden">
 
