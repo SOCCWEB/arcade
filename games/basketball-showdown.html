@@ -55,20 +55,40 @@
     #mobileGameControls { display: none; }
     body.mobile-touch-game #mobileGameControls { display: flex; }
     @media (max-width: 900px) and (orientation: landscape) {
-      body.mobile-touch-game { height: 100dvh; min-height: 0; overflow: hidden; padding: 4px !important; }
-      body.mobile-touch-game > header { gap: 2px; margin: 0; flex: 0 0 auto; }
-      body.mobile-touch-game > header > div:first-child { padding: 3px 6px; }
-      body.mobile-touch-game > header > div:first-child h1 { font-size: 12px; }
+      body.mobile-touch-game { position: relative; width: 100vw; height: 100dvh; min-height: 0; overflow: hidden; padding: 0 !important; }
+      body.mobile-touch-game > header { position: absolute; inset: 4px 4px auto; z-index: 20; width: auto; max-width: none; gap: 0; margin: 0; flex: none; pointer-events: none; }
+      body.mobile-touch-game > header > div { pointer-events: auto; }
+      body.mobile-touch-game > header > div:first-child { position: absolute; top: 0; left: 0; width: auto; padding: 2px 4px; border-radius: 8px; background: rgba(2,6,23,.68); }
+      body.mobile-touch-game > header > div:first-child h1,
+      body.mobile-touch-game > header > div:first-child #mode-text,
+      body.mobile-touch-game > header > div:first-child #sound-text,
+      body.mobile-touch-game > header > div:first-child #pause-text { display: none; }
+      body.mobile-touch-game > header > div:first-child > div { gap: 3px; }
       body.mobile-touch-game > header > div:first-child #btn-mode,
       body.mobile-touch-game > header > div:first-child #btn-sound,
       body.mobile-touch-game > header > div:first-child #btn-pause,
-      body.mobile-touch-game > header > div:first-child #btn-reset { padding: 3px 6px; font-size: 10px; }
-      body.mobile-touch-game > header > div:nth-child(2) { padding: 3px; }
-      body.mobile-touch-game > header .font-score { font-size: 1.8rem; }
-      body.mobile-touch-game > header .w-10.h-10 { width: 1.75rem; height: 1.75rem; border-width: 2px; font-size: 9px; }
-      body.mobile-touch-game main { flex: 1 1 auto; min-height: 0; margin: 2px 0 0; }
-      body.mobile-touch-game main > div { width: 100%; height: auto; max-height: 100%; aspect-ratio: 11 / 6.2; border-radius: 10px; }
+      body.mobile-touch-game > header > div:first-child #btn-reset { padding: 4px 6px; font-size: 10px; }
+      body.mobile-touch-game > header > div:nth-child(2) { position: absolute; top: 0; right: 0; display: flex; width: min(50vw, 360px); gap: 2px; padding: 2px 4px; border-width: 1px; border-radius: 8px; background: rgba(2,6,23,.74); }
+      body.mobile-touch-game > header > div:nth-child(2) > div { min-width: 0; padding-left: 2px; padding-right: 2px; gap: 3px; }
+      body.mobile-touch-game > header > div:nth-child(2) .font-score { font-size: 1.25rem; }
+      body.mobile-touch-game > header > div:nth-child(2) .w-10.h-10 { width: 1.35rem; height: 1.35rem; border-width: 1px; font-size: 8px; }
+      body.mobile-touch-game > header > div:nth-child(2) #match-period,
+      body.mobile-touch-game > header > div:nth-child(2) #lead-status,
+      body.mobile-touch-game > header > div:nth-child(2) .w-1\.5 { display: none; }
+      body.mobile-touch-game > header > div:nth-child(2) #game-clock { font-size: 1.1rem; padding: 0 4px; }
+      body.mobile-touch-game > header > div:nth-child(2) .flex.items-center.gap-1\.5.mt-1 { margin-top: 0; }
+      body.mobile-touch-game > header > div:nth-child(2) .flex.items-center.gap-1\.5.mt-1 > span:first-child { display: none; }
+      body.mobile-touch-game main { position: fixed; inset: 0; z-index: 0; width: 100vw; max-width: none; min-height: 0; margin: 0; }
+      body.mobile-touch-game main > div { width: 100%; height: 100%; max-height: none; aspect-ratio: auto; border: 0; border-radius: 0; }
       body.mobile-touch-game > footer { display: none; }
+      body.mobile-touch-game #mobileGameControls { inset: auto 0 max(4px, env(safe-area-inset-bottom)); align-items: end; gap: 4px; }
+      body.mobile-touch-game .mobile-player-controls { gap: 2px; padding: 2px; border-radius: 9px; background: rgba(2,6,23,.58); }
+      body.mobile-touch-game .mobile-player-controls button { width: 34px; height: 34px; border-radius: 7px; font-size: 11px; }
+      body.mobile-touch-game .mobile-player-controls button[data-key="KeyW"],
+      body.mobile-touch-game .mobile-player-controls button[data-key="Space"],
+      body.mobile-touch-game .mobile-player-controls button[data-key="ArrowUp"],
+      body.mobile-touch-game .mobile-player-controls button[data-key="Enter"] { height: 34px; padding: 0 5px; font-size: 8px; }
+      body.mobile-touch-game .mobile-player-controls > span { padding: 0 2px; }
     }
     .mobile-player-controls button { touch-action: none; user-select: none; -webkit-user-select: none; }
 

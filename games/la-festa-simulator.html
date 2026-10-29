@@ -160,6 +160,34 @@
         box-shadow: 0 3px 12px rgba(0,0,0,0.5);
       }
     }
+    /* Keep mobile kitchen tickets readable while leaving the room visible behind them. */
+    @media (pointer: coarse) and (max-width: 768px) {
+      body.mobile-gameplay #kitchenTicketsPanel {
+        width: 215px !important;
+        transform: scale(0.78) !important;
+        opacity: 0.84 !important;
+      }
+      body.mobile-gameplay .kitchen-ticket-paper {
+        padding: 5px 8px 5px 23px !important;
+        background-color: rgba(255, 254, 245, 0.62);
+        background-image:
+          linear-gradient(90deg, transparent 17px, rgba(239, 68, 68, 0.42) 17px, rgba(239, 68, 68, 0.42) 19px, transparent 19px),
+          repeating-linear-gradient(180deg, rgba(255, 254, 245, 0.58) 0px, rgba(255, 254, 245, 0.58) 16px, rgba(147, 197, 253, 0.28) 16px, rgba(147, 197, 253, 0.28) 17px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.28);
+      }
+      body.mobile-gameplay #ticketPanelTitle { font-size: 10px !important; }
+      body.mobile-gameplay #ticketCountBadge { padding: 1px 5px; font-size: 9px; }
+      body.mobile-gameplay #kitchenTicketsList { gap: 3px; }
+      body.mobile-gameplay #kitchenTicketsList > div {
+        gap: 5px;
+        padding: 3px 5px !important;
+        border-left-width: 3px;
+        background-color: rgba(255, 251, 235, 0.66) !important;
+      }
+      body.mobile-gameplay #kitchenTicketsList > div > div > div:first-child { font-size: 10px !important; }
+      body.mobile-gameplay #kitchenTicketsList > div > div > div:last-child { font-size: 9px !important; }
+      body.mobile-gameplay #kitchenTicketsList > div > span { width: 9px; height: 9px; }
+    }
     /* Scrollbar hide */
     .no-scrollbar::-webkit-scrollbar {
       display: none;
