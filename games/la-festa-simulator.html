@@ -201,6 +201,10 @@
       html, body { min-height: 100dvh; }
       #touchControls { bottom: calc(12px + env(safe-area-inset-bottom)) !important; left: max(8px, env(safe-area-inset-left)); right: max(8px, env(safe-area-inset-right)); padding-left: 0; padding-right: 0; }
     }
+    @media (max-width: 640px) and (orientation: portrait) {
+      #globalOvenMonitor { top: 82px; right: 6px; width: 142px; padding: 4px 5px; }
+      #globalOvenDecks { gap: 2px; font-size: 7px; }
+    }
 </style>
 </head>
 <body class="relative w-full h-full overflow-hidden select-none flex flex-col bg-[#161110]">
@@ -250,6 +254,14 @@
         🔊
       </button>
     </div>
+  </div>
+
+  <!-- Global oven monitor stays visible even when the player camera is elsewhere. -->
+  <div id="globalOvenMonitor" class="hidden fixed top-12 right-2 z-20 pointer-events-none w-40 sm:w-48 rounded-lg border border-orange-300/40 bg-stone-950/85 px-2 py-1.5 text-amber-50 shadow-lg backdrop-blur-sm">
+    <div class="mb-1 flex items-center justify-between text-[9px] font-black uppercase tracking-wider text-amber-200">
+      <span>🔥 Kitchen Ovens</span><span id="globalOvenSummary" class="text-orange-200">Ready</span>
+    </div>
+    <div id="globalOvenDecks" class="grid grid-cols-3 gap-1 text-[8px]"></div>
   </div>
 
   <!-- CHEF KITCHEN TICKETS OVERLAY (Moved lower to top-20 so it NEVER overlaps the top header bar, styled like lined kitchen ticket paper!) -->
@@ -398,7 +410,7 @@
               </div>
               <h3 class="mt-1.5 sm:mt-2 font-extrabold text-sm sm:text-lg text-white group-hover:text-purple-300">Waiter</h3>
               <p class="mt-1 text-[11px] sm:text-xs text-stone-300 leading-snug sm:leading-relaxed">
-                Seat parties in the Sideroom, carry up to 2 pies or 1 pie + 2 drinks, settle checks, and bus dishes to the sink!
+                Seat parties in the Sideroom, carry up to 2 pies or 4 drinks (even 1 pie + 4 drinks!), settle checks, and bus dishes to the sink!
               </p>
             </div>
             <div class="mt-2.5 sm:mt-3 pt-2 border-t border-white/10 flex items-center justify-between text-[11px] sm:text-xs font-extrabold text-purple-300">
@@ -1603,11 +1615,21 @@
             hold.pizzas.length ? `${hold.pizzas.length}x Pie (${pNames})` : '',
             hold.drinks.length ? `${hold.drinks.length}x Drink (${dNames})` : ''
           ].filter(Boolean).join(' & ');
-          const canAddInfo = (hold.pizzas.length === 1 && hold.drinks.length === 0)
-            ? ' (Can carry +1 Pie OR +2 Drinks!)'
-            : (hold.pizzas.length <= 1 && hold.drinks.length === 1)
-              ? ' (Can carry +1 Drink or +1 Pie!)'
-              : ' (Tray Full)';
+          const remainingDrinkSlots = Math.max(0, 4 - hold.drinks.length);
+          let canAddInfo;
+          if (hold.pizzas.length >= 2 || (hold.pizzas.length >= 1 && remainingDrinkSlots === 0)) {
+            canAddInfo = ' (Tray Full)';
+          } else if (hold.pizzas.length === 1 && hold.drinks.length === 0) {
+            canAddInfo = ' (Add 1 pie OR up to 4 drinks)';
+          } else if (hold.pizzas.length === 0 && hold.drinks.length === 0) {
+            canAddInfo = ' (Up to 2 pies OR 4 drinks)';
+          } else if (hold.pizzas.length === 0 && hold.drinks.length === 4) {
+            canAddInfo = ' (Add 1 pie)';
+          } else if (hold.pizzas.length === 0) {
+            canAddInfo = ` (${remainingDrinkSlots} more drink${remainingDrinkSlots === 1 ? '' : 's'} OR add 1 pie)`;
+          } else {
+            canAddInfo = ` (${remainingDrinkSlots} more drink${remainingDrinkSlots === 1 ? '' : 's'})`;
+          }
           objText.textContent = `Waiter Tray: ${summary}${canAddInfo} → Deliver to Sideroom Table`;
         } else if (hold.kind === 'slices') {
           holdIcon.textContent = '🍕';
@@ -1642,6 +1664,32 @@
         }
       }
       renderKitchenTicketsUI();
+      updateGlobalOvenMonitor();
+    }
+
+    function updateGlobalOvenMonitor() {
+      const panel = document.getElementById('globalOvenMonitor');
+      const list = document.getElementById('globalOvenDecks');
+      const summary = document.getElementById('globalOvenSummary');
+      if (!panel || !list || state.mode !== 'play') {
+        panel?.classList.add('hidden');
+        return;
+      }
+
+      panel.classList.remove('hidden');
+      const decks = state.ovens.flatMap((oven, ovenIndex) => oven.decks.map((deck, deckIndex) => ({
+        ovenIndex: ovenIndex + 1,
+        deckLabel: deckIndex === 0 ? 'A' : 'B',
+        deck
+      })));
+      const activeCount = decks.filter(({ deck }) => deck.item && deck.timer > 0).length;
+      const readyCount = decks.filter(({ deck }) => deck.item && deck.timer <= 0).length;
+      summary.textContent = readyCount ? `${readyCount} READY` : activeCount ? `${activeCount} HEATING` : 'ALL OPEN';
+      list.innerHTML = decks.map(({ ovenIndex, deckLabel, deck }) => {
+        const status = deck.item ? (deck.timer > 0 ? `${Math.ceil(deck.timer)}s` : 'READY!') : 'OPEN';
+        const tone = deck.item ? (deck.timer > 0 ? 'text-orange-200 border-orange-400/40 bg-orange-950/60' : 'text-emerald-200 border-emerald-300/50 bg-emerald-950/70 animate-pulse') : 'text-stone-400 border-stone-700 bg-stone-900/60';
+        return `<div class="rounded border px-1 py-1 text-center ${tone}"><b>${ovenIndex}${deckLabel}</b><br>${status}</div>`;
+      }).join('');
     }
 
     // --- PROXIMITY & INTERACTION SYSTEM (PRESS E) ---
@@ -1669,17 +1717,17 @@
     function canWaiterAddPizza(hold) {
       if (!hold) return true;
       if (hold.kind !== 'waiter_tray') return false;
-      // Waiter can hold up to 2 pizzas (if 0 drinks), or 1 pizza (if up to 2 drinks)
+      // Waiter can hold up to 2 pizzas without drinks, or 1 pizza with up to 4 drinks.
       if (hold.drinks.length === 0 && hold.pizzas.length < 2) return true;
-      if (hold.drinks.length <= 2 && hold.pizzas.length < 1) return true;
+      if (hold.drinks.length <= 4 && hold.pizzas.length < 1) return true;
       return false;
     }
 
     function canWaiterAddDrink(hold) {
       if (!hold) return true;
       if (hold.kind !== 'waiter_tray') return false;
-      // Waiter can hold up to 2 drinks as long as they have at most 1 pizza
-      if (hold.pizzas.length <= 1 && hold.drinks.length < 2) return true;
+      // Waiter can hold up to 4 drinks as long as they have at most 1 pizza.
+      if (hold.pizzas.length <= 1 && hold.drinks.length < 4) return true;
       return false;
     }
 
@@ -2233,7 +2281,7 @@
       }
       if (dist(px, py, drinkCenter.x, drinkCenter.y) < 90) {
         if (role === 'cashier') { if (hold) { showToast('Your hands are full! Deliver or throw away what you are holding first.'); return; } openFridgeMinigame(); return; }
-        if (role === 'waiter') { if (!canWaiterAddDrink(hold)) { SoundFX.error(); showToast('Waiter Tray Full! You can carry 1 Pizza + 2 Drinks (or 2 Pizzas with no drinks).'); return; } openFridgeMinigame(); return; }
+        if (role === 'waiter') { if (!canWaiterAddDrink(hold)) { SoundFX.error(); showToast('Waiter Tray Full! Carry up to 2 Pies, or 1 Pie + 4 Drinks (or 4 Drinks).'); return; } openFridgeMinigame(); return; }
         return denyWrongRole('Cashier or Waiter', 'grab drinks from the Drink Cooler');
       }
 
@@ -2273,7 +2321,7 @@
         if (role === 'waiter') {
           const pieIndex = state.pizzaDropoffItems.findIndex(item => item.kind === 'whole');
           if (pieIndex >= 0) {
-            if (!canWaiterAddPizza(hold)) { SoundFX.error(); showToast('Waiter Tray Full! You can carry at most 2 Pizzas (no drinks) OR 1 Pizza + 2 Drinks.'); return; }
+            if (!canWaiterAddPizza(hold)) { SoundFX.error(); showToast('Waiter Tray Full! Carry up to 2 Pies, or 1 Pie + 4 Drinks (or 4 Drinks).'); return; }
             const [item] = state.pizzaDropoffItems.splice(pieIndex, 1);
             addPizzaToWaiterTray(item.pizzaType); SoundFX.pop(); showToast(`Added ${item.pizzaType.name} to Waiter Tray!`); updateHUD(); return;
           }
@@ -2819,7 +2867,7 @@
             // If waiter can still carry another drink and a table needs more drinks, let them know or close modal
             state.activeMinigame = null;
             document.getElementById('fridgeMinigameModal').classList.add('hidden');
-            showToast(`Added ${drink.label} Drink to Waiter Tray (${tray.pizzas.length} Pie, ${tray.drinks.length}/2 Drinks)!`);
+            showToast(`Added ${drink.label} Drink to Waiter Tray (${tray.pizzas.length} Pie, ${tray.drinks.length}/4 Drinks)!`);
           } else {
             state.player.holding = { kind: 'drink', drink };
             state.activeMinigame = null;
@@ -3513,6 +3561,7 @@
           }
         });
       });
+      updateGlobalOvenMonitor();
 
       // Update Sideroom Tables eating timers
       state.tables.forEach(tbl => {
@@ -4393,12 +4442,12 @@
           ctx.fillRect(-8, -8, 16, 16);
           ctx.strokeRect(-8, -8, 16, 16);
         } else if (holding.kind === 'waiter_tray') {
-          // Large Waiter Serving Tray holding up to 2 Pizzas OR 1 Pizza + 2 Drinks
+          // Large Waiter Serving Tray holding up to 2 Pizzas OR 1 Pizza + 4 Drinks
           ctx.fillStyle = '#334155';
           ctx.strokeStyle = '#cbd5e1';
           ctx.lineWidth = 1.5;
           ctx.beginPath();
-          ctx.roundRect(-8, -14, 18, 28, 5);
+          ctx.roundRect(-12, -14, 26, 28, 5);
           ctx.fill();
           ctx.stroke();
 
@@ -4406,24 +4455,27 @@
           (holding.pizzas || []).forEach((pz, pIdx) => {
             const pyOff = holding.pizzas.length === 2 ? (pIdx === 0 ? -6 : 6) : (holding.drinks.length > 0 ? -5 : 0);
             ctx.beginPath();
-            ctx.arc(1, pyOff, 6.5, 0, Math.PI * 2);
+            ctx.arc(-5, pyOff, 6.5, 0, Math.PI * 2);
             ctx.fillStyle = '#fde68a';
             ctx.fill();
             ctx.strokeStyle = '#b45309';
             ctx.lineWidth = 1;
             ctx.stroke();
-            drawPizzaToppingsMini(ctx, 1, pyOff, 5.5, pz.id);
+            drawPizzaToppingsMini(ctx, -5, pyOff, 5.5, pz.id);
           });
 
           // Draw drinks on tray
           (holding.drinks || []).forEach((dr, dIdx) => {
-            const dxOff = dIdx === 0 ? -3 : 4;
-            const dyOff = holding.pizzas.length > 0 ? 6 : (dIdx === 0 ? -5 : 5);
+            const drinkSlots = [
+              { x: 3, y: -8 }, { x: 9, y: -8 },
+              { x: 3, y: 1 }, { x: 9, y: 1 }
+            ];
+            const { x: dxOff, y: dyOff } = drinkSlots[dIdx];
             ctx.fillStyle = dr.hex || '#3b82f6';
-            ctx.fillRect(dxOff - 3, dyOff - 3, 6, 7);
+            ctx.fillRect(dxOff - 2, dyOff - 2, 4, 5);
             ctx.strokeStyle = '#ffffff';
             ctx.lineWidth = 1;
-            ctx.strokeRect(dxOff - 3, dyOff - 3, 6, 7);
+            ctx.strokeRect(dxOff - 2, dyOff - 2, 4, 5);
           });
         } else if (holding.kind === 'escort_group') {
           // Menu clipboard held by Waiter while escorting guests

@@ -325,7 +325,7 @@
         <span class="text-xl">❄️</span>
         <div class="text-left leading-tight">
           <div class="font-extrabold uppercase tracking-wide">SABOTAGE!</div>
-          <div id="sabotageBtnSub" class="text-[10px] text-blue-100 font-normal">Freeze Opponent (Space)</div>
+          <div id="sabotageBtnSub" class="text-[10px] text-blue-100 font-normal">Freeze rival; keep collecting! (Space)</div>
         </div>
       </button>
     </div>
@@ -487,7 +487,8 @@
     let sabotagesUsed = 0;
 
     // Sabotage state
-    let oppFrozenTimer = 0; // counts down from 10 when active
+    const OPPONENT_FREEZE_SECONDS = 10;
+    let oppFrozenTimer = 0; // only gates rival movement and rival donut catches
     let sabotageCooldown = 0; // cooldown after freeze finishes
 
     // Controls input state
@@ -855,7 +856,7 @@
       if (oppFrozenTimer > 0) return; // already frozen
       if (sabotageCooldown > 0) return; // on cooldown
 
-      oppFrozenTimer = 10.0;
+      oppFrozenTimer = OPPONENT_FREEZE_SECONDS;
       sabotagesUsed++;
       sounds.playFreeze();
 
@@ -897,7 +898,7 @@
         btn.classList.remove('pulse-sabotage', 'bg-blue-600', 'hover:bg-blue-700');
         btn.classList.add('bg-cyan-500', 'hover:bg-cyan-600');
         btn.querySelector('div div').textContent = `FROZEN! (${Math.ceil(oppFrozenTimer)}s)`;
-        sub.textContent = 'Opponent is immobilized!';
+        sub.textContent = 'Rival frozen — you can still collect!';
         badge.innerHTML = `<span class="animate-pulse">❄️ OPPONENT FROZEN: ${Math.ceil(oppFrozenTimer)}s</span>`;
         badge.className = 'text-[10px] sm:text-xs font-bold mt-1 px-2 py-0.5 rounded-full bg-cyan-100 text-cyan-800 border border-cyan-400';
       } else if (sabotageCooldown > 0) {
@@ -911,7 +912,7 @@
         btn.classList.remove('bg-cyan-500', 'bg-slate-400');
         btn.classList.add('pulse-sabotage', 'bg-blue-600', 'hover:bg-blue-700');
         btn.querySelector('div div').textContent = `SABOTAGE!`;
-        sub.textContent = 'Freeze Opponent (Space)';
+        sub.textContent = 'Freeze rival; keep collecting! (Space)';
         badge.innerHTML = `<span>❄️ SPACEBAR: Ready</span>`;
         badge.className = 'text-[10px] sm:text-xs font-bold mt-1 px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-300';
       }
@@ -992,7 +993,7 @@
         }
       });
 
-      // Player movement
+      // Player movement always runs during a rival freeze so the player can collect uncontested.
       let moveDir = 0;
       if (keys.left) moveDir -= 1;
       if (keys.right) moveDir += 1;
@@ -1049,7 +1050,7 @@
         opponent.vx = 0; // Frozen completely!
       }
 
-      // Spawning donuts
+      // Donut spawning and falling continue during a rival freeze.
       donutSpawnTimer += dt;
       // Spawn every 0.65 to 0.9 seconds
       if (donutSpawnTimer > 0.75) {

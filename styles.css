@@ -252,6 +252,10 @@ body.is-leaving-for-game:after{content:"";position:fixed;z-index:10000;inset:0;b
 .game-actions-menu a:hover{background:#ffd45a;color:#382705}
 .featured-section .game-actions-menu{border-color:#ffd45a}
 .new-card .new-art{background:linear-gradient(145deg,color-mix(in srgb,var(--game-art-color,#7564f5) 78%,white),var(--game-art-color,#7564f5))!important}
+.recent-update-badge{position:absolute;top:7px;right:7px;z-index:4;display:inline-flex;align-items:center;gap:3px;padding:5px 6px;border:1px solid #fff0a8;border-radius:999px;background:#d3f36b;color:#211b39;font:800 6px/1 'DM Sans',sans-serif;letter-spacing:.25px;white-space:nowrap;box-shadow:0 2px 5px #100e2599}
+.game-thumb .recent-update-badge{top:7px;right:7px;font-size:5px;padding:4px 5px}
+.new-art .recent-update-badge{top:7px;right:7px}
+@media(max-width:560px){.game-thumb .recent-update-badge{top:5px;right:5px;font-size:5px;padding:4px 5px}}
 
 /* Keep the catalog's hover lift inside the horizontal scroll viewport. */
 .games-grid-wrap{padding-top:8px;margin-top:-8px}

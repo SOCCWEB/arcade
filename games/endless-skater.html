@@ -501,13 +501,13 @@
       </div>
     </div>
 
-    <!-- Tired / Quick Nap Notification Overlay -->
+    <!-- Silly wipeout notification overlay -->
     <div id="bail-overlay" class="absolute inset-0 z-20 pointer-events-none flex flex-col items-center justify-center opacity-0 transition-opacity duration-200">
-      <div class="text-4xl sm:text-6xl font-marker text-sky-300 drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] tracking-wider transform -rotate-3">
-        😴 WHEW! TIRED... Zzz
+      <div class="text-4xl sm:text-6xl font-marker text-amber-300 drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] tracking-wider transform -rotate-3">
+        🐥 PLOP! BOARD MEETING!
       </div>
-      <div class="text-sm sm:text-base font-bold text-sky-100 bg-slate-900/90 px-4 py-1.5 rounded-full border border-sky-400/50 mt-2">
-        Taking a quick rest! Straighten your board before landing!
+      <div class="text-sm sm:text-base font-bold text-amber-100 bg-slate-900/90 px-4 py-1.5 rounded-full border border-amber-400/50 mt-2">
+        A tiny bird called dibs on your skateboard!
       </div>
     </div>
 
@@ -651,19 +651,20 @@
             osc.start(now);
             osc.stop(now + 0.35);
           } else if (type === 'bail') {
-            // Cute sleepy yawn / lullaby notes (G4 -> E4 -> C4)
-            const sleepyNotes = [392.00, 329.63, 261.63];
-            sleepyNotes.forEach((freq, idx) => {
+            // Gentle cartoon boing with a squeaky finish.
+            const boingNotes = [220, 440, 330];
+            boingNotes.forEach((freq, idx) => {
               const osc = audioCtx.createOscillator();
               const gain = audioCtx.createGain();
-              osc.type = 'sine';
+              osc.type = 'triangle';
               osc.frequency.setValueAtTime(freq, now + idx * 0.14);
-              gain.gain.setValueAtTime(0.22, now + idx * 0.14);
-              gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.14 + 0.25);
+              osc.frequency.exponentialRampToValueAtTime(freq * 0.72, now + idx * 0.14 + 0.13);
+              gain.gain.setValueAtTime(0.18, now + idx * 0.14);
+              gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.14 + 0.2);
               osc.connect(gain);
               gain.connect(audioCtx.destination);
               osc.start(now + idx * 0.14);
-              osc.stop(now + idx * 0.14 + 0.25);
+              osc.stop(now + idx * 0.14 + 0.2);
             });
           } else if (type === 'levelup') {
             // Triumphant 4-note arpeggio fanfare C5 -> E5 -> G5 -> C6
@@ -1574,7 +1575,7 @@
 
         playSound('bail');
 
-        // Show sleepy rest overlay
+        // Show the playful wipeout overlay.
         const bailOverlay = document.getElementById('bail-overlay');
         bailOverlay.classList.remove('opacity-0');
         setTimeout(() => bailOverlay.classList.add('opacity-0'), 1600);
@@ -1586,16 +1587,16 @@
         skater.y = groundY;
         skater.isGrounded = true;
 
-        // Soft sleepy dream bubbles
-        for (let i = 0; i < 10; i++) {
+        // Toss up a few bright comic-book stars around the harmless tumble.
+        for (let i = 0; i < 8; i++) {
           addParticle(
-            skater.worldX + (Math.random() - 0.5) * 20,
-            skater.y - 15 - Math.random() * 15,
-            (Math.random() - 0.5) * 1.5,
-            -Math.random() * 2 - 0.5,
-            i % 2 === 0 ? '#7dd3fc' : '#e0f2fe',
-            3,
-            0.9
+            skater.worldX + (Math.random() - 0.5) * 34,
+            skater.y - 18 - Math.random() * 20,
+            (Math.random() - 0.5) * 2.2,
+            -Math.random() * 2.5 - 0.6,
+            ['#fde047', '#fb7185', '#60a5fa', '#34d399'][i % 4],
+            4,
+            1
           );
         }
       }
@@ -2859,9 +2860,7 @@
         ctx.lineJoin = 'round';
 
         if (state.isBailed) {
-          // Kid-friendly tired / resting pose sitting on the skateboard with floating "Zzz"
-          const t = Date.now() * 0.005;
-          const breathOffset = Math.sin(t * 1.5) * 1.2;
+          // Goofy harmless sit-down after a tumble, with a surprised face.
 
           // Sitting legs stretched forward on the board
           ctx.beginPath();
@@ -2870,80 +2869,74 @@
           ctx.lineTo(20, 3);
           ctx.stroke();
 
-          // Leaning back torso resting on one arm
+          // Leaning back torso after the surprise landing
           ctx.beginPath();
           ctx.moveTo(-6, 4);
-          ctx.lineTo(-12, -14 + breathOffset);
+          ctx.lineTo(-12, -14);
           ctx.stroke();
 
-          // Supporting arm resting on deck behind back
+          // One arm gives a tiny "ta-da!" shrug
           ctx.beginPath();
-          ctx.moveTo(-12, -12 + breathOffset);
-          ctx.lineTo(-22, 4);
+          ctx.moveTo(-12, -12);
+          ctx.lineTo(-23, -21);
           ctx.stroke();
 
-          // Other arm resting on lap
+          // Other arm points at the little board guest
           ctx.beginPath();
-          ctx.moveTo(-10, -10 + breathOffset);
-          ctx.lineTo(4, 1);
+          ctx.moveTo(-10, -10);
+          ctx.lineTo(17, -3);
           ctx.stroke();
 
-          // Nodding sleepy head
-          const sleepHeadX = -10;
-          const sleepHeadY = -24 + breathOffset;
+          const funnyHeadX = -10;
+          const funnyHeadY = -24;
           ctx.fillStyle = '#f8fafc';
           ctx.beginPath();
-          ctx.arc(sleepHeadX, sleepHeadY, 7, 0, Math.PI * 2);
+          ctx.arc(funnyHeadX, funnyHeadY, 7, 0, Math.PI * 2);
           ctx.fill();
 
-          // Cap tilted down while napping
+          // Crooked cap from the tumble
           ctx.fillStyle = '#ef4444';
           ctx.beginPath();
-          ctx.arc(sleepHeadX, sleepHeadY - 1, 7.5, Math.PI * 0.75, Math.PI * 1.95);
-          ctx.lineTo(sleepHeadX + 11, sleepHeadY + 1);
+          ctx.arc(funnyHeadX, funnyHeadY - 1, 7.5, Math.PI * 0.75, Math.PI * 1.95);
+          ctx.lineTo(funnyHeadX + 11, funnyHeadY + 1);
           ctx.closePath();
           ctx.fill();
 
-          // Closed peaceful sleeping eye
-          ctx.strokeStyle = '#0f172a';
-          ctx.lineWidth = 1.8;
+          // Wide eyes and a tiny "oops" mouth
+          ctx.fillStyle = '#0f172a';
           ctx.beginPath();
-          ctx.arc(sleepHeadX + 3, sleepHeadY + 1, 2.2, 0.1 * Math.PI, 0.9 * Math.PI);
-          ctx.stroke();
-
-          // Expanding/contracting cute blue sleep bubble
-          const bubbleRadius = 3.2 + Math.sin(t * 2) * 1.5;
-          ctx.fillStyle = 'rgba(186, 230, 253, 0.75)';
-          ctx.strokeStyle = '#38bdf8';
-          ctx.lineWidth = 1.2;
-          ctx.beginPath();
-          ctx.arc(sleepHeadX + 10, sleepHeadY + 3, bubbleRadius, 0, Math.PI * 2);
+          ctx.arc(funnyHeadX - 2, funnyHeadY + 1, 1, 0, Math.PI * 2);
+          ctx.arc(funnyHeadX + 3, funnyHeadY + 1, 1, 0, Math.PI * 2);
           ctx.fill();
-          ctx.stroke();
+          ctx.fillStyle = '#fb7185';
+          ctx.beginPath();
+          ctx.arc(funnyHeadX + 1, funnyHeadY + 4, 1.3, 0, Math.PI * 2);
+          ctx.fill();
 
-          // Floating "z", "Z", "Z" rising above the skater
+          // A tiny yellow bird has mistaken the board for a perch.
+          ctx.fillStyle = '#fde047';
+          ctx.beginPath();
+          ctx.arc(28, 2, 4, 0, Math.PI * 2);
+          ctx.arc(31, -2, 2.8, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#f97316';
+          ctx.beginPath();
+          ctx.moveTo(33, -2);
+          ctx.lineTo(37, -1);
+          ctx.lineTo(33, 1);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = '#0f172a';
+          ctx.beginPath();
+          ctx.arc(31, -3, 0.7, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.font = 'bold 9px sans-serif';
           ctx.textAlign = 'center';
-          const zItems = [
-            { text: 'z', size: 13, offset: 0 },
-            { text: 'Z', size: 17, offset: 0.33 },
-            { text: 'Z', size: 22, offset: 0.66 }
-          ];
-          zItems.forEach((item, idx) => {
-            const cycle = ((Date.now() * 0.0008) + item.offset) % 1;
-            const zx = sleepHeadX + 6 + idx * 8 + Math.sin(cycle * Math.PI * 2 + idx) * 5;
-            const zy = sleepHeadY - 12 - cycle * 38;
-            const alpha = Math.sin(cycle * Math.PI);
-
-            ctx.save();
-            ctx.globalAlpha = Math.max(0, alpha);
-            ctx.font = `bold ${item.size}px "Fredoka One", cursive`;
-            ctx.fillStyle = idx === 2 ? '#fde047' : '#7dd3fc';
-            ctx.strokeStyle = '#0f172a';
-            ctx.lineWidth = 3;
-            ctx.strokeText(item.text, zx, zy);
-            ctx.fillText(item.text, zx, zy);
-            ctx.restore();
-          });
+          ctx.fillStyle = '#fef08a';
+          ctx.strokeStyle = '#0f172a';
+          ctx.lineWidth = 2;
+          ctx.strokeText('?', 38, -8);
+          ctx.fillText('?', 38, -8);
 
           ctx.restore();
           return;
