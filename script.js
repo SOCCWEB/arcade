@@ -14,7 +14,7 @@ const games = [
   {number:9,title:'FortMorning',creator:'AC',laptop:true,mobile:false,art:'🪓',color:'#72a936',href:'games/fortmorning.html',updatedAt:'2026-10-28'},
   {number:10,title:'Pineapple Head',creator:'ML',laptop:true,mobile:true,art:'🍍',color:'#e5b83e',href:'games/pineapple-head.html',updatedAt:'2026-10-29'},
   {number:11,title:'La Festa Simulator',featured:true,featuredOrder:1,creator:'JP',laptop:true,mobile:true,art:'🍕',color:'#ca5946',href:'games/la-festa-simulator.html',updatedAt:'2026-10-31'},
-  {number:12,title:'Bobby Game',creator:'CB',laptop:true,mobile:false,art:'⛏️',color:'#56a6b5',href:'games/bobby-game.html',updatedAt:'2026-10-28'},
+  {number:12,title:'Bobby Game',creator:'CB',laptop:true,mobile:false,art:'⛏️',color:'#56a6b5',href:'games/bobby-game.html',updatedAt:'2026-11-08'},
   {number:13,title:'BasketBall Showdown',creator:'MS',laptop:true,mobile:false,art:'🏀',color:'#5680c5',href:'games/basketball-showdown.html',updatedAt:'2026-10-29'},
   ...Array.from({length:32},(_,i)=>({number:i+14,title:`Game slot ${String(i+14).padStart(2,'0')}`,creator:'SOCC Creator',laptop:true,mobile:true}))
 ];

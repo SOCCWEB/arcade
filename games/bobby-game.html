@@ -101,6 +101,27 @@
             background: linear-gradient(90deg, #ff4757, #ff6b81);
             transition: width 0.2s;
         }
+        #action-toast {
+            position: fixed;
+            top: auto;
+            bottom: calc(118px + env(safe-area-inset-bottom));
+            left: 50%;
+            transform: translateX(-50%) translateY(-8px);
+            z-index: 15;
+            padding: 9px 16px;
+            border: 1px solid rgba(125,249,255,.65);
+            border-radius: 999px;
+            background: rgba(7, 16, 42, .88);
+            color: #e6fcff;
+            font: 700 14px/1.2 Inter, sans-serif;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0,220,255,.28);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .18s ease, transform .18s ease;
+        }
+        #action-toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+        #action-toast.warning { border-color: rgba(255,190,80,.75); color: #fff0c4; box-shadow: 0 0 20px rgba(255,150,20,.22); }
         #mobile-controls { display: none; }
         @media (max-width: 800px) and (pointer: coarse) {
             #mobile-controls { display: flex; }
@@ -136,11 +157,10 @@
             <div class="ui-box" id="charges-ui">Charges: ⚡ 0</div><br>
             <div class="ui-box" id="inventory-ui">Inventory: [Empty]</div><br>
             <div class="ui-box text-sm font-normal">
-                WASD/Arrows to move & jump.<br>
-                'E' to Mine/Pickup block.<br>
-                'T' to Throw Block from Inventory.<br>
-                'Q' Slam Drop (3 ⚡)<br>
-                'F' Laser (5 ⚡)
+                WASD/Arrows move; hold Jump for a higher leap.<br>
+                'E' picks up nearby blocks (not lava).<br>
+                'T' throws the next block in your pack.<br>
+                'Q' slam in midair (3 ⚡); 'F' laser (5 ⚡).
             </div>
         </div>
         <div id="boss-health-container">
@@ -150,6 +170,7 @@
             </div>
         </div>
     </div>
+    <div id="action-toast" role="status" aria-live="polite"></div>
 
     <div id="mobile-controls" class="fixed inset-x-0 bottom-2 z-10 items-end justify-between px-3 pointer-events-none">
         <div class="grid grid-cols-3 gap-1.5 pointer-events-auto">
@@ -157,7 +178,7 @@
             <button class="mobile-control-btn" data-key="ArrowLeft">◀</button><button class="mobile-control-btn" data-key="ArrowDown">▼</button><button class="mobile-control-btn" data-key="ArrowRight">▶</button>
         </div>
         <div class="grid grid-cols-2 gap-1.5 pointer-events-auto max-w-[55vw]">
-            <button class="mobile-control-btn action" data-action="KeyE">MINE</button>
+            <button class="mobile-control-btn action" data-action="KeyE">PICK UP</button>
             <button class="mobile-control-btn action" data-action="KeyT">THROW</button>
             <button class="mobile-control-btn action" data-action="KeyQ">SLAM</button>
             <button class="mobile-control-btn action" data-action="KeyF">LASER</button>
@@ -183,6 +204,8 @@
     const messageOverlay = document.getElementById('message-overlay');
     const messageTitle = document.getElementById('message-title');
     const messageText = document.getElementById('message-text');
+    const actionToast = document.getElementById('action-toast');
+    let actionToastTimer;
 
     let w, h;
     function resize() {
@@ -194,13 +217,15 @@
 
     // Game Constants
     const TILE_SIZE = 50;
-    const GRAVITY = 0.6;
+    const GRAVITY = 0.58;
     const FRICTION = 0.8;
-    const JUMP_FORCE = -13;
+    const JUMP_FORCE = -15.5;
+    const JUMP_HOLD_FORCE = 0.24;
+    const MAX_JUMP_HOLD_FRAMES = 12;
     const SPEED = 6;
     const MAX_HEARTS = 10;
 
-    // Tile Types: 0:Empty, 1:Grass/Stone, 2:Dirt, 3:Lava, 4:TNT
+    // Tile Types: 0:Empty, 1:Stone/Grass, 2:Dirt, 3:Lava (hazard), 4:TNT
     const COLORS = {
         1: '#55aa55', // Grass
         2: '#8b4513', // Dirt
@@ -212,8 +237,20 @@
     let camera = { x: 0, y: 0 };
     let keys = {};
 
-    window.addEventListener('keydown', e => { keys[e.code] = true; handleSinglePress(e.code); });
-    window.addEventListener('keyup', e => keys[e.code] = false);
+    const jumpCodes = ['ArrowUp', 'KeyW', 'Space'];
+    function isJumpHeld() { return jumpCodes.some(code => keys[code]); }
+    function cutJumpIfReleased() {
+        if (!isJumpHeld() && player) player.cutJump();
+    }
+    window.addEventListener('keydown', e => {
+        const wasDown = keys[e.code];
+        keys[e.code] = true;
+        if (!e.repeat && !wasDown) handleSinglePress(e.code);
+    });
+    window.addEventListener('keyup', e => {
+        keys[e.code] = false;
+        if (jumpCodes.includes(e.code)) cutJumpIfReleased();
+    });
     document.querySelectorAll('#mobile-controls [data-key], #mobile-controls [data-action]').forEach(button => {
         const code = button.dataset.key || button.dataset.action;
         button.addEventListener('pointerdown', e => {
@@ -222,15 +259,18 @@
             keys[code] = true;
             if (button.dataset.action) handleSinglePress(code);
         });
-        const release = e => { if (e) e.preventDefault(); keys[code] = false; };
+        const release = e => {
+            if (e) e.preventDefault();
+            keys[code] = false;
+            if (jumpCodes.includes(code)) cutJumpIfReleased();
+        };
         button.addEventListener('pointerup', release);
         button.addEventListener('pointercancel', release);
         button.addEventListener('lostpointercapture', release);
     });
     window.addEventListener('blur', () => {
-        document.querySelectorAll('#mobile-controls [data-key], #mobile-controls [data-action]').forEach(button => {
-            keys[button.dataset.key || button.dataset.action] = false;
-        });
+        keys = {};
+        cutJumpIfReleased();
     });
 
     // Level map
@@ -247,6 +287,21 @@
     let particles = [];
     let activeEffects = []; 
     let asteroids = [];
+    let slamWaves = [];
+    let screenShake = 0;
+
+    function showActionToast(message, warning = false) {
+        actionToast.textContent = message;
+        actionToast.classList.toggle('warning', warning);
+        actionToast.classList.add('visible');
+        clearTimeout(actionToastTimer);
+        actionToastTimer = setTimeout(() => actionToast.classList.remove('visible'), 1350);
+    }
+
+    function createSlamWave(x, y) {
+        slamWaves.push({ x, y, radius: 14, life: 24, maxLife: 24 });
+        screenShake = 10;
+    }
 
     class Player {
         constructor(x, y) {
@@ -262,12 +317,17 @@
             this.inventory = [];
             this.facing = 1; // 1 right, -1 left
             this.invulnTimer = 0;
-            this.slimming = false;
+            this.slamming = false;
+            this.jumpHoldFrames = 0;
+            this.slamCooldown = 0;
+            this.laserCooldown = 0;
             this.phase = 1; // Phase changes based on health
         }
 
         update() {
             if (this.invulnTimer > 0) this.invulnTimer--;
+            if (this.slamCooldown > 0) this.slamCooldown--;
+            if (this.laserCooldown > 0) this.laserCooldown--;
 
             // Phase update
             this.phase = this.hearts <= 3 ? 2 : 1;
@@ -277,33 +337,25 @@
             if (keys['ArrowRight'] || keys['KeyD']) { this.vx += 1.2; this.facing = 1; }
             
             this.vx *= FRICTION;
-            if (Math.abs(this.vx) < 0.01) this.vx = 0; // Stops float drift
+            if (Math.abs(this.vx) < 0.01) this.vx = 0;
 
-            // Jump
-            if ((keys['ArrowUp'] || keys['KeyW'] || keys['Space']) && this.grounded && !this.slimming) {
+            // A held jump adds lift; releasing the key cuts the jump early.
+            if (isJumpHeld() && this.grounded && !this.slamming) {
                 this.vy = JUMP_FORCE;
                 this.grounded = false;
-                createParticles(this.x + this.width/2, this.y + this.height, '#fff', 5);
+                this.jumpHoldFrames = 0;
+                createParticles(this.x + this.width/2, this.y + this.height, '#dffcff', 9, 1.2);
+            }
+            if (isJumpHeld() && this.vy < 0 && this.jumpHoldFrames < MAX_JUMP_HOLD_FRAMES) {
+                this.vy -= JUMP_HOLD_FORCE;
+                this.jumpHoldFrames++;
             }
 
-            // Slam mechanics
-            if (this.slimming) {
-                this.vy += GRAVITY * 3; // Fast fall
-                if (this.grounded) {
-                    this.slimming = false;
-                    createParticles(this.x + this.width/2, this.y + this.height, '#fff', 30);
-                    // Damage nearby enemies
-                    enemies.forEach(e => {
-                        if (Math.abs(e.x - this.x) < 150) e.takeDamage(3);
-                    });
-                    if (boss && Math.abs(boss.x - this.x) < 200) boss.takeDamage(3);
-                }
-            } else {
-                this.vy += GRAVITY;
-            }
+            if (this.slamming) this.vy = Math.min(this.vy + GRAVITY * 4.5, 28);
+            else this.vy += GRAVITY;
 
             // Limits
-            let currentSpeed = this.phase === 2 ? SPEED * 1.2 : SPEED; // Faster when low health
+            let currentSpeed = this.phase === 2 ? SPEED * 1.2 : SPEED;
             if (this.vx > currentSpeed) this.vx = currentSpeed;
             if (this.vx < -currentSpeed) this.vx = -currentSpeed;
 
@@ -316,11 +368,31 @@
             this.grounded = false;
             this.checkCollision(false);
 
+            // Resolve the slam after collision detection reports a landing.
+            if (this.slamming && this.grounded) {
+                this.slamming = false;
+                this.slamCooldown = 30;
+                const impactX = this.x + this.width / 2;
+                const impactY = this.y + this.height;
+                createSlamWave(impactX, impactY);
+                createParticles(impactX, impactY, '#7df9ff', 34, 2.2);
+                enemies.forEach(e => {
+                    if (Math.abs((e.x + e.width / 2) - impactX) < 165 && Math.abs((e.y + e.height) - impactY) < 110) e.takeDamage(4);
+                });
+                if (boss && Math.abs((boss.x + boss.width / 2) - impactX) < 210 && Math.abs((boss.y + boss.height) - impactY) < 150) boss.takeDamage(4);
+                showActionToast('SLAM! Ground shockwave!');
+            }
+
             // Bounds check
-            if (this.y > MAP_HEIGHT * TILE_SIZE) this.takeDamage(10); // fall off map
+            if (this.y > MAP_HEIGHT * TILE_SIZE) this.takeDamage(10);
             if (this.x < 0) this.x = 0;
 
             updateUI();
+        }
+
+        cutJump() {
+            if (this.vy < -4) this.vy *= 0.55;
+            this.jumpHoldFrames = MAX_JUMP_HOLD_FRAMES;
         }
 
         checkCollision(isX) {
@@ -800,20 +872,30 @@
     }
 
     class Projectile {
-        constructor(x, y, vx, vy, type) {
+        constructor(x, y, vx, vy, type, facing = 1) {
             this.x = x;
             this.y = y;
             this.vx = vx;
             this.vy = vy;
             this.type = type;
-            this.width = type === 'laser' ? w : 16;
-            this.height = type === 'laser' ? 24 : 16;
-            this.life = type === 'laser' ? 20 : 200;
+            this.facing = facing;
+            if (type === 'laser') {
+                this.width = Math.max(0, Math.min(680, facing > 0 ? MAP_WIDTH * TILE_SIZE - x : x));
+                if (facing < 0) this.x -= this.width;
+                this.y -= 13;
+                this.height = 26;
+                this.life = 16;
+                this.hitApplied = false;
+            } else {
+                this.width = 20;
+                this.height = 20;
+                this.life = 200;
+            }
         }
         update() {
             this.life--;
             if (this.type !== 'laser') {
-                if (this.type === 'bomb' || this.type === 'thrown_dirt' || this.type === 'thrown_tnt') {
+                if (this.type === 'bomb' || this.type === 'thrown_stone' || this.type === 'thrown_dirt' || this.type === 'thrown_tnt') {
                     this.vy += GRAVITY;
                 }
                 this.x += this.vx;
@@ -827,27 +909,35 @@
                 }
 
                 // Collision with enemies (if player thrown block)
-                if (this.type === 'thrown_dirt' || this.type === 'thrown_tnt') {
+                if (this.type === 'thrown_stone' || this.type === 'thrown_dirt' || this.type === 'thrown_tnt') {
+                    const damage = this.type === 'thrown_tnt' ? 6 : this.type === 'thrown_stone' ? 3 : 2;
                     enemies.forEach(e => {
                         if (rectIntersect(this, e)) {
-                            e.takeDamage(this.type === 'thrown_tnt' ? 6 : 2);
+                            e.takeDamage(damage);
                             this.life = 0;
-                            createParticles(this.x, this.y, this.type === 'thrown_tnt' ? 'red' : 'brown', 20);
+                            createParticles(this.x, this.y, this.type === 'thrown_tnt' ? '#ff4757' : this.type === 'thrown_stone' ? '#d3e6eb' : '#b87940', 22, 1.5);
                         }
                     });
                     if (boss && rectIntersect(this, boss)) {
-                        boss.takeDamage(this.type === 'thrown_tnt' ? 6 : 2);
+                        boss.takeDamage(damage);
                         this.life = 0;
-                        createParticles(this.x, this.y, 'orange', 20);
+                        createParticles(this.x, this.y, '#ffb347', 22, 1.5);
                     }
                 }
 
-            } else {
-                // Laser logic
+            } else if (!this.hitApplied) {
+                // Resolve one clean hit per beam, then keep the beam alive as a visual effect.
                 enemies.forEach(e => {
-                    if (rectIntersect(this, e)) e.takeDamage(7);
+                    if (rectIntersect(this, e)) {
+                        e.takeDamage(5);
+                        createParticles(e.x + e.width / 2, e.y + e.height / 2, '#82f7ff', 14, 1.6);
+                    }
                 });
-                if (boss && rectIntersect(this, boss)) boss.takeDamage(7);
+                if (boss && rectIntersect(this, boss)) {
+                    boss.takeDamage(5);
+                    createParticles(boss.x + boss.width / 2, boss.y + boss.height / 2, '#82f7ff', 20, 1.6);
+                }
+                this.hitApplied = true;
             }
         }
         draw(ctx) {
@@ -862,19 +952,49 @@
                 ctx.strokeStyle = '#fff';
                 ctx.beginPath(); ctx.moveTo(this.x, this.y-14); ctx.lineTo(this.x+4, this.y-20); ctx.stroke();
             } else if (this.type === 'laser') {
-                ctx.fillStyle = `rgba(0, 255, 255, ${this.life/20})`;
-                ctx.fillRect(this.x, this.y, this.width, this.height);
-                ctx.fillStyle = 'white';
-                ctx.fillRect(this.x, this.y+6, this.width, 12);
+                const alpha = Math.max(0, this.life / 16);
+                const pulse = 0.82 + Math.sin(Date.now() / 28) * 0.18;
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.shadowColor = '#00efff';
+                ctx.shadowBlur = 28;
+                ctx.fillStyle = `rgba(0, 224, 255, ${pulse})`;
+                ctx.fillRect(this.x, this.y + 3, this.width, this.height - 6);
+                ctx.shadowBlur = 10;
+                ctx.fillStyle = '#f2ffff';
+                ctx.fillRect(this.x, this.y + 9, this.width, 8);
+                ctx.fillStyle = '#4bfbff';
+                ctx.beginPath();
+                ctx.arc(this.facing > 0 ? this.x + this.width : this.x, this.y + this.height / 2, 13 + Math.sin(Date.now() / 25) * 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            } else if (this.type === 'thrown_stone') {
+                ctx.save();
+                ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
+                ctx.rotate(Date.now() / 95);
+                ctx.fillStyle = '#9aaeb8';
+                ctx.strokeStyle = '#e5f0f4';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(-10, -6); ctx.lineTo(-3, -10); ctx.lineTo(9, -5); ctx.lineTo(8, 7); ctx.lineTo(-4, 10); ctx.lineTo(-10, 3);
+                ctx.closePath(); ctx.fill(); ctx.stroke();
+                ctx.restore();
             } else if (this.type === 'thrown_dirt') {
-                ctx.fillStyle = COLORS[2];
-                ctx.fillRect(this.x, this.y, 20, 20);
+                ctx.fillStyle = '#a76532';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                ctx.fillStyle = '#e0a45f';
+                ctx.fillRect(this.x + 4, this.y + 4, 4, 4);
             } else if (this.type === 'thrown_tnt') {
+                ctx.save();
+                ctx.shadowColor = '#ff334f';
+                ctx.shadowBlur = 8 + Math.sin(Date.now() / 35) * 5;
                 ctx.fillStyle = COLORS[4];
                 ctx.fillRect(this.x, this.y, 20, 20);
                 ctx.fillStyle = 'white';
-                ctx.font = '10px Arial';
-                ctx.fillText('TNT', this.x+2, this.y+14);
+                ctx.font = 'bold 10px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('TNT', this.x + 10, this.y + 14);
+                ctx.restore();
             }
         }
     }
@@ -1017,31 +1137,42 @@
         if (gameState !== 'playing') return;
 
         if (code === 'KeyE') {
-            // Mine block or Pickup
-            let c = Math.floor((player.x + player.width/2 + player.facing * TILE_SIZE) / TILE_SIZE);
-            let r = Math.floor((player.y + player.height/2) / TILE_SIZE);
-            
-            let tile = getTile(c, r);
-            if (tile !== 0) {
-                if (tile === 2) {
-                    player.inventory.push('dirt');
-                    setTile(c, r, 0);
-                    createParticles(c*TILE_SIZE + TILE_SIZE/2, r*TILE_SIZE + TILE_SIZE/2, COLORS[2], 15);
-                } else if (tile === 4) {
-                    player.inventory.push('tnt');
-                    setTile(c, r, 0);
-                    createParticles(c*TILE_SIZE + TILE_SIZE/2, r*TILE_SIZE + TILE_SIZE/2, COLORS[4], 15);
-                } else if (tile === 3) {
-                    // Mining Lava hurts you but removes block
-                    let hasLava = activeEffects.find(e => e.type === 'lava');
-                    if (!hasLava) {
-                        activeEffects.push({ type: 'lava', duration: 180, ticksLeft: 2 });
-                        player.takeDamage(1); 
+            // Pick up the nearest solid block in reach. Lava remains a hazard and cannot be carried.
+            const playerCenterX = player.x + player.width / 2;
+            const playerCenterY = player.y + player.height / 2;
+            const centerCol = Math.floor(playerCenterX / TILE_SIZE);
+            const centerRow = Math.floor(playerCenterY / TILE_SIZE);
+            let target = null;
+            let nearestDistance = TILE_SIZE * 1.4;
+            let lavaNearby = false;
+
+            for (let r = Math.max(0, centerRow - 2); r <= Math.min(MAP_HEIGHT - 1, centerRow + 2); r++) {
+                for (let c = Math.max(0, centerCol - 2); c <= Math.min(MAP_WIDTH - 1, centerCol + 2); c++) {
+                    const tile = map[r][c];
+                    if (tile === 0) continue;
+                    const blockX = c * TILE_SIZE + TILE_SIZE / 2;
+                    const blockY = r * TILE_SIZE + TILE_SIZE / 2;
+                    const distance = Math.hypot(blockX - playerCenterX, blockY - playerCenterY);
+                    if (distance > TILE_SIZE * 1.4) continue;
+                    if (tile === 3) { lavaNearby = true; continue; }
+                    if (distance < nearestDistance) {
+                        nearestDistance = distance;
+                        target = { c, r, tile, x: blockX, y: blockY };
                     }
-                    setTile(c, r, 0);
-                    createParticles(c*TILE_SIZE + TILE_SIZE/2, r*TILE_SIZE + TILE_SIZE/2, COLORS[3], 15);
                 }
+            }
+
+            if (target) {
+                const item = target.tile === 1 ? 'stone' : target.tile === 2 ? 'dirt' : 'tnt';
+                player.inventory.push(item);
+                setTile(target.c, target.r, 0);
+                createParticles(target.x, target.y, COLORS[target.tile], 18, 1.4);
+                showActionToast(`${item.toUpperCase()} picked up!`);
                 updateUI();
+            } else if (lavaNearby) {
+                showActionToast('Lava is too hot to pick up.', true);
+            } else {
+                showActionToast('Move closer to a block to pick it up.', true);
             }
         }
         
@@ -1049,7 +1180,7 @@
             // Throw from inventory
             if (player.inventory.length > 0) {
                 let item = player.inventory.shift(); // Remove first item
-                let typeStr = item === 'dirt' ? 'thrown_dirt' : 'thrown_tnt';
+                let typeStr = `thrown_${item}`;
                 projectiles.push(new Projectile(
                     player.x + (player.facing === 1 ? player.width : -20), 
                     player.y + 10, 
@@ -1062,23 +1193,27 @@
         }
 
         if (code === 'KeyQ') {
-            // Slam
-            if (player.charges >= 3 && !player.slimming && !player.grounded) {
-                player.charges -= 3;
-                player.slimming = true;
-                player.vy = 0;
-                updateUI();
-            }
+            if (player.slamCooldown > 0) return;
+            if (player.grounded) { showActionToast('Jump first to use the slam.', true); return; }
+            if (player.charges < 3) { showActionToast('Slam needs 3 energy charges.', true); return; }
+            player.charges -= 3;
+            player.slamming = true;
+            player.vy = 2;
+            player.jumpHoldFrames = MAX_JUMP_HOLD_FRAMES;
+            createParticles(player.x + player.width / 2, player.y + player.height, '#7df9ff', 14, 1.5);
+            showActionToast('SLAM CHARGED!');
+            updateUI();
         }
         
         if (code === 'KeyF') {
-            // Laser
-            if (player.charges >= 5) {
-                player.charges -= 5;
-                let lx = player.facing === 1 ? player.x + player.width : player.x - w;
-                projectiles.push(new Projectile(lx, player.y + 15, 0, 0, 'laser'));
-                updateUI();
-            }
+            if (player.laserCooldown > 0) return;
+            if (player.charges < 5) { showActionToast('Laser needs 5 energy charges.', true); return; }
+            player.charges -= 5;
+            player.laserCooldown = 38;
+            projectiles.push(new Projectile(player.x + player.width / 2, player.y + player.height / 2, 0, 0, 'laser', player.facing));
+            createParticles(player.x + player.width / 2, player.y + player.height / 2, '#80f7ff', 14, 1.3);
+            showActionToast('LASER BLAST!');
+            updateUI();
         }
     }
 
@@ -1124,6 +1259,8 @@
         particles = [];
         activeEffects = [];
         asteroids = [];
+        slamWaves = [];
+        screenShake = 0;
         boss = new Boss(MAP_WIDTH * TILE_SIZE - 250, (MAP_HEIGHT - 2) * TILE_SIZE - 140);
 
         // Spawn enemies
@@ -1141,9 +1278,10 @@
         healthUI.innerText = `Hearts: ❤️ ${player.hearts} / 10`;
         chargesUI.innerText = `Charges: ⚡ ${player.charges}`;
         
-        let invCounts = { dirt: 0, tnt: 0 };
+        let invCounts = { stone: 0, dirt: 0, tnt: 0 };
         player.inventory.forEach(item => invCounts[item]++);
         let invText = [];
+        if(invCounts.stone > 0) invText.push(`${invCounts.stone} Stone`);
         if(invCounts.dirt > 0) invText.push(`${invCounts.dirt} Dirt`);
         if(invCounts.tnt > 0) invText.push(`${invCounts.tnt} TNT`);
         inventoryUI.innerText = `Inventory: ${invText.length > 0 ? invText.join(', ') : '[Empty]'}`;
@@ -1213,6 +1351,8 @@
 
             particles.forEach(p => p.update());
             particles = particles.filter(p => p.life > 0);
+            slamWaves.forEach(wave => { wave.radius += 7.5; wave.life--; });
+            slamWaves = slamWaves.filter(wave => wave.life > 0);
 
             // Camera follow
             camera.x += (player.x - w / 2 - camera.x) * 0.1; // Smooth camera
@@ -1227,7 +1367,10 @@
         ctx.clearRect(0, 0, w, h);
         
         ctx.save();
-        ctx.translate(-camera.x, -camera.y);
+        const shakeX = screenShake > 0 ? (Math.random() - 0.5) * screenShake : 0;
+        const shakeY = screenShake > 0 ? (Math.random() - 0.5) * screenShake : 0;
+        if (screenShake > 0) screenShake--;
+        ctx.translate(-camera.x + shakeX, -camera.y + shakeY);
 
         // Draw Map
         let startCol = Math.floor(camera.x / TILE_SIZE);
@@ -1239,23 +1382,47 @@
             for (let c = Math.max(0, startCol); c < Math.min(MAP_WIDTH, endCol); c++) {
                 let tile = map[r][c];
                 if (tile !== 0) {
+                    const tx = c * TILE_SIZE;
+                    const ty = r * TILE_SIZE;
                     ctx.fillStyle = COLORS[tile];
-                    ctx.fillRect(c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-                    ctx.strokeStyle = 'rgba(0,0,0,0.3)';
-                    ctx.lineWidth = 2;
-                    ctx.strokeRect(c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-                    
-                    // Decor
-                    if (tile === 4) { // TNT label
+                    ctx.fillRect(tx, ty, TILE_SIZE, TILE_SIZE);
+                    if (tile === 1) {
+                        ctx.fillStyle = '#91dc70';
+                        ctx.fillRect(tx, ty, TILE_SIZE, 9);
+                        ctx.fillStyle = 'rgba(28,66,54,.38)';
+                        ctx.fillRect(tx, ty + 9, TILE_SIZE, 3);
+                        ctx.fillStyle = 'rgba(255,255,255,.2)';
+                        ctx.fillRect(tx + 7 + (c % 3) * 7, ty + 20 + (r % 2) * 8, 5, 4);
+                        ctx.fillRect(tx + 29 - (c % 4) * 3, ty + 34, 4, 4);
+                    } else if (tile === 2) {
+                        ctx.fillStyle = '#c88645';
+                        ctx.fillRect(tx + 5, ty + 8, 11, 4);
+                        ctx.fillRect(tx + 28, ty + 23, 13, 4);
+                        ctx.fillStyle = 'rgba(40,20,8,.3)';
+                        ctx.fillRect(tx + 17, ty + 15, 4, 4);
+                        ctx.fillRect(tx + 8, ty + 35, 5, 4);
+                    } else if (tile === 4) {
+                        ctx.save();
+                        ctx.shadowColor = '#ff304e';
+                        ctx.shadowBlur = 8 + Math.sin(Date.now() / 110 + c) * 4;
+                        ctx.strokeStyle = '#ff9eab';
+                        ctx.lineWidth = 3;
+                        ctx.strokeRect(tx + 4, ty + 4, TILE_SIZE - 8, TILE_SIZE - 8);
+                        ctx.restore();
                         ctx.fillStyle = 'white';
                         ctx.font = 'bold 16px sans-serif';
                         ctx.textAlign = 'center';
-                        ctx.fillText('TNT', c*TILE_SIZE + TILE_SIZE/2, r*TILE_SIZE + TILE_SIZE/1.5);
+                        ctx.fillText('TNT', tx + TILE_SIZE/2, ty + TILE_SIZE/1.6);
+                    } else if (tile === 3) {
+                        const waveHeight = 10 + Math.sin(Date.now()/150 + c) * 5;
+                        ctx.fillStyle = 'rgba(255,255,0,.48)';
+                        ctx.fillRect(tx, ty, TILE_SIZE, waveHeight);
+                        ctx.fillStyle = 'rgba(255,190,30,.55)';
+                        ctx.fillRect(tx + 7 + (c % 3) * 5, ty + 18, 4, 8);
                     }
-                    if (tile === 3) { // Lava animation
-                        ctx.fillStyle = 'rgba(255,255,0,0.4)';
-                        ctx.fillRect(c*TILE_SIZE, r*TILE_SIZE, TILE_SIZE, 10 + Math.sin(Date.now()/200 + c)*5);
-                    }
+                    ctx.strokeStyle = 'rgba(0,0,0,0.34)';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(tx, ty, TILE_SIZE, TILE_SIZE);
                 }
             }
         }
@@ -1267,6 +1434,19 @@
         projectiles.forEach(p => p.draw(ctx));
         asteroids.forEach(a => a.draw(ctx));
         particles.forEach(p => p.draw(ctx));
+        slamWaves.forEach(wave => {
+            const alpha = wave.life / wave.maxLife;
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.strokeStyle = '#8cfaff';
+            ctx.shadowColor = '#00eaff';
+            ctx.shadowBlur = 22;
+            ctx.lineWidth = 5 * alpha + 1;
+            ctx.beginPath();
+            ctx.ellipse(wave.x, wave.y, wave.radius, wave.radius * 0.28, 0, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+        });
 
         ctx.restore();
 
