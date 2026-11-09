@@ -252,10 +252,11 @@ body.is-leaving-for-game:after{content:"";position:fixed;z-index:10000;inset:0;b
 .game-actions-menu a:hover{background:#ffd45a;color:#382705}
 .featured-section .game-actions-menu{border-color:#ffd45a}
 .new-card .new-art{background:linear-gradient(145deg,color-mix(in srgb,var(--game-art-color,#7564f5) 78%,white),var(--game-art-color,#7564f5))!important}
-.recent-update-badge{position:absolute;top:7px;right:7px;z-index:4;display:inline-flex;align-items:center;gap:3px;padding:5px 6px;border:1px solid #fff0a8;border-radius:999px;background:#d3f36b;color:#211b39;font:800 6px/1 'DM Sans',sans-serif;letter-spacing:.25px;white-space:nowrap;box-shadow:0 2px 5px #100e2599}
-.game-thumb .recent-update-badge{top:7px;right:7px;font-size:5px;padding:4px 5px}
-.new-art .recent-update-badge{top:7px;right:7px}
-@media(max-width:560px){.game-thumb .recent-update-badge{top:5px;right:5px;font-size:5px;padding:4px 5px}}
+.recent-update-badge{position:absolute;left:0;right:0;top:57%;z-index:4;display:flex;align-items:center;justify-content:center;height:24px;padding:0 5px;transform:translateY(-50%);background:#d92f3a;color:#fff;font:900 7px/1 'DM Sans',sans-serif;letter-spacing:.75px;text-align:center;white-space:nowrap;box-shadow:0 3px 10px #16102c66}
+.game-thumb .recent-update-badge{height:22px;font-size:clamp(5px, .72vw, 8px);letter-spacing:.45px}
+.new-art .recent-update-badge{height:25px;font-size:8px;letter-spacing:.9px}
+.just-dropped-tag{background:#fff;color:#4b254b;border:1px solid #f6d3ff}
+.game-thumb .just-dropped-tag{left:auto;right:8px}
 
 /* Keep the catalog's hover lift inside the horizontal scroll viewport. */
 .games-grid-wrap{padding-top:8px;margin-top:-8px}
@@ -265,3 +266,6 @@ body.is-leaving-for-game:after{content:"";position:fixed;z-index:10000;inset:0;b
 .carousel-window.is-dragging{cursor:grabbing}
 .carousel-window.is-dragging .new-card-link{cursor:grabbing}
 .carousel-window.is-dragging .carousel-track{transition:none}
+
+/* Horizontal trackpad swipes operate either carousel; page scrolling remains vertical. */
+.carousel-window{overscroll-behavior-x:contain}

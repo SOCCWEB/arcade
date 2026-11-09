@@ -1,8 +1,9 @@
 const laptopIcon = '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="2.5" width="10" height="8" rx="1.1"></rect><path d="M1.7 12.5h12.6l-.8 1H2.5z"></path></svg>';
 const mobileIcon = '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="4.4" y="1.5" width="7.2" height="13" rx="1.4"></rect><path d="M6.8 3.3h2.4M7.3 12.6h1.4"></path></svg>';
 const RECENT_UPDATE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+const JUST_DROPPED_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 const games = [
-  // Update updatedAt when pushing changes to a game's code; the badge expires after seven days.
+  // Set addedAt only when a game is first added. Update updatedAt when its code changes.
   {number:1,title:'Endless Skater',featured:true,creator:'KC',laptop:true,mobile:true,art:'🛹',color:'#a9d94d',href:'games/endless-skater.html',updatedAt:'2026-10-31'},
   {number:2,title:'Potato Wars',featured:true,creator:'OP',laptop:true,mobile:true,art:'🥔',color:'#e79a51',href:'games/potato-wars.html',updatedAt:'2026-10-26'},
   {number:3,title:'MineWorld',creator:'LC',laptop:true,mobile:true,art:'⛏️',color:'#4ea66e',href:'games/mine-world.html',updatedAt:'2026-10-28'},
@@ -32,21 +33,32 @@ const newest = [
 ];
 const gameGrid=document.querySelector('#games-grid');
 const filter=document.querySelector('#support-filter');
+function gameRecord(game){
+  return game?.href?games.find(item=>item.href===game.href)||game:game;
+}
 function isRecentlyUpdated(game){
-  const source=game.updatedAt?game:games.find(item=>item.href&&item.href===game.href);
+  const source=gameRecord(game);
   const updatedAt=Date.parse(source?.updatedAt||'');
   const age=Date.now()-updatedAt;
-  return Number.isFinite(updatedAt)&&age>=0&&age<RECENT_UPDATE_WINDOW_MS;
+  return !isJustDropped(game)&&Number.isFinite(updatedAt)&&age>=0&&age<RECENT_UPDATE_WINDOW_MS;
+}
+function isJustDropped(game){
+  const addedAt=Date.parse(gameRecord(game)?.addedAt||'');
+  const age=Date.now()-addedAt;
+  return Number.isFinite(addedAt)&&age>=0&&age<JUST_DROPPED_WINDOW_MS;
 }
 function recentlyUpdatedBadge(game){
   return isRecentlyUpdated(game)?'<span class="recent-update-badge" aria-label="Recently updated">✦ RECENTLY UPDATED!</span>':'';
+}
+function justDroppedBadge(game){
+  return isJustDropped(game)?'<span class="new-tag just-dropped-tag" aria-label="Just dropped">✦ JUST DROPPED</span>':'';
 }
 function renderGames(){
   const value=filter.value;
   gameGrid.innerHTML=games.filter(g=>value==='all'||g[value]).map(g=>{
     const supportedDevices=[g.laptop?'laptop':'',g.mobile?'mobile':''].filter(Boolean).join(' and ');
     const deviceIcons=`${g.laptop?`<span class="support-icon" title="Laptop supported">${laptopIcon}</span>`:''}${g.mobile?`<span class="support-icon" title="Mobile supported">${mobileIcon}</span>`:''}`;
-    const card=`<div class="game-thumb" style="--game-art-color:${g.color||'#302b59'}"><span class="slot-number">SLOT ${String(g.number).padStart(2,'0')}</span>${recentlyUpdatedBadge(g)}<span class="thumb-placeholder ${g.href?'game-art-playable':''}" aria-hidden="true">${g.href?g.art:'＋'}</span></div><div class="game-info"><div class="game-title-row"><span class="game-title">${g.title}</span><span class="support-icons" aria-label="Supported on ${supportedDevices}">${deviceIcons}</span></div><div class="game-byline"><span class="creator"><span class="creator-dot">✦</span>${g.creator}</span><span>${g.href?'PLAY ▶':'♡ 0'}</span></div></div>`;
+    const card=`<div class="game-thumb" style="--game-art-color:${g.color||'#302b59'}"><span class="slot-number">SLOT ${String(g.number).padStart(2,'0')}</span>${justDroppedBadge(g)}${recentlyUpdatedBadge(g)}<span class="thumb-placeholder ${g.href?'game-art-playable':''}" aria-hidden="true">${g.href?g.art:'＋'}</span></div><div class="game-info"><div class="game-title-row"><span class="game-title">${g.title}</span><span class="support-icons" aria-label="Supported on ${supportedDevices}">${deviceIcons}</span></div><div class="game-byline"><span class="creator"><span class="creator-dot">✦</span>${g.creator}</span><span>${g.href?'PLAY ▶':'♡ 0'}</span></div></div>`;
     return g.href?`<div class="game-card-shell"><a class="game-card game-card-link" href="${g.href}" aria-label="Play ${g.title} by ${g.creator}${isRecentlyUpdated(g)?', recently updated':''}">${card}</a>${gameDownloadMenu(g)}</div>`:`<article class="game-card" aria-label="${g.title} placeholder">${card}</article>`;
   }).join('');
 }
@@ -56,13 +68,15 @@ function gameDownloadMenu(game){
   const filename=game.href.split('/').pop();
   return `<details class="game-actions"><summary aria-label="More options for ${game.title}" title="More options">•••</summary><div class="game-actions-menu"><a href="${game.href}" download="${filename}">↓ Download game</a></div></details>`;
 }
-const featuredGames=games.filter(game=>game.featured).sort((a,b)=>(a.featuredOrder||Infinity)-(b.featuredOrder||Infinity)).map(game=>({number:game.number,icon:game.art,title:game.title,art:game.art,color:game.color,href:game.href,updatedAt:game.updatedAt}));
+const featuredGames=games.filter(game=>game.featured).sort((a,b)=>(a.featuredOrder||Infinity)-(b.featuredOrder||Infinity)).map(game=>({number:game.number,icon:game.art,title:game.title,art:game.art,color:game.color,href:game.href,addedAt:game.addedAt,updatedAt:game.updatedAt}));
 function setupCarousel(items,trackId,previousId,nextId,counterId,tag,badge){
   const carouselTrack=document.querySelector(`#${trackId}`);
   const windowEl=carouselTrack.closest('.carousel-window');
   const counter=document.querySelector(`#${counterId}`);
   carouselTrack.innerHTML=items.map(game=>{
-    const contents=`<div class="new-art" style="--game-art-color:${game.color||'#7564f5'}"><span class="new-tag">${tag}</span>${recentlyUpdatedBadge(game)}<span class="mini-icon" aria-hidden="true">${game.icon}</span></div><div class="new-meta"><h3>${game.title}</h3><span>${badge}</span></div>`;
+    const cardTag=tag==='JUST DROPPED'?justDroppedBadge(game):tag?`<span class="new-tag">${tag}</span>`:'';
+    const metaBadge=badge?`<span>${badge}</span>`:'';
+    const contents=`<div class="new-art" style="--game-art-color:${game.color||'#7564f5'}">${cardTag}${recentlyUpdatedBadge(game)}<span class="mini-icon" aria-hidden="true">${game.icon}</span></div><div class="new-meta"><h3>${game.title}</h3>${metaBadge}</div>`;
     return game.href?`<article class="new-card">${`<a class="new-card-link" href="${game.href}" aria-label="Play ${game.title}${isRecentlyUpdated(game)?', recently updated':''}">${contents}</a>`}${gameDownloadMenu(game)}</article>`:`<article class="new-card">${contents}</article>`;
   }).join('');
   let current=0;
@@ -96,6 +110,23 @@ function setupCarousel(items,trackId,previousId,nextId,counterId,tag,badge){
   document.querySelector(`#${nextId}`).addEventListener('click',()=>move(1));
   document.querySelector(`#${previousId}`).addEventListener('click',()=>move(-1));
   windowEl.style.touchAction='pan-y';
+  let wheelRemainder=0;
+  let wheelResetTimer;
+  windowEl.addEventListener('wheel',event=>{
+    // Horizontal two-finger trackpad swipes move the carousel without hijacking page scroll.
+    const horizontalDelta=event.deltaMode===1?event.deltaX*16:event.deltaX;
+    if(Math.abs(horizontalDelta)<1)return;
+    event.preventDefault();
+    wheelRemainder+=horizontalDelta;
+    const threshold=42;
+    while(Math.abs(wheelRemainder)>=threshold){
+      const direction=wheelRemainder>0?1:-1;
+      move(direction);
+      wheelRemainder-=direction*threshold;
+    }
+    clearTimeout(wheelResetTimer);
+    wheelResetTimer=setTimeout(()=>{wheelRemainder=0},140);
+  },{passive:false});
   windowEl.addEventListener('pointerdown',event=>{
     if((event.pointerType==='mouse'&&event.button!==0)||event.target.closest('.carousel-controls,.game-actions'))return;
     const size=metrics();
@@ -142,7 +173,7 @@ function setupCarousel(items,trackId,previousId,nextId,counterId,tag,badge){
   },true);
   return ()=>{current=0;carouselTrack.style.transform='translateX(0)';counter.textContent='01'};
 }
-const resetNewestCarousel=setupCarousel(newest,'carousel-track','previous','next','slide-current','JUST DROPPED','NEW ✦');
+const resetNewestCarousel=setupCarousel(newest,'carousel-track','previous','next','slide-current','JUST DROPPED','');
 const resetFeaturedCarousel=setupCarousel(featuredGames,'featured-track','featured-previous','featured-next','featured-slide-current','FEATURED','PLAYER PICK ✦');
 let resizeTimer;
 window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{resetNewestCarousel();resetFeaturedCarousel()},100)});
