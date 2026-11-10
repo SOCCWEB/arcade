@@ -4,29 +4,31 @@ const RECENT_UPDATE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 const JUST_DROPPED_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 const games = [
   // Set addedAt only when a game is first added. Update updatedAt when its code changes.
-  {number:1,title:'Endless Skater',featured:true,creator:'KC',laptop:true,mobile:true,art:'🛹',color:'#a9d94d',href:'games/endless-skater.html',updatedAt:'2026-10-31'},
+  {number:1,title:'Endless Skater',featured:true,creator:'KC',laptop:true,mobile:true,art:'🛹',color:'#a9d94d',href:'games/endless-skater.html',updatedAt:'2026-11-10'},
   {number:2,title:'Potato Wars',featured:true,creator:'OP',laptop:true,mobile:true,art:'🥔',color:'#e79a51',href:'games/potato-wars.html',updatedAt:'2026-10-26'},
   {number:3,title:'MineWorld',creator:'LC',laptop:true,mobile:true,art:'⛏️',color:'#4ea66e',href:'games/mine-world.html',updatedAt:'2026-10-28'},
   {number:4,title:"Crabby's Ocean Quest",creator:'MH',laptop:true,mobile:true,art:'🦀',color:'#38afc1',href:'games/crabbys-ocean-quest.html',updatedAt:'2026-10-28'},
-  {number:5,title:'Donut Mania',creator:'EF',laptop:true,mobile:true,art:'🍩',color:'#df78b6',href:'games/donut-mania.html',updatedAt:'2026-10-26'},
+  {number:5,title:'Donut Mania',creator:'EF',laptop:true,mobile:true,art:'🍩',color:'#df78b6',href:'games/donut-mania.html',updatedAt:'2026-11-06'},
   {number:6,title:'Bunny Hops',featured:true,creator:'AL',laptop:true,mobile:true,art:'🐰',color:'#91c958',href:'games/bunny-hops.html',updatedAt:'2026-10-26'},
   {number:7,title:'Stickgirl Candy Adventure',creator:'MH',laptop:true,mobile:false,art:'🍭',color:'#ae75dc',href:'games/stickgirl-candy-adventure.html',updatedAt:'2026-10-28'},
   {number:8,title:'Astro Explorer',featured:true,creator:'CM',laptop:true,mobile:true,art:'🪐',color:'#587ad3',href:'games/astro-explorer.html',updatedAt:'2026-10-28'},
   {number:9,title:'FortMorning',creator:'AC',laptop:true,mobile:false,art:'🪓',color:'#72a936',href:'games/fortmorning.html',updatedAt:'2026-10-28'},
-  {number:10,title:'Pineapple Head',creator:'ML',laptop:true,mobile:true,art:'🍍',color:'#e5b83e',href:'games/pineapple-head.html',updatedAt:'2026-10-29'},
-  {number:11,title:'La Festa Simulator',featured:true,featuredOrder:1,creator:'JP',laptop:true,mobile:true,art:'🍕',color:'#ca5946',href:'games/la-festa-simulator.html',updatedAt:'2026-10-31'},
+  {number:10,title:'Pineapple Head',creator:'ML',laptop:true,mobile:true,art:'🍍',color:'#e5b83e',href:'games/pineapple-head.html',updatedAt:'2026-11-10'},
+  {number:11,title:'La Festa Simulator',featured:true,featuredOrder:1,creator:'JP',laptop:true,mobile:true,art:'🍕',color:'#ca5946',href:'games/la-festa-simulator.html',updatedAt:'2026-11-06'},
   {number:12,title:'Bobby Game',creator:'CB',laptop:true,mobile:false,art:'⛏️',color:'#56a6b5',href:'games/bobby-game.html',updatedAt:'2026-11-08'},
   {number:13,title:'BasketBall Showdown',creator:'MS',laptop:true,mobile:false,art:'🏀',color:'#5680c5',href:'games/basketball-showdown.html',updatedAt:'2026-10-29'},
   ...Array.from({length:32},(_,i)=>({number:i+14,title:`Game slot ${String(i+14).padStart(2,'0')}`,creator:'SOCC Creator',laptop:true,mobile:true}))
 ];
 const newest = [
-  {number:13,icon:'🏀',title:'BasketBall Showdown',art:'🏀',color:'#5680c5',href:'games/basketball-showdown.html'},
-  {number:12,icon:'⛏️',title:'Bobby Game',art:'⛏️',color:'#56a6b5',href:'games/bobby-game.html'},
+  {number:10,icon:'🍍',title:'Pineapple Head',art:'🍍',color:'#e5b83e',href:'games/pineapple-head.html'},
   {number:1,icon:'🛹',title:'Endless Skater',art:'🛹',color:'#a9d94d',href:'games/endless-skater.html'},
+  {number:12,icon:'⛏️',title:'Bobby Game',art:'⛏️',color:'#56a6b5',href:'games/bobby-game.html'},
+  {number:11,icon:'🍕',title:'La Festa Simulator',art:'🍕',color:'#ca5946',href:'games/la-festa-simulator.html'},
+  {number:5,icon:'🍩',title:'Donut Mania',art:'🍩',color:'#df78b6',href:'games/donut-mania.html'},
+  {number:13,icon:'🏀',title:'BasketBall Showdown',art:'🏀',color:'#5680c5',href:'games/basketball-showdown.html'},
   {number:2,icon:'🥔',title:'Potato Wars',art:'🥔',color:'#e79a51',href:'games/potato-wars.html'},
   {number:3,icon:'⛏️',title:'MineWorld',art:'⛏️',color:'#4ea66e',href:'games/mine-world.html'},
   {number:4,icon:'🦀',title:"Crabby's Ocean Quest",art:'🦀',color:'#38afc1',href:'games/crabbys-ocean-quest.html'},
-  {number:5,icon:'🍩',title:'Donut Mania',art:'🍩',color:'#df78b6',href:'games/donut-mania.html'},
   {number:6,icon:'🐰',title:'Bunny Hops',art:'🐰',color:'#91c958',href:'games/bunny-hops.html'},
   {number:7,icon:'🍭',title:'Stickgirl Candy Adventure',art:'🍭',color:'#ae75dc',href:'games/stickgirl-candy-adventure.html'},
   {number:8,icon:'🪐',title:'Astro Explorer',art:'🪐',color:'#587ad3',href:'games/astro-explorer.html'}
@@ -40,12 +42,12 @@ function isRecentlyUpdated(game){
   const source=gameRecord(game);
   const updatedAt=Date.parse(source?.updatedAt||'');
   const age=Date.now()-updatedAt;
-  return !isJustDropped(game)&&Number.isFinite(updatedAt)&&age>=0&&age<RECENT_UPDATE_WINDOW_MS;
+  return !isJustDropped(game)&&Number.isFinite(updatedAt)&&age>=-86400000&&age<RECENT_UPDATE_WINDOW_MS;
 }
 function isJustDropped(game){
   const addedAt=Date.parse(gameRecord(game)?.addedAt||'');
   const age=Date.now()-addedAt;
-  return Number.isFinite(addedAt)&&age>=0&&age<JUST_DROPPED_WINDOW_MS;
+  return Number.isFinite(addedAt)&&age>=-86400000&&age<JUST_DROPPED_WINDOW_MS;
 }
 function recentlyUpdatedBadge(game){
   return isRecentlyUpdated(game)?'<span class="recent-update-badge" aria-label="Recently updated">✦ RECENTLY UPDATED!</span>':'';
@@ -73,12 +75,15 @@ function setupCarousel(items,trackId,previousId,nextId,counterId,tag,badge){
   const carouselTrack=document.querySelector(`#${trackId}`);
   const windowEl=carouselTrack.closest('.carousel-window');
   const counter=document.querySelector(`#${counterId}`);
-  carouselTrack.innerHTML=items.map(game=>{
-    const cardTag=tag==='JUST DROPPED'?justDroppedBadge(game):tag?`<span class="new-tag">${tag}</span>`:'';
-    const metaBadge=badge?`<span>${badge}</span>`:'';
-    const contents=`<div class="new-art" style="--game-art-color:${game.color||'#7564f5'}">${cardTag}${recentlyUpdatedBadge(game)}<span class="mini-icon" aria-hidden="true">${game.icon}</span></div><div class="new-meta"><h3>${game.title}</h3>${metaBadge}</div>`;
-    return game.href?`<article class="new-card">${`<a class="new-card-link" href="${game.href}" aria-label="Play ${game.title}${isRecentlyUpdated(game)?', recently updated':''}">${contents}</a>`}${gameDownloadMenu(game)}</article>`:`<article class="new-card">${contents}</article>`;
-  }).join('');
+  function renderItems(){
+    carouselTrack.innerHTML=items.map(game=>{
+      const cardTag=tag==='JUST DROPPED'?justDroppedBadge(game):tag?`<span class="new-tag">${tag}</span>`:'';
+      const metaBadge=badge?`<span>${badge}</span>`:'';
+      const contents=`<div class="new-art" style="--game-art-color:${game.color||'#7564f5'}">${cardTag}${recentlyUpdatedBadge(game)}<span class="mini-icon" aria-hidden="true">${game.icon}</span></div><div class="new-meta"><h3>${game.title}</h3>${metaBadge}</div>`;
+      return game.href?`<article class="new-card">${`<a class="new-card-link" href="${game.href}" aria-label="Play ${game.title}${isRecentlyUpdated(game)?', recently updated':''}">${contents}</a>`}${gameDownloadMenu(game)}</article>`:`<article class="new-card">${contents}</article>`;
+    }).join('');
+  }
+  renderItems();
   let current=0;
   let dragPointer=null;
   let dragStartX=0;
@@ -171,7 +176,7 @@ function setupCarousel(items,trackId,previousId,nextId,counterId,tag,badge){
     event.stopPropagation();
     suppressClick=false;
   },true);
-  return ()=>{current=0;carouselTrack.style.transform='translateX(0)';counter.textContent='01'};
+  return ()=>{current=0;carouselTrack.style.transform='translateX(0)';counter.textContent='01';renderItems()};
 }
 const resetNewestCarousel=setupCarousel(newest,'carousel-track','previous','next','slide-current','JUST DROPPED','');
 const resetFeaturedCarousel=setupCarousel(featuredGames,'featured-track','featured-previous','featured-next','featured-slide-current','FEATURED','PLAYER PICK ✦');
@@ -329,3 +334,31 @@ submissionForm.addEventListener('submit',event=>{
   feedback.textContent='Email draft opening. Attach the selected HTML file before sending.';
   window.location.href=`mailto:kids@socclab.org?subject=${encodeURIComponent(`SOCC Arcade game submission: ${name}`)}&body=${encodeURIComponent(body)}`;
 });
+
+// Automatically check HTTP Last-Modified headers on page load so any game updated in the last 7 days gets the ribbon
+async function autoSyncUpdateDates(){
+  let changed=false;
+  const checks=games.filter(g=>g.href).map(async g=>{
+    try{
+      const res=await fetch(g.href,{method:'HEAD',cache:'no-cache'});
+      const lastMod=res.headers.get('Last-Modified');
+      if(lastMod){
+        const modTime=Date.parse(lastMod);
+        if(Number.isFinite(modTime)){
+          const current=Date.parse(g.updatedAt||'');
+          if(!Number.isFinite(current)||modTime>current){
+            g.updatedAt=new Date(modTime).toISOString().slice(0,10);
+            changed=true;
+          }
+        }
+      }
+    }catch(_){}
+  });
+  await Promise.allSettled(checks);
+  if(changed){
+    renderGames();
+    resetNewestCarousel();
+    resetFeaturedCarousel();
+  }
+}
+autoSyncUpdateDates();

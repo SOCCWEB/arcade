@@ -52,8 +52,8 @@ Playable cards and playable carousel entries use the same launch sequence: the c
 ## Adding or updating a game
 
 1. Add the standalone HTML file to `games/`.
-2. Add or update its metadata in the `games` array in `script.js`.
-3. Add it to `newest` when it should appear in the carousel.
+2. Add or update its metadata in the `games` array in `script.js` (you can run `node scripts/sync-update-dates.js` to automatically sync `updatedAt` for all games from git commit history; a GitHub Action also automatically synchronizes dates on push).
+3. Add it to `newest` when it should appear in the carousel. Games updated within the last 7 days automatically display the red "✦ RECENTLY UPDATED!" ribbon on their title card across both carousels and the catalog grid.
 4. Update the catalog count in `index.html` if the number of entries changes.
 5. Check the relative link and device-support flags before publishing.
 
