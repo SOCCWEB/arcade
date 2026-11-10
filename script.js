@@ -8,13 +8,13 @@ const games = [
   {number:2,title:'Potato Wars',featured:true,creator:'OP',laptop:true,mobile:true,art:'🥔',color:'#e79a51',href:'games/potato-wars.html',updatedAt:'2026-10-26'},
   {number:3,title:'MineWorld',creator:'LC',laptop:true,mobile:true,art:'⛏️',color:'#4ea66e',href:'games/mine-world.html',updatedAt:'2026-10-28'},
   {number:4,title:"Crabby's Ocean Quest",creator:'MH',laptop:true,mobile:true,art:'🦀',color:'#38afc1',href:'games/crabbys-ocean-quest.html',updatedAt:'2026-10-28'},
-  {number:5,title:'Donut Mania',creator:'EF',laptop:true,mobile:true,art:'🍩',color:'#df78b6',href:'games/donut-mania.html',updatedAt:'2026-11-06'},
+  {number:5,title:'Donut Mania',creator:'EF',laptop:true,mobile:true,art:'🍩',color:'#df78b6',href:'games/donut-mania.html',updatedAt:'2026-10-26'},
   {number:6,title:'Bunny Hops',featured:true,creator:'AL',laptop:true,mobile:true,art:'🐰',color:'#91c958',href:'games/bunny-hops.html',updatedAt:'2026-10-26'},
   {number:7,title:'Stickgirl Candy Adventure',creator:'MH',laptop:true,mobile:false,art:'🍭',color:'#ae75dc',href:'games/stickgirl-candy-adventure.html',updatedAt:'2026-10-28'},
   {number:8,title:'Astro Explorer',featured:true,creator:'CM',laptop:true,mobile:true,art:'🪐',color:'#587ad3',href:'games/astro-explorer.html',updatedAt:'2026-10-28'},
   {number:9,title:'FortMorning',creator:'AC',laptop:true,mobile:false,art:'🪓',color:'#72a936',href:'games/fortmorning.html',updatedAt:'2026-10-28'},
   {number:10,title:'Pineapple Head',creator:'ML',laptop:true,mobile:true,art:'🍍',color:'#e5b83e',href:'games/pineapple-head.html',updatedAt:'2026-11-10'},
-  {number:11,title:'La Festa Simulator',featured:true,featuredOrder:1,creator:'JP',laptop:true,mobile:true,art:'🍕',color:'#ca5946',href:'games/la-festa-simulator.html',updatedAt:'2026-11-06'},
+  {number:11,title:'La Festa Simulator',featured:true,featuredOrder:1,creator:'JP',laptop:true,mobile:true,art:'🍕',color:'#ca5946',href:'games/la-festa-simulator.html',updatedAt:'2026-10-31'},
   {number:12,title:'Bobby Game',creator:'CB',laptop:true,mobile:false,art:'⛏️',color:'#56a6b5',href:'games/bobby-game.html',updatedAt:'2026-11-08'},
   {number:13,title:'BasketBall Showdown',creator:'MS',laptop:true,mobile:false,art:'🏀',color:'#5680c5',href:'games/basketball-showdown.html',updatedAt:'2026-10-29'},
   ...Array.from({length:32},(_,i)=>({number:i+14,title:`Game slot ${String(i+14).padStart(2,'0')}`,creator:'SOCC Creator',laptop:true,mobile:true}))
@@ -334,31 +334,3 @@ submissionForm.addEventListener('submit',event=>{
   feedback.textContent='Email draft opening. Attach the selected HTML file before sending.';
   window.location.href=`mailto:kids@socclab.org?subject=${encodeURIComponent(`SOCC Arcade game submission: ${name}`)}&body=${encodeURIComponent(body)}`;
 });
-
-// Automatically check HTTP Last-Modified headers on page load so any game updated in the last 7 days gets the ribbon
-async function autoSyncUpdateDates(){
-  let changed=false;
-  const checks=games.filter(g=>g.href).map(async g=>{
-    try{
-      const res=await fetch(g.href,{method:'HEAD',cache:'no-cache'});
-      const lastMod=res.headers.get('Last-Modified');
-      if(lastMod){
-        const modTime=Date.parse(lastMod);
-        if(Number.isFinite(modTime)){
-          const current=Date.parse(g.updatedAt||'');
-          if(!Number.isFinite(current)||modTime>current){
-            g.updatedAt=new Date(modTime).toISOString().slice(0,10);
-            changed=true;
-          }
-        }
-      }
-    }catch(_){}
-  });
-  await Promise.allSettled(checks);
-  if(changed){
-    renderGames();
-    resetNewestCarousel();
-    resetFeaturedCarousel();
-  }
-}
-autoSyncUpdateDates();
