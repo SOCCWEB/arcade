@@ -178,6 +178,16 @@
           <span>Empire</span>
         </button>
 
+        <button id="btn-open-travel" class="relative px-2.5 py-1.5 bg-gradient-to-r from-indigo-600/40 to-purple-600/40 hover:from-indigo-600/70 hover:to-purple-600/70 text-indigo-200 hover:text-white border border-indigo-400/40 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition">
+          <span>🚀</span>
+          <span>Travel</span>
+        </button>
+
+        <button id="btn-open-build" class="relative px-2.5 py-1.5 bg-cyan-600/30 hover:bg-cyan-600/50 text-cyan-200 hover:text-white border border-cyan-400/40 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition">
+          <span>🏗️</span>
+          <span>Build</span>
+        </button>
+
         <button id="btn-toggle-sound" class="w-8 h-8 flex items-center justify-center bg-slate-700/60 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg border border-slate-600 transition" title="Toggle Sound">
           <span id="sound-icon">🔊</span>
         </button>
@@ -222,6 +232,27 @@
       <div id="ascension-alert" class="absolute top-16 left-1/2 -translate-x-1/2 bg-gradient-to-r from-purple-600 via-indigo-400 to-purple-700 text-white px-6 py-2.5 rounded-full font-game font-bold text-sm sm:text-base shadow-2xl shadow-purple-500/60 border-2 border-purple-200 flex items-center gap-2 transform -translate-y-36 transition-all duration-500 pointer-events-none z-20">
         <span id="ascension-icon" class="text-xl">🚀</span>
         <span id="ascension-text">ERA UNLOCKED!</span>
+      </div>
+
+      <!-- Quick Canvas Overlay Realm & Powers Controls -->
+      <div class="absolute top-3 left-3 flex flex-col gap-2 z-20">
+        <!-- Return to Earth / NH button (shown when in space) -->
+        <button id="btn-return-nh" class="hidden bg-slate-900/90 hover:bg-slate-800 text-emerald-400 border border-emerald-500/50 px-3 py-1.5 rounded-xl font-game font-bold text-xs shadow-lg flex items-center gap-1.5 transition pointer-events-auto cursor-pointer">
+          <span>🌲</span>
+          <span>Earth / NH</span>
+        </button>
+
+        <!-- Toggle Invisibility button -->
+        <button id="btn-toggle-invis" class="hidden bg-purple-950/90 hover:bg-purple-900 text-purple-300 border border-purple-500/50 px-3 py-1.5 rounded-xl font-game font-bold text-xs shadow-lg flex items-center gap-1.5 transition pointer-events-auto cursor-pointer">
+          <span>👻</span>
+          <span id="btn-invis-text">Invisibility: OFF [Q]</span>
+        </button>
+
+        <!-- Super Boost button -->
+        <button id="btn-boost-action" class="hidden bg-amber-950/90 hover:bg-amber-900 text-amber-300 border border-amber-500/50 px-3 py-1.5 rounded-xl font-game font-bold text-xs shadow-lg flex items-center gap-1.5 transition pointer-events-auto cursor-pointer">
+          <span>⚡</span>
+          <span>Super Speed [Shift]</span>
+        </button>
       </div>
 
       <!-- Quick Contextual Buy Land Banner -->
@@ -376,14 +407,18 @@
       </div>
 
       <!-- Upgrade Character Tabs -->
-      <div class="flex border-b border-slate-800 mb-4 gap-2">
-        <button id="tab-shop-pineapple" class="px-4 py-2 font-game font-bold text-sm rounded-t-xl transition flex items-center gap-2 border-b-2 border-amber-400 text-amber-300 bg-amber-950/30">
+      <div class="flex border-b border-slate-800 mb-4 gap-2 overflow-x-auto pb-1">
+        <button id="tab-shop-pineapple" class="px-4 py-2 font-game font-bold text-sm rounded-t-xl transition flex items-center gap-2 border-b-2 border-amber-400 text-amber-300 bg-amber-950/30 whitespace-nowrap">
           <span>🍍 Pineapple Head</span>
           <span id="badge-ph-level" class="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded">Lv. 0</span>
         </button>
-        <button id="tab-shop-flowerman" class="px-4 py-2 font-game font-bold text-sm rounded-t-xl transition flex items-center gap-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200">
+        <button id="tab-shop-flowerman" class="px-4 py-2 font-game font-bold text-sm rounded-t-xl transition flex items-center gap-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap">
           <span>🌻 Flower Man</span>
           <span id="badge-fm-level" class="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded">Lv. 0</span>
+        </button>
+        <button id="tab-shop-cosmic" class="px-4 py-2 font-game font-bold text-sm rounded-t-xl transition flex items-center gap-2 border-b-2 border-transparent text-purple-400 hover:text-purple-200 whitespace-nowrap">
+          <span>⚡ Cosmic Powers</span>
+          <span id="badge-cosmic-level" class="text-[10px] bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded">Lv. 0</span>
         </button>
       </div>
 
@@ -396,6 +431,11 @@
 
         <!-- Flower Man Upgrades View -->
         <div id="view-shop-flowerman" class="grid grid-cols-1 md:grid-cols-2 gap-3 hidden">
+          <!-- Injected via JavaScript -->
+        </div>
+
+        <!-- Cosmic Powers Upgrades View -->
+        <div id="view-shop-cosmic" class="grid grid-cols-1 md:grid-cols-2 gap-3 hidden">
           <!-- Injected via JavaScript -->
         </div>
       </div>
@@ -483,6 +523,81 @@
     </div>
   </div>
 
+  <!-- MODAL: Cosmic Travel Star-Map -->
+  <div id="modal-travel" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-6 hidden">
+    <div class="bg-slate-900 border border-indigo-500/50 rounded-3xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl p-4 sm:p-6 overflow-hidden">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl animate-spin">🚀</span>
+          <div>
+            <h3 class="font-game font-bold text-lg text-indigo-300 flex items-center gap-2">
+              Cosmic Star-Map & Travel
+              <span id="travel-modal-current-badge" class="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-950 text-indigo-300 border border-indigo-700/50">Current: New Hampshire</span>
+            </h3>
+            <p class="text-xs text-slate-400">Board your cosmic shuttle to travel to colonized planets and conquered galaxies!</p>
+          </div>
+        </div>
+        <button id="btn-close-travel" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-sm cursor-pointer">✕</button>
+      </div>
+
+      <!-- Filter Tabs -->
+      <div class="flex border-b border-slate-800 mb-3 gap-2 overflow-x-auto pb-1">
+        <button id="tab-travel-all" class="px-3 sm:px-4 py-1.5 font-game font-bold text-xs sm:text-sm rounded-t-xl transition border-b-2 border-indigo-400 text-indigo-300 bg-indigo-950/30 whitespace-nowrap cursor-pointer">
+          <span>🌌 All Destinations</span>
+        </button>
+        <button id="tab-travel-planets" class="px-3 sm:px-4 py-1.5 font-game font-bold text-xs sm:text-sm rounded-t-xl transition border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap cursor-pointer">
+          <span>🪐 Planets</span>
+        </button>
+        <button id="tab-travel-galaxies" class="px-3 sm:px-4 py-1.5 font-game font-bold text-xs sm:text-sm rounded-t-xl transition border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap cursor-pointer">
+          <span>🌀 Galaxies</span>
+        </button>
+      </div>
+
+      <!-- Travel List Container -->
+      <div id="view-travel-destinations" class="flex-1 overflow-y-auto pr-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <!-- Injected via JavaScript -->
+      </div>
+
+      <!-- Footer Info -->
+      <div class="mt-4 pt-3 border-t border-slate-800/80 flex flex-wrap justify-between items-center text-xs text-slate-400 gap-2">
+        <div>Wallet: <strong id="travel-modal-money" class="text-emerald-400 font-game text-sm">$0</strong></div>
+        <div class="text-[11px] text-indigo-300">Travel freely between all owned celestial worlds at any time!</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Planetary & Galactic Construction -->
+  <div id="modal-building" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-6 hidden">
+    <div class="bg-slate-900 border border-cyan-500/50 rounded-3xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl p-4 sm:p-6 overflow-hidden">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">🏗️</span>
+          <div>
+            <h3 class="font-game font-bold text-lg text-cyan-300 flex items-center gap-2">
+              Planetary Construction & Infrastructure
+              <span id="building-modal-realm-badge" class="text-xs font-semibold px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-700/50">The Moon</span>
+            </h3>
+            <p class="text-xs text-slate-400">Build futuristic biodomes, power arrays, and outposts on this celestial world!</p>
+          </div>
+        </div>
+        <button id="btn-close-building" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-sm cursor-pointer">✕</button>
+      </div>
+
+      <!-- Buildings Grid Container -->
+      <div id="view-buildings-list" class="flex-1 overflow-y-auto pr-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <!-- Injected via JavaScript -->
+      </div>
+
+      <!-- Footer Info -->
+      <div class="mt-4 pt-3 border-t border-slate-800/80 flex flex-wrap justify-between items-center text-xs text-slate-400 gap-2">
+        <div>Wallet: <strong id="building-modal-money" class="text-emerald-400 font-game text-sm">$0</strong></div>
+        <div class="text-[11px] text-cyan-300">Each structure generates massive permanent $/s and boosts fruit yields!</div>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL: How to Play / Help -->
   <div id="modal-help" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-6 hidden">
     <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl p-4 sm:p-6">
@@ -531,6 +646,27 @@
             <span>🌌</span> 4. Cosmic Evolution: Countries, Worlds & Galaxies
           </h4>
           <p>Start by buying parcels in <strong class="text-emerald-400">New Hampshire</strong>. Then evolve to buy entire <strong class="text-sky-300">Countries</strong> (USA, Canada, Brazil...), interplanetary <strong class="text-amber-300">Worlds</strong> (Moon, Mars, Saturn...), and vast <strong class="text-purple-300">Galaxies</strong> (Milky Way, Andromeda, Multiverse)! Each purchase generates massive passive $/sec income!</p>
+        </div>
+
+        <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700">
+          <h4 class="font-bold text-indigo-400 mb-1 flex items-center gap-1.5">
+            <span>🚀</span> 5. Traveling to Planets & Galaxies & Building Outposts
+          </h4>
+          <p>Once you colonize planets or galaxies in the Empire or Star-Map, click <strong class="text-white">🚀 Travel</strong> to physically go there! Each celestial realm has its own landscape, unique high-value cosmic fruits, and 4 building plots. Walk near a plot and press <strong class="text-white">E</strong> (or open the <strong class="text-cyan-300">🏗️ Build</strong> menu) to construct biodomes, power cores, and space citadels!</p>
+        </div>
+
+        <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700">
+          <h4 class="font-bold text-yellow-400 mb-1 flex items-center gap-1.5">
+            <span>⚡</span> 6. Super Speed, Invisibility & Cosmic Powers
+          </h4>
+          <p>Open <strong class="text-emerald-300">Upgrades &gt; ⚡ Cosmic Powers</strong> to unlock superpowers:
+          <ul class="mt-1 space-y-0.5 list-disc list-inside text-slate-300">
+            <li><strong class="text-amber-300">⚡ Super Speed</strong>: Hold <strong class="text-white">Shift</strong> to boost with rainbow thruster fire!</li>
+            <li><strong class="text-purple-300">👻 Invisibility</strong>: Press <strong class="text-white">Q</strong> to phase through boundaries, gain 3x fruit cash!</li>
+            <li><strong class="text-cyan-300">🧲 Cosmic Vacuum</strong>: Magnetically vacuums fruits across the whole screen!</li>
+            <li><strong class="text-red-300">🔫 Fruit Blaster</strong>: Press <strong class="text-white">F</strong> or click on screen to shoot and auto-harvest fruits!</li>
+          </ul>
+          </p>
         </div>
       </div>
 
@@ -677,6 +813,71 @@
             this.playTone(freq, 'sine', 0.35, 0.25);
           }, idx * 70);
         });
+      }
+      warp() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        try {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sawtooth';
+          const now = this.ctx.currentTime;
+          osc.frequency.setValueAtTime(220, now);
+          osc.frequency.exponentialRampToValueAtTime(1320, now + 0.35);
+          osc.frequency.exponentialRampToValueAtTime(440, now + 0.55);
+          gain.gain.setValueAtTime(0.18, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.55);
+        } catch(e) {}
+      }
+      laser() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        try {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sawtooth';
+          const now = this.ctx.currentTime;
+          osc.frequency.setValueAtTime(1600, now);
+          osc.frequency.exponentialRampToValueAtTime(150, now + 0.12);
+          gain.gain.setValueAtTime(0.15, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.12);
+        } catch(e) {}
+      }
+      cloak() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        const notes = [587.33, 739.99, 880.00, 1174.66];
+        notes.forEach((freq, idx) => {
+          setTimeout(() => {
+            this.playTone(freq, 'sine', 0.28, 0.12);
+          }, idx * 45);
+        });
+      }
+      build() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        const notes = [440, 554.37, 659.25, 880, 1108.73];
+        notes.forEach((freq, idx) => {
+          setTimeout(() => {
+            this.playTone(freq, 'triangle', 0.25, 0.2);
+          }, idx * 60);
+        });
+      }
+      boost() {
+        if (!this.enabled) return;
+        this.playTone(520, 'square', 0.12, 0.08);
       }
       pop() {
         this.playTone(320, 'sine', 0.08, 0.1);
@@ -1065,6 +1266,316 @@
       }
     ];
 
+    // --- COSMIC & PLANETARY POWERS ---
+    const COSMIC_POWERS = [
+      {
+        id: 'pow_speed',
+        name: 'Super Speed (Hyper-Thrusters)',
+        icon: '⚡',
+        basePrice: 2000000,
+        costMult: 1.6,
+        level: 0,
+        desc: 'Propels Pineapple Head at supersonic speed! Hold Shift to Super Boost with rainbow thruster flames!',
+        statLabel: (lvl) => lvl === 0 ? 'Normal Speed' : `Speed: +${lvl * 40}% & Boost Ready!`,
+        nextLabel: (lvl) => `Next: +${(lvl + 1) * 40}% Speed & Faster Boost`
+      },
+      {
+        id: 'pow_invis',
+        name: 'Ghost Cloak (Invisibility)',
+        icon: '👻',
+        basePrice: 5000000,
+        costMult: 1.8,
+        level: 0,
+        desc: 'Toggle Invisibility with [Q] or screen button! Phase through boundaries, gain 3x fruit cash, and pull spirit fruits!',
+        statLabel: (lvl) => lvl === 0 ? 'Locked (Press [Q] once unlocked)' : `Invisibility Multiplier: ${3 + lvl}x`,
+        nextLabel: (lvl) => `Next: ${3 + lvl + 1}x Ghost Multiplier`
+      },
+      {
+        id: 'pow_magnet',
+        name: 'Singularity Fruit Vacuum',
+        icon: '🧲',
+        basePrice: 10000000,
+        costMult: 1.7,
+        level: 0,
+        desc: 'Unleashes gravitational black-hole suction pulling all fruits on screen directly to Pineapple Head!',
+        statLabel: (lvl) => lvl === 0 ? 'Standard Reach' : `Cosmic Gravity Radius: ${200 + lvl * 150}px`,
+        nextLabel: (lvl) => `Next: ${200 + (lvl + 1) * 150}px Radius`
+      },
+      {
+        id: 'pow_laser',
+        name: 'Cosmic Fruit Blaster',
+        icon: '🔫',
+        basePrice: 25000000,
+        costMult: 1.75,
+        level: 0,
+        desc: 'Fire laser energy rays with [F], Space, or Click/Tap to zap and harvest fruits instantly from afar with bonus cash!',
+        statLabel: (lvl) => lvl === 0 ? 'Locked' : `Blaster Range: ${300 + lvl * 120}px (+${lvl * 25}% Cash)`,
+        nextLabel: (lvl) => `Next: +${(lvl + 1) * 25}% Cash & Range`
+      },
+      {
+        id: 'pow_flight',
+        name: 'Anti-Gravity Hover Levitation',
+        icon: '🛸',
+        basePrice: 50000000,
+        costMult: 1.8,
+        level: 0,
+        desc: 'Pineapple Head floats above the ground on a glowing cosmic halo disc, gliding over all terrain friction effortlessly!',
+        statLabel: (lvl) => lvl === 0 ? 'Ground Walking' : `Cosmic Levitation: Lv. ${lvl} Glide`,
+        nextLabel: (lvl) => `Next: Glide Speed +${(lvl + 1) * 15}%`
+      },
+      {
+        id: 'pow_transmute',
+        name: 'Midas Transmutation Pulse',
+        icon: '✨',
+        basePrice: 150000000,
+        costMult: 1.9,
+        level: 0,
+        desc: 'Periodically releases a radiant golden shockwave that mutates regular fruits into Diamond and Emerald treasures!',
+        statLabel: (lvl) => lvl === 0 ? 'Inactive' : `Pulse Rate: Every ${Math.max(4, 10 - lvl)}s (${2 + lvl} fruits)`,
+        nextLabel: (lvl) => `Next: Every ${Math.max(4, 10 - (lvl + 1))}s`
+      },
+      {
+        id: 'pow_fm_astro',
+        name: 'Flower Man Astro-Jetpack Suit',
+        icon: '👨‍🚀',
+        basePrice: 100000000,
+        costMult: 1.85,
+        level: 0,
+        desc: 'Equips Flower Man with an interstellar astronaut bubble helmet & rocket boosters, supercharging foraging speed 3x!',
+        statLabel: (lvl) => lvl === 0 ? 'Earth Outfit' : `Cosmic Forager: +${lvl * 50}% Speed & Cyclone Reach`,
+        nextLabel: (lvl) => `Next: +${(lvl + 1) * 50}% Speed`
+      }
+    ];
+
+    // --- PLANET & GALAXY REALM DEFINITIONS ---
+    const REALMS = {
+      nh: {
+        id: 'nh',
+        name: 'New Hampshire',
+        icon: '🌲',
+        type: 'state',
+        tagline: 'Granite State Apple & Blueberry Orchards',
+        gravity: 1.0,
+        skyTheme: 'blue',
+        spawnPos: { x: 200, y: 350 },
+        fruits: null
+      },
+      w_moon: {
+        id: 'w_moon',
+        name: 'The Moon',
+        icon: '🌕',
+        type: 'world',
+        tagline: 'Low-Gravity Lunar Hydroponic Outpost',
+        gravity: 0.55,
+        skyTheme: 'lunar',
+        spawnPos: { x: 1100, y: 650 },
+        fruits: [
+          { type: 'moon_berry', name: 'Moonberry', value: 35000, color: '#93c5fd', leafColor: '#e0f2fe' },
+          { type: 'lunar_star', name: 'Lunar Starfruit', value: 90000, color: '#fef08a', leafColor: '#fde047' },
+          { type: 'space_pine', name: 'Cosmic Pineapple', value: 250000, color: '#facc15', leafColor: '#38bdf8' }
+        ]
+      },
+      w_mars: {
+        id: 'w_mars',
+        name: 'Mars Colony',
+        icon: '🔴',
+        type: 'world',
+        tagline: 'Terraformed Red Planet Greenhouse Valleys',
+        gravity: 0.7,
+        skyTheme: 'mars',
+        spawnPos: { x: 1100, y: 650 },
+        fruits: [
+          { type: 'mars_berry', name: 'Martian Red Berry', value: 180000, color: '#ef4444', leafColor: '#fca5a5' },
+          { type: 'terra_peach', name: 'Terraformed Peach', value: 550000, color: '#fb923c', leafColor: '#fdba74' },
+          { type: 'solar_crystal', name: 'Solar Sun-Fruit', value: 1600000, color: '#f59e0b', leafColor: '#fbbf24' }
+        ]
+      },
+      w_europa: {
+        id: 'w_europa',
+        name: 'Europa (Jupiter)',
+        icon: '🧊',
+        type: 'world',
+        tagline: 'Sub-surface Hydrothermal Ocean Gardens',
+        gravity: 0.65,
+        skyTheme: 'europa',
+        spawnPos: { x: 1100, y: 650 },
+        fruits: [
+          { type: 'cryo_melon', name: 'Cryo-Melon', value: 950000, color: '#06b6d4', leafColor: '#67e8f9' },
+          { type: 'hydro_pearl', name: 'Hydro Pearl Fruit', value: 3200000, color: '#38bdf8', leafColor: '#bae6fd' },
+          { type: 'ocean_jewel', name: 'Abyssal Jewel Fruit', value: 11000000, color: '#0284c7', leafColor: '#7dd3fc' }
+        ]
+      },
+      w_saturn: {
+        id: 'w_saturn',
+        name: "Saturn's Golden Rings",
+        icon: '🪐',
+        type: 'world',
+        tagline: 'Orbital Stardust Ring-Catchers',
+        gravity: 0.75,
+        skyTheme: 'saturn',
+        spawnPos: { x: 1100, y: 650 },
+        fruits: [
+          { type: 'ring_peach', name: 'Golden Ring Peach', value: 6000000, color: '#eab308', leafColor: '#fef08a' },
+          { type: 'star_plum', name: 'Starlight Plum', value: 20000000, color: '#c084fc', leafColor: '#e9d5ff' },
+          { type: 'saturn_gold', name: 'Pure Saturn Gold', value: 65000000, color: '#facc15', leafColor: '#fef9c3' }
+        ]
+      },
+      w_kepler: {
+        id: 'w_kepler',
+        name: 'Exoplanet Kepler-452b',
+        icon: '🌌',
+        type: 'world',
+        tagline: 'Alien Bioluminescent Super-Orchards',
+        gravity: 0.85,
+        skyTheme: 'kepler',
+        spawnPos: { x: 1100, y: 650 },
+        fruits: [
+          { type: 'void_melon', name: 'Alien Void Melon', value: 35000000, color: '#10b981', leafColor: '#a7f3d0' },
+          { type: 'quantum_berry', name: 'Quantum Berry', value: 110000000, color: '#a855f7', leafColor: '#d8b4fe' },
+          { type: 'kepler_prime', name: 'Kepler Emerald Prime', value: 380000000, color: '#059669', leafColor: '#6ee7b7' }
+        ]
+      },
+      g_milkyway: {
+        id: 'g_milkyway',
+        name: 'The Milky Way Galaxy',
+        icon: '🌀',
+        type: 'galaxy',
+        tagline: '100 Billion Star Systems of Fresh Fruit',
+        gravity: 0.8,
+        skyTheme: 'milkyway',
+        spawnPos: { x: 1100, y: 650 },
+        fruits: [
+          { type: 'starbase_apple', name: 'Starbase Apple', value: 250000000, color: '#6366f1', leafColor: '#a5b4fc' },
+          { type: 'pulsar_berry', name: 'Pulsar Berry', value: 900000000, color: '#ec4899', leafColor: '#fbcfe8' },
+          { type: 'nebula_fruit', name: 'Milky Way Super-Fruit', value: 3500000000, color: '#8b5cf6', leafColor: '#c4b5fd' }
+        ]
+      },
+      g_andromeda: {
+        id: 'g_andromeda',
+        name: 'Andromeda Galaxy',
+        icon: '💫',
+        type: 'galaxy',
+        tagline: 'Dual-Galaxy Spiral Fruit Web',
+        gravity: 0.8,
+        skyTheme: 'andromeda',
+        spawnPos: { x: 1100, y: 650 },
+        fruits: [
+          { type: 'spiral_pear', name: 'Andromeda Spiral Pear', value: 1800000000, color: '#a855f7', leafColor: '#f0abfc' },
+          { type: 'void_shard', name: 'Cosmic Void Shard', value: 7000000000, color: '#d946ef', leafColor: '#fae8ff' },
+          { type: 'singularity_core', name: 'Singularity Fruit Core', value: 28000000000, color: '#f43f5e', leafColor: '#fecdd3' }
+        ]
+      },
+      g_triangulum: {
+        id: 'g_triangulum',
+        name: 'Triangulum Galaxy',
+        icon: '✨',
+        type: 'galaxy',
+        tagline: 'Luminous Stellar Fruit Nurseries',
+        gravity: 0.8,
+        skyTheme: 'triangulum',
+        spawnPos: { x: 1100, y: 650 },
+        fruits: [
+          { type: 'plasma_berry', name: 'Stellar Plasma Berry', value: 9000000000, color: '#38bdf8', leafColor: '#7dd3fc' },
+          { type: 'sun_celestial', name: 'Celestial Sun-Fruit', value: 40000000000, color: '#f59e0b', leafColor: '#fde68a' },
+          { type: 'nova_diamond', name: 'Supernova Blast Fruit', value: 160000000000, color: '#fbbf24', leafColor: '#ffffff' }
+        ]
+      },
+      g_supercluster: {
+        id: 'g_supercluster',
+        name: 'The Virgo Supercluster',
+        icon: '🌠',
+        type: 'galaxy',
+        tagline: 'Tens of Thousands of Bound Galaxies',
+        gravity: 0.8,
+        skyTheme: 'supercluster',
+        spawnPos: { x: 1100, y: 650 },
+        fruits: [
+          { type: 'cluster_orb', name: 'Supercluster Orb', value: 70000000000, color: '#3b82f6', leafColor: '#93c5fd' },
+          { type: 'gravity_core', name: 'Gravity Singularity Fruit', value: 300000000000, color: '#8b5cf6', leafColor: '#ddd6fe' },
+          { type: 'dark_matter_melon', name: 'Dark Energy Melon', value: 1200000000000, color: '#c084fc', leafColor: '#fae8ff' }
+        ]
+      },
+      g_multiverse: {
+        id: 'g_multiverse',
+        name: 'Pineapple & Flower Multiverse',
+        icon: '👑',
+        type: 'galaxy',
+        tagline: 'Infinite Dimensions of Eternal Sweetness',
+        gravity: 0.8,
+        skyTheme: 'multiverse',
+        spawnPos: { x: 1100, y: 650 },
+        fruits: [
+          { type: 'multi_pine', name: 'Omniverse God Pineapple', value: 600000000000, color: '#facc15', leafColor: '#4ade80' },
+          { type: 'divine_petal', name: 'Divine Flower Man Petal', value: 2500000000000, color: '#f472b6', leafColor: '#fbcfe8' },
+          { type: 'infinite_jewel', name: 'Infinite Reality Jewel', value: 12000000000000, color: '#38bdf8', leafColor: '#fef08a' }
+        ]
+      }
+    };
+
+    // --- CONSTRUCTIBLE INFRASTRUCTURE BUILDINGS PER REALM ---
+    const REALM_BUILDINGS = {
+      w_moon: [
+        { id: 'b_moon_1', name: 'Lunar Hydroponic Bio-Dome', icon: '🔮', price: 8000000, passive: 500000, desc: 'Cultivates high-yield bio-luminescent space flora.', pos: { x: 300, y: 250, w: 160, h: 140 }, built: false },
+        { id: 'b_moon_2', name: 'Deep Space Radio Array', icon: '📡', price: 20000000, passive: 1500000, desc: 'Scans the galaxy for cosmic fruit meteors.', pos: { x: 1900, y: 260, w: 150, h: 140 }, built: false },
+        { id: 'b_moon_3', name: 'Lunar Rover Garage', icon: '🚙', price: 60000000, passive: 4500000, desc: 'Deploys automated rovers to extract moon minerals.', pos: { x: 350, y: 1000, w: 160, h: 130 }, built: false },
+        { id: 'b_moon_4', name: 'Anti-Gravity Space Launchpad', icon: '🚀', price: 150000000, passive: 12000000, desc: 'Facilitates interplanetary fruit transport rockets.', pos: { x: 1850, y: 980, w: 180, h: 150 }, built: false }
+      ],
+      w_mars: [
+        { id: 'b_mars_1', name: 'Terraforming Atmosphere Plant', icon: '🏭', price: 40000000, passive: 3000000, desc: 'Pumps warm oxygen to transform Martian soil into fertile soil.', pos: { x: 320, y: 280, w: 160, h: 140 }, built: false },
+        { id: 'b_mars_2', name: 'Red Planet Solar Matrix', icon: '☀️', price: 100000000, passive: 8000000, desc: 'Captures intense Martian solar radiation for endless power.', pos: { x: 1900, y: 280, w: 160, h: 140 }, built: false },
+        { id: 'b_mars_3', name: 'Geothermal Core Extractor', icon: '🌋', price: 300000000, passive: 25000000, desc: 'Taps deep volcanic magma heat to power greenhouses.', pos: { x: 350, y: 980, w: 160, h: 140 }, built: false },
+        { id: 'b_mars_4', name: 'Mars Mega-Colony Habitat', icon: '🏙️', price: 800000000, passive: 75000000, desc: 'A thriving planetary city enjoying fresh pineapples.', pos: { x: 1850, y: 960, w: 190, h: 160 }, built: false }
+      ],
+      w_europa: [
+        { id: 'b_europa_1', name: 'Cryo-Ice Deep Thermal Drill', icon: '⛏️', price: 180000000, passive: 15000000, desc: 'Bores through kilometers of outer ice into the ocean.', pos: { x: 320, y: 280, w: 160, h: 140 }, built: false },
+        { id: 'b_europa_2', name: 'Sub-Surface Bio-Lab', icon: '🔬', price: 500000000, passive: 45000000, desc: 'Studies strange hydrothermal alien fruit ecosystems.', pos: { x: 1900, y: 280, w: 160, h: 140 }, built: false },
+        { id: 'b_europa_3', name: 'Hydrothermal Vent Siphon', icon: '🌊', price: 1200000000, passive: 120000000, desc: 'Harnesses superheated oceanic vents for endless energy.', pos: { x: 350, y: 980, w: 160, h: 140 }, built: false },
+        { id: 'b_europa_4', name: 'Crystalline Ice Palace', icon: '🏰', price: 3000000000, passive: 350000000, desc: 'A majestic translucent jewel palace carved from pure ice.', pos: { x: 1850, y: 960, w: 190, h: 160 }, built: false }
+      ],
+      w_saturn: [
+        { id: 'b_saturn_1', name: 'Ring Dust Particle Harvester', icon: '🪨', price: 800000000, passive: 80000000, desc: 'Catches orbital golden rock fragments from the rings.', pos: { x: 320, y: 280, w: 160, h: 140 }, built: false },
+        { id: 'b_saturn_2', name: 'Golden Starlight Refiner', icon: '⭐', price: 2000000000, passive: 220000000, desc: 'Smelts celestial stardust into solid pure gold bullion.', pos: { x: 1900, y: 280, w: 160, h: 140 }, built: false },
+        { id: 'b_saturn_3', name: 'Ring Spire Beacon', icon: '🗼', price: 6000000000, passive: 750000000, desc: 'Stabilizes gravitational resonances along the Cassini division.', pos: { x: 350, y: 980, w: 160, h: 140 }, built: false },
+        { id: 'b_saturn_4', name: 'Golden Citadel of Saturn', icon: '👑', price: 18000000000, passive: 2500000000, desc: 'A floating celestial fortress ruling over the golden rings.', pos: { x: 1850, y: 960, w: 190, h: 160 }, built: false }
+      ],
+      w_kepler: [
+        { id: 'b_kepler_1', name: 'Exo-Botany Mega Nursery', icon: '🌱', price: 3000000000, passive: 350000000, desc: 'Bioluminescent orchards yielding giant quantum pineapples.', pos: { x: 320, y: 280, w: 160, h: 140 }, built: false },
+        { id: 'b_kepler_2', name: 'Quantum Energy Spire', icon: '⚡', price: 8000000000, passive: 1000000000, desc: 'Taps zero-point space vacuum for infinite power.', pos: { x: 1900, y: 280, w: 160, h: 140 }, built: false },
+        { id: 'b_kepler_3', name: 'Atmospheric Harmonizer', icon: '🌀', price: 25000000000, passive: 3500000000, desc: 'Enriches planetary air with sweet floral fragrances.', pos: { x: 350, y: 980, w: 160, h: 140 }, built: false },
+        { id: 'b_kepler_4', name: 'Transcendence Warp Gate', icon: '🌌', price: 75000000000, passive: 12000000000, desc: 'Direct wormhole connection to the Cosmic Galaxies.', pos: { x: 1850, y: 960, w: 190, h: 160 }, built: false }
+      ],
+      g_milkyway: [
+        { id: 'b_milkyway_1', name: 'Galactic Orbital Starbase', icon: '🛸', price: 12000000000, passive: 1500000000, desc: 'A colossal orbital hub coordinating 100 billion star systems.', pos: { x: 320, y: 280, w: 160, h: 140 }, built: false },
+        { id: 'b_milkyway_2', name: 'Dyson Swarm Collector', icon: '☀️', price: 40000000000, passive: 6000000000, desc: 'Encloses stars in solar collectors for astronomical wattage.', pos: { x: 1900, y: 280, w: 160, h: 140 }, built: false },
+        { id: 'b_milkyway_3', name: 'Hyperspace Fruit Conduit', icon: '💫', price: 150000000000, passive: 25000000000, desc: 'Transports ripe pineapples instantaneously across lightyears.', pos: { x: 350, y: 980, w: 160, h: 140 }, built: false },
+        { id: 'b_milkyway_4', name: 'Sagittarius A* Core Harvester', icon: '🕳️', price: 450000000000, passive: 80000000000, desc: 'Taps the supermassive black hole at the galaxy center.', pos: { x: 1850, y: 960, w: 190, h: 160 }, built: false }
+      ],
+      g_andromeda: [
+        { id: 'b_andromeda_1', name: 'Spiral Arm Resonator', icon: '🌀', price: 60000000000, passive: 10000000000, desc: 'Harmonizes Andromeda spiral arm fruit frequencies.', pos: { x: 320, y: 280, w: 160, h: 140 }, built: false },
+        { id: 'b_andromeda_2', name: 'Dark Matter Forge', icon: '🔮', price: 200000000000, passive: 35000000000, desc: 'Synthesizes exotic matter into emerald crystal fruits.', pos: { x: 1900, y: 280, w: 160, h: 140 }, built: false },
+        { id: 'b_andromeda_3', name: 'Intergalactic Bridge Core', icon: '🌉', price: 600000000000, passive: 120000000000, desc: 'Connects the Milky Way and Andromeda in fruit commerce.', pos: { x: 350, y: 980, w: 160, h: 140 }, built: false },
+        { id: 'b_andromeda_4', name: 'Andromeda Overlord Citadel', icon: '👑', price: 2000000000000, passive: 450000000000, desc: 'The seat of supreme pineapple & flower galactic authority.', pos: { x: 1850, y: 960, w: 190, h: 160 }, built: false }
+      ],
+      g_triangulum: [
+        { id: 'b_triangulum_1', name: 'Stellar Nursery Crucible', icon: '✨', price: 250000000000, passive: 45000000000, desc: 'Ignites newborn proto-stars that rain golden light.', pos: { x: 320, y: 280, w: 160, h: 140 }, built: false },
+        { id: 'b_triangulum_2', name: 'Plasma Energy Dynamo', icon: '⚡', price: 800000000000, passive: 160000000000, desc: 'Converts ionized plasma into pure golden revenue.', pos: { x: 1900, y: 280, w: 160, h: 140 }, built: false },
+        { id: 'b_triangulum_3', name: 'Nova Burst Synthesizer', icon: '💥', price: 2500000000000, passive: 550000000000, desc: 'Harnesses safe supernova pulses to enrich planetary soil.', pos: { x: 350, y: 980, w: 160, h: 140 }, built: false },
+        { id: 'b_triangulum_4', name: 'Triangulum Prime Sanctuary', icon: '🏛️', price: 8000000000000, passive: 2000000000000, desc: 'A golden stellar temple celebrating eternal friendship.', pos: { x: 1850, y: 960, w: 190, h: 160 }, built: false }
+      ],
+      g_supercluster: [
+        { id: 'b_supercluster_1', name: 'Supercluster Gravity Anchor', icon: '⚓', price: 1200000000000, passive: 250000000000, desc: 'Binds 50,000 galaxies into a single cosmic orchard.', pos: { x: 320, y: 280, w: 160, h: 140 }, built: false },
+        { id: 'b_supercluster_2', name: 'Cosmic Web Filament Tap', icon: '🕸️', price: 4000000000000, passive: 900000000000, desc: 'Draws endless energy from the connective tissue of space.', pos: { x: 1900, y: 280, w: 160, h: 140 }, built: false },
+        { id: 'b_supercluster_3', name: 'Dark Energy Amplifier', icon: '🌌', price: 15000000000000, passive: 3500000000000, desc: 'Rides universal expansion to generate infinite fruit value.', pos: { x: 350, y: 980, w: 160, h: 140 }, built: false },
+        { id: 'b_supercluster_4', name: 'Omniverse Super-Core', icon: '🌟', price: 40000000000000, passive: 10000000000000, desc: 'A transcendent core shining across hundreds of millions of lightyears.', pos: { x: 1850, y: 960, w: 190, h: 160 }, built: false }
+      ],
+      g_multiverse: [
+        { id: 'b_multiverse_1', name: 'Infinite Reality Nexus', icon: '♾️', price: 8000000000000, passive: 1800000000000, desc: 'Unifies every timeline where pineapples and flowers grow.', pos: { x: 320, y: 280, w: 160, h: 140 }, built: false },
+        { id: 'b_multiverse_2', name: 'Dimensional Loom of Eternity', icon: '🧵', price: 30000000000000, passive: 7500000000000, desc: 'Weaves infinite parallel universes into eternal joy.', pos: { x: 1900, y: 280, w: 160, h: 140 }, built: false },
+        { id: 'b_multiverse_3', name: 'Divine Flower Shrine', icon: '🌸', price: 100000000000000, passive: 30000000000000, desc: 'Flower Man apotheosis shrine radiating unconditional friendship.', pos: { x: 350, y: 980, w: 160, h: 140 }, built: false },
+        { id: 'b_multiverse_4', name: 'Pineapple God Supreme Throne', icon: '👑', price: 350000000000000, passive: 120000000000000, desc: 'Ultimate cosmic throne: Pineapple Head & Flower Man rule reality!', pos: { x: 1850, y: 960, w: 190, h: 160 }, built: false }
+      ]
+    };
+
     function getUpgradePrice(up) {
       return Math.floor(up.basePrice * Math.pow(up.costMult, up.level));
     }
@@ -1080,6 +1591,12 @@
       dialogTimer: 0,
       dialogText: '',
       activeBuyPlot: null,
+      activeBuyStructure: null,
+      currentLocation: 'nh', // 'nh' or worldId / galaxyId
+      isInvisible: false,
+      boostActive: false,
+      lastTransmuteTime: 0,
+      lasers: [],
       keys: {},
       touchVector: { x: 0, y: 0 },
       targetPos: null,
@@ -1181,6 +1698,8 @@
     const modalShop = document.getElementById('modal-shop');
     const modalHelp = document.getElementById('modal-help');
     const modalVictory = document.getElementById('modal-victory');
+    const modalTravel = document.getElementById('modal-travel');
+    const modalBuilding = document.getElementById('modal-building');
 
     const viewEmpireNH = document.getElementById('view-empire-nh');
     const viewEmpireCountries = document.getElementById('view-empire-countries');
@@ -1189,6 +1708,7 @@
 
     const viewShopPineapple = document.getElementById('view-shop-pineapple');
     const viewShopFlowerman = document.getElementById('view-shop-flowerman');
+    const viewShopCosmic = document.getElementById('view-shop-cosmic');
 
     // --- FRUIT DEFINITIONS (Including $150 Diamond & $1000 Emerald!) ---
     const FRUIT_TYPES = [
@@ -1218,11 +1738,62 @@
       WORLDS.filter(w => w.owned).forEach(w => rate += w.passive);
       // Galaxies passive
       GALAXIES.filter(g => g.owned).forEach(g => rate += g.passive);
+      // Planetary & Galactic Built Infrastructure!
+      Object.values(REALM_BUILDINGS).forEach(bList => {
+        bList.filter(b => b.built).forEach(b => rate += b.passive);
+      });
 
       return rate;
     }
 
     function spawnFruit(forcedPlotId = null, forcedType = null) {
+      // 1. If currently visiting a Planet or Galaxy, spawn native celestial fruits!
+      if (gameState.currentLocation !== 'nh') {
+        const realm = REALMS[gameState.currentLocation];
+        if (realm && realm.fruits && realm.fruits.length > 0) {
+          let chosen = realm.fruits[Math.floor(Math.random() * realm.fruits.length)];
+          // High luck roll can yield rare diamonds or emeralds with cosmic scaling
+          const luckLvl = PH_UPGRADES.find(u => u.id === 'ph_luck').level;
+          const roll = Math.random() * 100;
+          if (roll > 94 - luckLvl * 2) {
+            chosen = {
+              type: 'emerald_cosmic',
+              name: `${realm.name} Cosmic Emerald`,
+              value: chosen.value * 5,
+              color: '#10b981',
+              leafColor: '#a7f3d0'
+            };
+          } else if (roll > 84 - luckLvl * 3) {
+            chosen = {
+              type: 'diamond_cosmic',
+              name: `${realm.name} Star Diamond`,
+              value: chosen.value * 2.5,
+              color: '#06b6d4',
+              leafColor: '#e0f2fe'
+            };
+          }
+
+          const padding = 80;
+          const fx = padding + Math.random() * (WORLD_WIDTH - padding * 2);
+          const fy = 240 + Math.random() * (WORLD_HEIGHT - 320);
+
+          gameState.fruits.push({
+            x: fx,
+            y: fy,
+            type: chosen.type,
+            name: chosen.name,
+            value: chosen.value,
+            tier: chosen.type.includes('emerald') ? 'emerald' : chosen.type.includes('diamond') ? 'diamond' : 'celestial',
+            color: chosen.color,
+            leafColor: chosen.leafColor,
+            bobOffset: Math.random() * Math.PI * 2,
+            spawnTime: performance.now()
+          });
+          return;
+        }
+      }
+
+      // 2. Earth / New Hampshire parcel fruit spawning
       const ownedPlots = LAND_PLOTS.filter(p => p.owned);
       if (ownedPlots.length === 0) return;
 
@@ -1350,19 +1921,44 @@
       // Update character level badges in shop tabs
       const phTotalLevel = PH_UPGRADES.reduce((acc, u) => acc + u.level, 0);
       const fmTotalLevel = FM_UPGRADES.reduce((acc, u) => acc + u.level, 0);
+      const cosmicTotalLevel = COSMIC_POWERS.reduce((acc, u) => acc + u.level, 0);
       document.getElementById('badge-ph-level').textContent = `Lv. ${phTotalLevel}`;
       document.getElementById('badge-fm-level').textContent = `Lv. ${fmTotalLevel}`;
+      const cosmicBadge = document.getElementById('badge-cosmic-level');
+      if (cosmicBadge) cosmicBadge.textContent = `Lv. ${cosmicTotalLevel}`;
+
+      const travelMoney = document.getElementById('travel-modal-money');
+      if (travelMoney) travelMoney.textContent = formatMoney(gameState.money);
+      const bMoney = document.getElementById('building-modal-money');
+      if (bMoney) bMoney.textContent = formatMoney(gameState.money);
+
+      // If exploring a Planet or Galaxy, highlight in top bar
+      if (gameState.currentLocation !== 'nh') {
+        const realm = REALMS[gameState.currentLocation];
+        if (realm) {
+          badgeEra.className = "text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full bg-purple-950 text-indigo-300 border border-indigo-500 shadow-sm flex items-center gap-1 animate-pulse";
+          badgeEraText.textContent = `${realm.icon} ${realm.name}`;
+          statRealmIcon.textContent = realm.icon;
+          statRealmLabel.textContent = "Location";
+          statRealmCount.textContent = realm.name.length > 12 ? realm.name.slice(0, 10) + '..' : realm.name;
+        }
+      }
 
       // Check if player can afford any upgrades to show notification ping
-      const canAffordAny = [...PH_UPGRADES, ...FM_UPGRADES].some(u => gameState.money >= getUpgradePrice(u));
+      const canAffordAny = [...PH_UPGRADES, ...FM_UPGRADES, ...COSMIC_POWERS].some(u => gameState.money >= getUpgradePrice(u));
       const shopBadge = document.getElementById('shop-badge');
       if (canAffordAny) shopBadge.classList.remove('hidden');
       else shopBadge.classList.add('hidden');
 
       // Update minimap position label
-      const currentPlot = getPlotAt(player.x, player.y);
-      if (currentPlot) {
-        minimapPos.textContent = currentPlot.name.split(' ')[0];
+      if (gameState.currentLocation === 'nh') {
+        const currentPlot = getPlotAt(player.x, player.y);
+        if (currentPlot) {
+          minimapPos.textContent = currentPlot.name.split(' ')[0];
+        }
+      } else {
+        const realm = REALMS[gameState.currentLocation];
+        if (realm) minimapPos.textContent = realm.name.split(' ')[0];
       }
 
       // Check Era Milestone celebrations
@@ -1493,7 +2089,7 @@
         world.owned = true;
         sfx.cosmicFanfare();
         createConfetti(player.x, player.y, 50);
-        showDialog(`Planetary Colonization! Acquired ${world.name} ${world.icon}! (+${formatMoney(world.passive)}/s)`, 5000);
+        showDialog(`Planetary Colonization! Acquired ${world.name} ${world.icon}! You can now travel there and construct outposts!`, 6000);
         updateHUD();
         renderEmpireWorlds();
       } else {
@@ -1510,13 +2106,196 @@
         galaxy.owned = true;
         sfx.cosmicFanfare();
         createConfetti(player.x, player.y, 60);
-        showDialog(`Cosmic Hegemony! Acquired ${galaxy.name} ${galaxy.icon}! (+${formatMoney(galaxy.passive)}/s)`, 6000);
+        showDialog(`Cosmic Hegemony! Acquired ${galaxy.name} ${galaxy.icon}! You can now warp there and build cosmic citadels!`, 6000);
         updateHUD();
         renderEmpireGalaxies();
       } else {
         sfx.pop();
         showDialog(`Need ${formatMoney(galaxy.price - gameState.money)} more for ${galaxy.name}!`, 3000);
       }
+    }
+
+    function tryBuildStructure(buildingId) {
+      let found = null;
+      for (const list of Object.values(REALM_BUILDINGS)) {
+        const b = list.find(item => item.id === buildingId);
+        if (b) {
+          found = b;
+          break;
+        }
+      }
+      if (!found || found.built) return;
+
+      if (gameState.money >= found.price) {
+        gameState.money -= found.price;
+        found.built = true;
+        sfx.build();
+        createConfetti(found.pos.x + found.pos.w / 2, found.pos.y + found.pos.h / 2, 45);
+        showDialog(`Infrastructure Constructed! Completed ${found.name} ${found.icon}! (+${formatMoney(found.passive)}/s)`, 5000);
+        updateHUD();
+        renderBuildingModal();
+      } else {
+        sfx.pop();
+        showDialog(`Need ${formatMoney(found.price - gameState.money)} more to build ${found.name}!`, 3000);
+      }
+    }
+
+    function tryBuyPower(powerId) {
+      const up = COSMIC_POWERS.find(p => p.id === powerId);
+      if (!up) return;
+      const price = getUpgradePrice(up);
+      if (gameState.money >= price) {
+        gameState.money -= price;
+        up.level += 1;
+        sfx.cosmicFanfare();
+        createConfetti(player.x, player.y, 35);
+        showDialog(`Superpower Upgraded! ${up.name} is now Lv. ${up.level}! ⚡✨`, 4000);
+        updateHUD();
+        renderCosmicPowers();
+        updateRealmControls();
+      } else {
+        sfx.pop();
+        showDialog(`Need ${formatMoney(price - gameState.money)} more for ${up.name}!`, 3000);
+      }
+    }
+
+    function travelTo(destId) {
+      if (!REALMS[destId]) return;
+      if (destId !== 'nh') {
+        const isWorld = WORLDS.find(w => w.id === destId);
+        const isGalaxy = GALAXIES.find(g => g.id === destId);
+        if (isWorld && !isWorld.owned) {
+          showDialog(`Colonize ${isWorld.name} first in Empire or Star-Map!`, 3000);
+          return;
+        }
+        if (isGalaxy && !isGalaxy.owned) {
+          showDialog(`Conquer ${isGalaxy.name} first in Empire or Star-Map!`, 3000);
+          return;
+        }
+      }
+
+      gameState.currentLocation = destId;
+      const targetRealm = REALMS[destId];
+      sfx.warp();
+
+      // Reset coordinates to realm spawn
+      player.x = targetRealm.spawnPos.x;
+      player.y = targetRealm.spawnPos.y;
+      player.vx = 0;
+      player.vy = 0;
+
+      flowerMan.x = player.x - 60;
+      flowerMan.y = player.y;
+      flowerMan.vx = 0;
+      flowerMan.vy = 0;
+
+      // Camera center
+      camera.x = Math.max(0, Math.min(WORLD_WIDTH - camera.width, player.x - camera.width / 2));
+      camera.y = Math.max(0, Math.min(WORLD_HEIGHT - camera.height, player.y - camera.height / 2));
+
+      createConfetti(player.x, player.y, 45);
+      triggerAscensionBanner(`ARRIVED AT ${targetRealm.name.toUpperCase()}!`, targetRealm.icon);
+      showDialog(`Welcome to ${targetRealm.name} ${targetRealm.icon}! Explore, build structures, and harvest cosmic fruits!`, 5000);
+
+      // Clear fruits and seed realm fruits
+      gameState.fruits = [];
+      const initCount = destId === 'nh' ? 9 : 14;
+      for (let i = 0; i < initCount; i++) spawnFruit();
+
+      updateHUD();
+      updateRealmControls();
+    }
+
+    function updateRealmControls() {
+      const btnReturnNH = document.getElementById('btn-return-nh');
+      const btnToggleInvis = document.getElementById('btn-toggle-invis');
+      const btnBoostAction = document.getElementById('btn-boost-action');
+
+      if (btnReturnNH) {
+        if (gameState.currentLocation !== 'nh') {
+          btnReturnNH.classList.remove('hidden');
+        } else {
+          btnReturnNH.classList.add('hidden');
+        }
+      }
+
+      const invisPower = COSMIC_POWERS.find(p => p.id === 'pow_invis');
+      if (btnToggleInvis) {
+        if (invisPower && invisPower.level > 0) {
+          btnToggleInvis.classList.remove('hidden');
+          const invisText = document.getElementById('btn-invis-text');
+          if (invisText) {
+            invisText.textContent = gameState.isInvisible ? 'Invisibility: ON [Q]' : 'Invisibility: OFF [Q]';
+          }
+          if (gameState.isInvisible) {
+            btnToggleInvis.className = "bg-purple-600 hover:bg-purple-500 text-white border border-purple-300 px-3 py-1.5 rounded-xl font-game font-bold text-xs shadow-lg flex items-center gap-1.5 transition pointer-events-auto cursor-pointer animate-pulse";
+          } else {
+            btnToggleInvis.className = "bg-purple-950/90 hover:bg-purple-900 text-purple-300 border border-purple-500/50 px-3 py-1.5 rounded-xl font-game font-bold text-xs shadow-lg flex items-center gap-1.5 transition pointer-events-auto cursor-pointer";
+          }
+        } else {
+          btnToggleInvis.classList.add('hidden');
+        }
+      }
+
+      const speedPower = COSMIC_POWERS.find(p => p.id === 'pow_speed');
+      if (btnBoostAction) {
+        if (speedPower && speedPower.level > 0) {
+          btnBoostAction.classList.remove('hidden');
+        } else {
+          btnBoostAction.classList.add('hidden');
+        }
+      }
+    }
+
+    function distToSegment(px, py, x1, y1, x2, y2) {
+      const l2 = (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);
+      if (l2 === 0) return Math.hypot(px - x1, py - y1);
+      let t = ((px - x1) * (x2 - x1) + (py - y1) * (y2 - y1)) / l2;
+      t = Math.max(0, Math.min(1, t));
+      return Math.hypot(px - (x1 + t * (x2 - x1)), py - (y1 + t * (y2 - y1)));
+    }
+
+    function fireBlaster(targetX, targetY) {
+      const laserPower = COSMIC_POWERS.find(p => p.id === 'pow_laser');
+      if (!laserPower || laserPower.level === 0) return;
+
+      const maxRange = 320 + laserPower.level * 140;
+      const dx = targetX - player.x;
+      const dy = targetY - player.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist === 0) return;
+
+      const beamLength = Math.min(dist, maxRange);
+      const nx = dx / dist;
+      const ny = dy / dist;
+      const endX = player.x + nx * beamLength;
+      const endY = player.y + ny * beamLength;
+
+      sfx.laser();
+      gameState.lasers.push({
+        x1: player.x,
+        y1: player.y - 12,
+        x2: endX,
+        y2: endY,
+        time: performance.now(),
+        color: '#f43f5e'
+      });
+
+      // Zap fruits along laser beam
+      for (let i = gameState.fruits.length - 1; i >= 0; i--) {
+        const f = gameState.fruits[i];
+        const fDist = distToSegment(f.x, f.y, player.x, player.y - 12, endX, endY);
+        if (fDist < 42) {
+          const bonus = 1.25 + (laserPower.level * 0.25);
+          const earned = Math.round(f.value * bonus);
+          gameState.money += earned;
+          gameState.totalFruitsCollected += 1;
+          createFloatingText(f.x, f.y, `+$${formatMoney(earned)} ZAP! ⚡`, '#f43f5e');
+          createConfetti(f.x, f.y, 16);
+          gameState.fruits.splice(i, 1);
+        }
+      }
+      updateHUD();
     }
 
     function checkEraMilestones() {
@@ -1565,6 +2344,7 @@
     function renderShopModal() {
       renderPineappleUpgrades();
       renderFlowerManUpgrades();
+      renderCosmicPowers();
     }
 
     function renderPineappleUpgrades() {
@@ -1667,6 +2447,49 @@
             renderFlowerManUpgrades();
             showDialog(`Flower Man upgraded ${up.name} to Lv. ${up.level}! 🌻💖`, 3000);
           }
+        });
+      });
+    }
+
+    function renderCosmicPowers() {
+      if (!viewShopCosmic) return;
+      viewShopCosmic.innerHTML = '';
+      COSMIC_POWERS.forEach(p => {
+        const price = getUpgradePrice(p);
+        const canAfford = gameState.money >= price;
+        const card = document.createElement('div');
+        card.className = 'p-3 rounded-2xl border transition bg-slate-800/70 border-purple-500/40 text-slate-300 hover:border-purple-400';
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between mb-1.5">
+            <div class="flex items-center gap-2">
+              <span class="text-2xl">${p.icon}</span>
+              <div>
+                <h4 class="font-bold font-game text-sm text-purple-300">${p.name}</h4>
+                <div class="text-[10px] text-purple-400 font-semibold">${p.statLabel(p.level)}</div>
+              </div>
+            </div>
+            <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-purple-950 text-purple-300 border border-purple-600/40">
+              Lv. ${p.level}
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-300 mb-2">${p.desc}</p>
+          <div class="text-[10px] text-emerald-400 font-medium mb-2.5">${p.nextLabel(p.level)}</div>
+          <button data-power-id="${p.id}" class="btn-buy-power w-full py-2 rounded-xl font-game text-xs font-bold transition flex items-center justify-center gap-1 ${
+            canAfford
+              ? 'bg-gradient-to-r from-purple-500 via-indigo-500 to-pink-500 hover:from-purple-400 hover:to-pink-400 text-white shadow-md cursor-pointer active:scale-95'
+              : 'bg-slate-700/80 text-slate-400 cursor-not-allowed'
+          }">
+            <span>${p.level === 0 ? 'Unlock Power' : 'Upgrade'} (${formatMoney(price)})</span>
+          </button>
+        `;
+        viewShopCosmic.appendChild(card);
+      });
+
+      viewShopCosmic.querySelectorAll('.btn-buy-power').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.getAttribute('data-power-id');
+          tryBuyPower(id);
         });
       });
     }
@@ -1810,7 +2633,12 @@
           <p class="text-[11px] text-slate-300 mb-3">${w.desc}</p>
           ${
             isOwned
-              ? `<div class="text-center py-1.5 text-xs font-semibold text-indigo-400 bg-indigo-900/30 rounded-xl">✓ World Colonized</div>`
+              ? `<div class="flex items-center gap-2">
+                  <div class="flex-1 text-center py-1.5 text-xs font-semibold text-indigo-400 bg-indigo-900/30 rounded-xl">✓ Colonized</div>
+                  <button data-world-id="${w.id}" class="btn-travel-world px-3 py-1.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white font-game font-bold text-xs rounded-xl shadow transition transform active:scale-95 flex items-center gap-1 cursor-pointer">
+                    <span>🚀</span><span>Travel</span>
+                  </button>
+                </div>`
               : `<button data-world-id="${w.id}" class="btn-buy-world w-full py-1.5 rounded-xl font-game text-xs font-bold transition ${
                   canAfford
                     ? 'bg-indigo-500 hover:bg-indigo-400 text-slate-950 shadow-md cursor-pointer'
@@ -1826,6 +2654,13 @@
       viewEmpireWorlds.querySelectorAll('.btn-buy-world').forEach(btn => {
         btn.addEventListener('click', () => {
           tryBuyWorld(btn.getAttribute('data-world-id'));
+        });
+      });
+
+      viewEmpireWorlds.querySelectorAll('.btn-travel-world').forEach(btn => {
+        btn.addEventListener('click', () => {
+          modalDeeds.classList.add('hidden');
+          travelTo(btn.getAttribute('data-world-id'));
         });
       });
     }
@@ -1861,7 +2696,12 @@
           <p class="text-[11px] text-slate-300 mb-3">${g.desc}</p>
           ${
             isOwned
-              ? `<div class="text-center py-1.5 text-xs font-semibold text-purple-400 bg-purple-900/30 rounded-xl">✓ Galaxy Conquered</div>`
+              ? `<div class="flex items-center gap-2">
+                  <div class="flex-1 text-center py-1.5 text-xs font-semibold text-purple-400 bg-purple-900/30 rounded-xl">✓ Conquered</div>
+                  <button data-galaxy-id="${g.id}" class="btn-travel-galaxy px-3 py-1.5 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-400 hover:to-pink-500 text-white font-game font-bold text-xs rounded-xl shadow transition transform active:scale-95 flex items-center gap-1 cursor-pointer">
+                    <span>🌌</span><span>Warp</span>
+                  </button>
+                </div>`
               : `<button data-galaxy-id="${g.id}" class="btn-buy-galaxy w-full py-1.5 rounded-xl font-game text-xs font-bold transition ${
                   canAfford
                     ? 'bg-purple-500 hover:bg-purple-400 text-slate-950 shadow-md cursor-pointer'
@@ -1879,21 +2719,237 @@
           tryBuyGalaxy(btn.getAttribute('data-galaxy-id'));
         });
       });
+
+      viewEmpireGalaxies.querySelectorAll('.btn-travel-galaxy').forEach(btn => {
+        btn.addEventListener('click', () => {
+          modalDeeds.classList.add('hidden');
+          travelTo(btn.getAttribute('data-galaxy-id'));
+        });
+      });
+    }
+
+    function renderTravelModal(filter = 'all') {
+      const viewTravel = document.getElementById('view-travel-destinations');
+      if (!viewTravel) return;
+      viewTravel.innerHTML = '';
+
+      const dests = [
+        { id: 'nh', name: 'New Hampshire', icon: '🌲', type: 'state', desc: 'Granite State home base with rolling green meadows & lake shores.', price: 0, owned: true, passive: 0 },
+        ...WORLDS.map(w => ({ id: w.id, name: w.name, icon: w.icon, type: 'world', desc: w.desc, price: w.price, owned: w.owned, passive: w.passive })),
+        ...GALAXIES.map(g => ({ id: g.id, name: g.name, icon: g.icon, type: 'galaxy', desc: g.desc, price: g.price, owned: g.owned, passive: g.passive }))
+      ];
+
+      const filtered = dests.filter(d => {
+        if (filter === 'planets') return d.type === 'world';
+        if (filter === 'galaxies') return d.type === 'galaxy';
+        return true;
+      });
+
+      filtered.forEach(d => {
+        const isCurrent = gameState.currentLocation === d.id;
+        const canAfford = gameState.money >= d.price;
+        const card = document.createElement('div');
+        card.className = `p-3 rounded-2xl border transition flex flex-col justify-between ${
+          isCurrent
+            ? 'bg-indigo-950/70 border-emerald-400 text-indigo-100 ring-2 ring-emerald-400/40'
+            : d.owned
+            ? 'bg-slate-800/80 border-indigo-500/50 text-indigo-100'
+            : 'bg-slate-900/60 border-slate-700 text-slate-400'
+        }`;
+
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <div class="flex items-center gap-1.5">
+                <span class="text-2xl">${d.icon}</span>
+                <h4 class="font-bold font-game text-sm ${d.owned ? 'text-white' : 'text-slate-300'}">${d.name}</h4>
+              </div>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                isCurrent ? 'bg-emerald-600 text-white' : d.owned ? 'bg-indigo-800 text-indigo-200' : 'bg-slate-700 text-amber-300'
+              }">
+                ${isCurrent ? '📍 HERE' : d.owned ? '✓ UNLOCKED' : formatMoney(d.price)}
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-300 mb-2">${d.desc}</p>
+            ${d.passive > 0 ? `<div class="text-[10px] text-yellow-400 font-semibold mb-2">Base Income: +${formatMoney(d.passive)}/s</div>` : ''}
+          </div>
+          <div>
+            ${
+              isCurrent
+                ? `<div class="text-center py-2 text-xs font-bold text-emerald-400 bg-emerald-950/50 rounded-xl border border-emerald-500/30">Currently Exploring</div>`
+                : d.owned
+                ? `<button data-dest-id="${d.id}" class="btn-do-travel w-full py-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-400 hover:to-pink-400 text-white font-game font-bold text-xs rounded-xl shadow-md transition transform active:scale-95 cursor-pointer">
+                    🚀 Travel to ${d.name}
+                  </button>`
+                : `<button data-buy-dest="${d.id}" data-dest-type="${d.type}" class="btn-buy-and-travel w-full py-2 rounded-xl font-game text-xs font-bold transition ${
+                    canAfford
+                      ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-md cursor-pointer'
+                      : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                  }">
+                    ${canAfford ? `Colonize (${formatMoney(d.price)})` : `Need ${formatMoney(d.price - gameState.money)}`}
+                  </button>`
+            }
+          </div>
+        `;
+        viewTravel.appendChild(card);
+      });
+
+      viewTravel.querySelectorAll('.btn-do-travel').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const destId = btn.getAttribute('data-dest-id');
+          modalTravel.classList.add('hidden');
+          travelTo(destId);
+        });
+      });
+
+      viewTravel.querySelectorAll('.btn-buy-and-travel').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const destId = btn.getAttribute('data-buy-dest');
+          const type = btn.getAttribute('data-dest-type');
+          if (type === 'world') tryBuyWorld(destId);
+          else if (type === 'galaxy') tryBuyGalaxy(destId);
+          renderTravelModal(filter);
+        });
+      });
+    }
+
+    function renderBuildingModal() {
+      const viewBuildings = document.getElementById('view-buildings-list');
+      const badge = document.getElementById('building-modal-realm-badge');
+      if (!viewBuildings) return;
+      viewBuildings.innerHTML = '';
+
+      const currentLoc = gameState.currentLocation;
+      if (currentLoc === 'nh') {
+        if (badge) badge.textContent = 'New Hampshire';
+        viewBuildings.innerHTML = `
+          <div class="col-span-full p-6 text-center bg-slate-800/40 rounded-2xl border border-slate-700">
+            <div class="text-4xl mb-2">🚀</div>
+            <h4 class="font-game font-bold text-base text-amber-300 mb-1">Travel to Space to Build!</h4>
+            <p class="text-xs text-slate-300 max-w-md mx-auto mb-4">
+              Planetary and galactic infrastructure (biodomes, solar matrices, radio arrays, and citadels) are constructed directly on Planets and Galaxies!
+            </p>
+            <button id="btn-building-goto-travel" class="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white font-game font-bold text-xs rounded-xl shadow transition cursor-pointer">
+              Open Cosmic Star-Map 🚀
+            </button>
+          </div>
+        `;
+        const gotoBtn = document.getElementById('btn-building-goto-travel');
+        if (gotoBtn) {
+          gotoBtn.addEventListener('click', () => {
+            modalBuilding.classList.add('hidden');
+            modalTravel.classList.remove('hidden');
+            renderTravelModal();
+          });
+        }
+        return;
+      }
+
+      const realm = REALMS[currentLoc];
+      if (badge && realm) badge.textContent = `${realm.icon} ${realm.name}`;
+
+      const bList = REALM_BUILDINGS[currentLoc] || [];
+      bList.forEach(b => {
+        const canAfford = gameState.money >= b.price;
+        const card = document.createElement('div');
+        card.className = `p-3 rounded-2xl border transition flex flex-col justify-between ${
+          b.built
+            ? 'bg-cyan-950/40 border-cyan-500/60 text-cyan-100'
+            : 'bg-slate-800/70 border-slate-700 text-slate-300'
+        }`;
+
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <div class="flex items-center gap-2">
+                <span class="text-2xl">${b.icon}</span>
+                <div>
+                  <h4 class="font-bold font-game text-sm ${b.built ? 'text-cyan-300' : 'text-slate-100'}">${b.name}</h4>
+                  <div class="text-[10px] text-yellow-400 font-semibold">+${formatMoney(b.passive)}/s passive</div>
+                </div>
+              </div>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                b.built ? 'bg-cyan-800 text-cyan-200' : 'bg-slate-700 text-amber-300'
+              }">
+                ${b.built ? '✓ BUILT' : formatMoney(b.price)}
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-300 mb-3">${b.desc}</p>
+          </div>
+          <div>
+            ${
+              b.built
+                ? `<div class="text-center py-2 text-xs font-bold text-cyan-400 bg-cyan-900/30 rounded-xl border border-cyan-500/30">✓ Fully Operational</div>`
+                : `<button data-build-id="${b.id}" class="btn-do-build w-full py-2 rounded-xl font-game text-xs font-bold transition ${
+                    canAfford
+                      ? 'bg-gradient-to-r from-cyan-500 to-teal-400 hover:from-cyan-400 hover:to-teal-300 text-slate-950 shadow-md cursor-pointer active:scale-95'
+                      : 'bg-slate-700 text-slate-400 cursor-not-allowed'
+                  }">
+                    ${canAfford ? `Construct Building (${formatMoney(b.price)})` : `Need ${formatMoney(b.price - gameState.money)} More`}
+                  </button>`
+            }
+          </div>
+        `;
+        viewBuildings.appendChild(card);
+      });
+
+      viewBuildings.querySelectorAll('.btn-do-build').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const bId = btn.getAttribute('data-build-id');
+          tryBuildStructure(bId);
+        });
+      });
     }
 
     // --- GAME CONTROLS & LISTENERS ---
     window.addEventListener('keydown', (e) => {
       sfx.init();
-      gameState.keys[e.key.toLowerCase()] = true;
+      const key = e.key.toLowerCase();
+      gameState.keys[key] = true;
+
+      // Purchase / Build Hotkeys
       if (e.key === 'e' || e.key === 'E' || e.key === ' ') {
         if (gameState.activeBuyPlot !== null) {
           tryBuyPlot(gameState.activeBuyPlot);
+        } else if (gameState.activeBuyStructure !== null) {
+          tryBuildStructure(gameState.activeBuyStructure);
+        }
+      }
+
+      // Invisibility Superpower Toggle [Q] / [I]
+      if (key === 'q' || key === 'i') {
+        const invisPow = COSMIC_POWERS.find(p => p.id === 'pow_invis');
+        if (invisPow && invisPow.level > 0) {
+          gameState.isInvisible = !gameState.isInvisible;
+          sfx.cloak();
+          updateRealmControls();
+          showDialog(gameState.isInvisible ? "Invisibility ACTIVATED! Phasing through matter... 👻" : "Invisibility OFF", 2200);
+        }
+      }
+
+      // Super Speed Sprint Boost [Shift]
+      if (e.key === 'Shift') {
+        const spdPow = COSMIC_POWERS.find(p => p.id === 'pow_speed');
+        if (spdPow && spdPow.level > 0 && !gameState.boostActive) {
+          gameState.boostActive = true;
+          sfx.boost();
+        }
+      }
+
+      // Cosmic Fruit Blaster Laser [F]
+      if (key === 'f') {
+        const laserPow = COSMIC_POWERS.find(p => p.id === 'pow_laser');
+        if (laserPow && laserPow.level > 0) {
+          fireBlaster(player.x + (player.dir || 1) * 360, player.y);
         }
       }
     });
 
     window.addEventListener('keyup', (e) => {
       gameState.keys[e.key.toLowerCase()] = false;
+      if (e.key === 'Shift') {
+        gameState.boostActive = false;
+      }
     });
 
     // On phones, keep Pineapple Head following the finger for as long as the player holds the screen.
@@ -1909,6 +2965,18 @@
     canvas.addEventListener('pointerdown', (e) => {
       sfx.init();
       setPointerTarget(e);
+
+      // Fire Cosmic Laser Blaster towards click target if unlocked
+      const laserPow = COSMIC_POWERS.find(p => p.id === 'pow_laser');
+      if (laserPow && laserPow.level > 0 && e.pointerType === 'mouse') {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = camera.width / rect.width;
+        const scaleY = camera.height / rect.height;
+        const worldX = (e.clientX - rect.left) * scaleX + camera.x;
+        const worldY = (e.clientY - rect.top) * scaleY + camera.y;
+        fireBlaster(worldX, worldY);
+      }
+
       if (e.pointerType === 'touch') {
         e.preventDefault();
         gameState.touchGuiding = true;
@@ -1950,29 +3018,87 @@
         sfx.init();
         if (gameState.activeBuyPlot !== null) {
           tryBuyPlot(gameState.activeBuyPlot);
+        } else if (gameState.activeBuyStructure !== null) {
+          tryBuildStructure(gameState.activeBuyStructure);
         } else {
-          showDialog("Pineapple Head: Let's find more Golden, Diamond and Emerald fruits!", 2500);
+          showDialog("Pineapple Head: Let's harvest more Golden, Diamond, Emerald & Cosmic fruits!", 2500);
         }
       });
     }
 
-    // Modal tabs: Shop
+    // On-Canvas Action Overlay Controls
+    const btnReturnNH = document.getElementById('btn-return-nh');
+    if (btnReturnNH) {
+      btnReturnNH.addEventListener('click', () => {
+        sfx.init();
+        travelTo('nh');
+      });
+    }
+
+    const btnToggleInvis = document.getElementById('btn-toggle-invis');
+    if (btnToggleInvis) {
+      btnToggleInvis.addEventListener('click', () => {
+        sfx.init();
+        const invisPow = COSMIC_POWERS.find(p => p.id === 'pow_invis');
+        if (invisPow && invisPow.level > 0) {
+          gameState.isInvisible = !gameState.isInvisible;
+          sfx.cloak();
+          updateRealmControls();
+          showDialog(gameState.isInvisible ? "Invisibility ACTIVATED! Phasing through matter... 👻" : "Invisibility OFF", 2200);
+        }
+      });
+    }
+
+    const btnBoostAction = document.getElementById('btn-boost-action');
+    if (btnBoostAction) {
+      const activateBoost = (e) => {
+        e.preventDefault();
+        sfx.init();
+        const spdPow = COSMIC_POWERS.find(p => p.id === 'pow_speed');
+        if (spdPow && spdPow.level > 0) {
+          gameState.boostActive = true;
+          sfx.boost();
+        }
+      };
+      const deactivateBoost = (e) => {
+        e.preventDefault();
+        gameState.boostActive = false;
+      };
+      btnBoostAction.addEventListener('pointerdown', activateBoost);
+      btnBoostAction.addEventListener('pointerup', deactivateBoost);
+      btnBoostAction.addEventListener('pointerleave', deactivateBoost);
+      btnBoostAction.addEventListener('pointercancel', deactivateBoost);
+    }
+
+    // Modal tabs: Shop (Pineapple Head, Flower Man, & Cosmic Powers)
     const tabShopPineapple = document.getElementById('tab-shop-pineapple');
     const tabShopFlowerman = document.getElementById('tab-shop-flowerman');
-    tabShopPineapple.addEventListener('click', () => {
+    const tabShopCosmic = document.getElementById('tab-shop-cosmic');
+
+    const switchShopTab = (active) => {
       sfx.init();
-      tabShopPineapple.className = 'px-4 py-2 font-game font-bold text-sm rounded-t-xl transition flex items-center gap-2 border-b-2 border-amber-400 text-amber-300 bg-amber-950/30';
-      tabShopFlowerman.className = 'px-4 py-2 font-game font-bold text-sm rounded-t-xl transition flex items-center gap-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200';
-      viewShopPineapple.classList.remove('hidden');
-      viewShopFlowerman.classList.add('hidden');
-    });
-    tabShopFlowerman.addEventListener('click', () => {
-      sfx.init();
-      tabShopFlowerman.className = 'px-4 py-2 font-game font-bold text-sm rounded-t-xl transition flex items-center gap-2 border-b-2 border-emerald-400 text-emerald-300 bg-emerald-950/30';
-      tabShopPineapple.className = 'px-4 py-2 font-game font-bold text-sm rounded-t-xl transition flex items-center gap-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200';
-      viewShopFlowerman.classList.remove('hidden');
-      viewShopPineapple.classList.add('hidden');
-    });
+      [tabShopPineapple, tabShopFlowerman, tabShopCosmic].forEach(t => {
+        if (!t) return;
+        t.className = 'px-4 py-2 font-game font-bold text-sm rounded-t-xl transition flex items-center gap-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap cursor-pointer';
+      });
+      [viewShopPineapple, viewShopFlowerman, viewShopCosmic].forEach(v => { if (v) v.classList.add('hidden'); });
+
+      if (active === 'pineapple') {
+        tabShopPineapple.className = 'px-4 py-2 font-game font-bold text-sm rounded-t-xl transition flex items-center gap-2 border-b-2 border-amber-400 text-amber-300 bg-amber-950/30 whitespace-nowrap cursor-pointer';
+        viewShopPineapple.classList.remove('hidden');
+      } else if (active === 'flowerman') {
+        tabShopFlowerman.className = 'px-4 py-2 font-game font-bold text-sm rounded-t-xl transition flex items-center gap-2 border-b-2 border-emerald-400 text-emerald-300 bg-emerald-950/30 whitespace-nowrap cursor-pointer';
+        viewShopFlowerman.classList.remove('hidden');
+      } else if (active === 'cosmic') {
+        if (tabShopCosmic) tabShopCosmic.className = 'px-4 py-2 font-game font-bold text-sm rounded-t-xl transition flex items-center gap-2 border-b-2 border-purple-400 text-purple-300 bg-purple-950/30 whitespace-nowrap cursor-pointer';
+        if (viewShopCosmic) viewShopCosmic.classList.remove('hidden');
+        renderCosmicPowers();
+      }
+    };
+
+    tabShopPineapple.addEventListener('click', () => switchShopTab('pineapple'));
+    tabShopFlowerman.addEventListener('click', () => switchShopTab('flowerman'));
+    if (tabShopCosmic) tabShopCosmic.addEventListener('click', () => switchShopTab('cosmic'));
 
     // Modal tabs: Empire
     const tabEmpireNH = document.getElementById('tab-empire-nh');
@@ -2041,10 +3167,68 @@
       modalVictory.classList.add('hidden');
     });
 
+    // Cosmic Star-Map Travel Modal Openers & Filters
+    const btnOpenTravel = document.getElementById('btn-open-travel');
+    const btnCloseTravel = document.getElementById('btn-close-travel');
+    if (btnOpenTravel) {
+      btnOpenTravel.addEventListener('click', () => {
+        sfx.init();
+        renderTravelModal();
+        modalTravel.classList.remove('hidden');
+      });
+    }
+    if (btnCloseTravel) {
+      btnCloseTravel.addEventListener('click', () => {
+        modalTravel.classList.add('hidden');
+      });
+    }
+
+    const tabTravelAll = document.getElementById('tab-travel-all');
+    const tabTravelPlanets = document.getElementById('tab-travel-planets');
+    const tabTravelGalaxies = document.getElementById('tab-travel-galaxies');
+
+    const switchTravelFilter = (filter) => {
+      sfx.init();
+      [tabTravelAll, tabTravelPlanets, tabTravelGalaxies].forEach(btn => {
+        if (!btn) return;
+        btn.className = 'px-3 sm:px-4 py-1.5 font-game font-bold text-xs sm:text-sm rounded-t-xl transition border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap cursor-pointer';
+      });
+      if (filter === 'all' && tabTravelAll) {
+        tabTravelAll.className = 'px-3 sm:px-4 py-1.5 font-game font-bold text-xs sm:text-sm rounded-t-xl transition border-b-2 border-indigo-400 text-indigo-300 bg-indigo-950/30 whitespace-nowrap cursor-pointer';
+      } else if (filter === 'planets' && tabTravelPlanets) {
+        tabTravelPlanets.className = 'px-3 sm:px-4 py-1.5 font-game font-bold text-xs sm:text-sm rounded-t-xl transition border-b-2 border-indigo-400 text-indigo-300 bg-indigo-950/30 whitespace-nowrap cursor-pointer';
+      } else if (filter === 'galaxies' && tabTravelGalaxies) {
+        tabTravelGalaxies.className = 'px-3 sm:px-4 py-1.5 font-game font-bold text-xs sm:text-sm rounded-t-xl transition border-b-2 border-indigo-400 text-indigo-300 bg-indigo-950/30 whitespace-nowrap cursor-pointer';
+      }
+      renderTravelModal(filter);
+    };
+
+    if (tabTravelAll) tabTravelAll.addEventListener('click', () => switchTravelFilter('all'));
+    if (tabTravelPlanets) tabTravelPlanets.addEventListener('click', () => switchTravelFilter('planets'));
+    if (tabTravelGalaxies) tabTravelGalaxies.addEventListener('click', () => switchTravelFilter('galaxies'));
+
+    // Planetary Construction Modal Openers
+    const btnOpenBuild = document.getElementById('btn-open-build');
+    const btnCloseBuilding = document.getElementById('btn-close-building');
+    if (btnOpenBuild) {
+      btnOpenBuild.addEventListener('click', () => {
+        sfx.init();
+        renderBuildingModal();
+        modalBuilding.classList.remove('hidden');
+      });
+    }
+    if (btnCloseBuilding) {
+      btnCloseBuilding.addEventListener('click', () => {
+        modalBuilding.classList.add('hidden');
+      });
+    }
+
     btnQuickBuy.addEventListener('click', () => {
       sfx.init();
       if (gameState.activeBuyPlot !== null) {
         tryBuyPlot(gameState.activeBuyPlot);
+      } else if (gameState.activeBuyStructure !== null) {
+        tryBuildStructure(gameState.activeBuyStructure);
       }
     });
 
@@ -2055,7 +3239,8 @@
     });
 
     // Close modals on clicking backdrop
-    [modalStory, modalDeeds, modalShop, modalHelp, modalVictory].forEach(modal => {
+    [modalStory, modalDeeds, modalShop, modalHelp, modalVictory, modalTravel, modalBuilding].forEach(modal => {
+      if (!modal) return;
       modal.addEventListener('click', (e) => {
         if (e.target === modal) {
           modal.classList.add('hidden');
@@ -2082,9 +3267,28 @@
 
     // Game physics & logic update
     function update(dt) {
-      // 1. Calculate dynamic player speed from upgrades
+      // 1. Calculate dynamic player speed from upgrades & cosmic superpowers
       const speedLvl = PH_UPGRADES.find(u => u.id === 'ph_speed').level;
-      const currentSpeed = player.baseSpeed * (1 + speedLvl * 0.10);
+      let currentSpeed = player.baseSpeed * (1 + speedLvl * 0.10);
+      const cosmicSpeed = COSMIC_POWERS.find(p => p.id === 'pow_speed');
+      if (cosmicSpeed && cosmicSpeed.level > 0) {
+        currentSpeed *= (1 + cosmicSpeed.level * 0.35);
+      }
+      if (gameState.boostActive) {
+        currentSpeed *= 2.0;
+        if (Math.random() < 0.6) {
+          gameState.particles.push({
+            x: player.x - (player.dir || 1) * 15 + (Math.random() - 0.5) * 8,
+            y: player.y + 10 + (Math.random() - 0.5) * 6,
+            vx: -(player.dir || 1) * (2 + Math.random() * 3),
+            vy: (Math.random() - 0.5) * 2,
+            size: 4 + Math.random() * 4,
+            color: ['#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#facc15'][Math.floor(Math.random() * 5)],
+            life: 1,
+            decay: 0.05
+          });
+        }
+      }
 
       // Player movement
       let dx = 0;
@@ -2125,18 +3329,30 @@
         player.isMoving = false;
       }
 
-      // Check boundary collisions against unowned plots
+      // Boundary collisions & ghost phasing
       const nextX = player.x + player.vx;
       const nextY = player.y + player.vy;
 
-      const targetPlot = getPlotAt(nextX, nextY);
-      if (targetPlot && targetPlot.owned) {
+      if (gameState.currentLocation !== 'nh') {
+        // Celestial worlds have open exploration bounds
         player.x = Math.max(30, Math.min(WORLD_WIDTH - 30, nextX));
         player.y = Math.max(30, Math.min(WORLD_HEIGHT - 30, nextY));
       } else {
-        // Soft fence bounce
-        player.x = Math.max(30, Math.min(WORLD_WIDTH - 30, player.x + player.vx * 0.2));
-        player.y = Math.max(30, Math.min(WORLD_HEIGHT - 30, player.y + player.vy * 0.2));
+        if (gameState.isInvisible) {
+          // Invisibility allows ghost phasing through fence boundaries!
+          player.x = Math.max(30, Math.min(WORLD_WIDTH - 30, nextX));
+          player.y = Math.max(30, Math.min(WORLD_HEIGHT - 30, nextY));
+        } else {
+          const targetPlot = getPlotAt(nextX, nextY);
+          if (targetPlot && targetPlot.owned) {
+            player.x = Math.max(30, Math.min(WORLD_WIDTH - 30, nextX));
+            player.y = Math.max(30, Math.min(WORLD_HEIGHT - 30, nextY));
+          } else {
+            // Soft fence bounce
+            player.x = Math.max(30, Math.min(WORLD_WIDTH - 30, player.x + player.vx * 0.2));
+            player.y = Math.max(30, Math.min(WORLD_HEIGHT - 30, player.y + player.vy * 0.2));
+          }
+        }
       }
 
       // Camera follow with smooth damping
@@ -2155,12 +3371,17 @@
         flowerMan.state = 'following';
         sfx.goldenJackpot();
         createConfetti(flowerMan.x, flowerMan.y, 30);
-        showDialog("Pineapple Head! It's me, Flower Man! I'm so happy to meet you in New Hampshire! 🌻🍍", 6000);
+        showDialog("Pineapple Head! It's me, Flower Man! I'm so happy to meet you! 🌻🍍", 6000);
       }
 
-      // Flower Man movement speed
+      // Flower Man movement speed (amplified by Astro-Suit)
       const fmSpeedLvl = FM_UPGRADES.find(u => u.id === 'fm_speed').level;
-      const fmCurrentSpeed = flowerMan.baseSpeed * (1 + fmSpeedLvl * 0.15);
+      const fmAstro = COSMIC_POWERS.find(p => p.id === 'pow_fm_astro');
+      let fmAstroMultiplier = 1;
+      if (fmAstro && fmAstro.level > 0) {
+        fmAstroMultiplier = 1 + fmAstro.level * 0.5;
+      }
+      const fmCurrentSpeed = flowerMan.baseSpeed * (1 + fmSpeedLvl * 0.15) * fmAstroMultiplier;
 
       if (flowerMan.state === 'following') {
         const autoLvl = FM_UPGRADES.find(u => u.id === 'fm_auto').level;
@@ -2168,7 +3389,7 @@
 
         // Autonomous Forager behavior
         if (autoLvl > 0 && gameState.fruits.length > 0) {
-          const searchRange = 250 + (autoLvl * 90);
+          const searchRange = (250 + (autoLvl * 90)) * (fmAstro && fmAstro.level > 0 ? 1.7 : 1);
           let bestFruit = null;
           let bestScore = -1;
 
@@ -2211,6 +3432,20 @@
             flowerMan.stepAnim += dt * 8;
           }
         }
+
+        // Astro-suit ion thruster particle trail
+        if (fmAstro && fmAstro.level > 0 && Math.random() < 0.25) {
+          gameState.particles.push({
+            x: flowerMan.x - flowerMan.dir * 12,
+            y: flowerMan.y + 12,
+            vx: -flowerMan.dir * (1 + Math.random() * 2),
+            vy: (Math.random() - 0.5) * 1.5,
+            size: 3 + Math.random() * 3,
+            color: '#06b6d4',
+            life: 0.8,
+            decay: 0.06
+          });
+        }
       }
       flowerMan.petalsAngle += dt * 1.5;
 
@@ -2240,9 +3475,16 @@
         }
       }
 
-      // 4. Magnet & Collection Radii
+      // 4. Magnet & Collection Radii (augmented by Singularity Fruit Vacuum & Invisibility)
       const magLvl = PH_UPGRADES.find(u => u.id === 'ph_magnet').level;
-      const magnetRadius = magLvl === 0 ? 35 : (35 + magLvl * 30);
+      const cosmicMag = COSMIC_POWERS.find(p => p.id === 'pow_magnet');
+      let magnetRadius = magLvl === 0 ? 35 : (35 + magLvl * 30);
+      if (cosmicMag && cosmicMag.level > 0) {
+        magnetRadius += cosmicMag.level * 80;
+      }
+      if (gameState.isInvisible) {
+        magnetRadius += 60;
+      }
 
       const fmAuraLvl = FM_UPGRADES.find(u => u.id === 'fm_radius').level;
       const fmCollectionRadius = 30 + (fmAuraLvl * 25);
@@ -2257,6 +3499,40 @@
       const critLvl = PH_UPGRADES.find(u => u.id === 'ph_crit').level;
       const critChance = critLvl === 0 ? 0 : (0.05 + (critLvl - 1) * 0.03);
 
+      // Cosmic Power: Midas Transmutation Pulse
+      const transmutePow = COSMIC_POWERS.find(p => p.id === 'pow_transmute');
+      if (transmutePow && transmutePow.level > 0) {
+        const interval = Math.max(4000, 10000 - transmutePow.level * 1500);
+        if (now - gameState.lastTransmuteTime > interval) {
+          gameState.lastTransmuteTime = now;
+          let transmutedCount = 0;
+          const maxToConvert = 2 + transmutePow.level;
+          for (let i = 0; i < gameState.fruits.length && transmutedCount < maxToConvert; i++) {
+            const f = gameState.fruits[i];
+            if (f.tier === 'common') {
+              f.tier = Math.random() < 0.4 ? 'emerald' : 'diamond';
+              f.value = f.tier === 'emerald' ? 1000 : 150;
+              f.name = f.tier === 'emerald' ? 'Transmuted Emerald' : 'Transmuted Diamond';
+              f.color = f.tier === 'emerald' ? '#10b981' : '#06b6d4';
+              f.leafColor = f.tier === 'emerald' ? '#34d399' : '#a5f3fc';
+              createConfetti(f.x, f.y, 10);
+              createFloatingText(f.x, f.y, '✨ TRANSMUTED!', f.color);
+              transmutedCount++;
+            }
+          }
+          if (transmutedCount > 0) {
+            sfx.chime();
+          }
+        }
+      }
+
+      // Laser beams decay
+      for (let i = gameState.lasers.length - 1; i >= 0; i--) {
+        if (now - gameState.lasers[i].time > 180) {
+          gameState.lasers.splice(i, 1);
+        }
+      }
+
       // 5. Fruit collection check
       for (let i = gameState.fruits.length - 1; i >= 0; i--) {
         const f = gameState.fruits[i];
@@ -2264,9 +3540,10 @@
         const distF = Math.hypot(flowerMan.x - f.x, flowerMan.y - f.y);
 
         // Magnet attraction to player
-        if (magLvl > 0 && distP < magnetRadius && distP > 25) {
-          f.x += ((player.x - f.x) / distP) * (4 + magLvl * 1.5);
-          f.y += ((player.y - f.y) / distP) * (4 + magLvl * 1.5);
+        if ((magLvl > 0 || (cosmicMag && cosmicMag.level > 0) || gameState.isInvisible) && distP < magnetRadius && distP > 25) {
+          const pullSpeed = (4 + magLvl * 1.5) + (cosmicMag ? cosmicMag.level * 3.5 : 0) + (gameState.isInvisible ? 2 : 0);
+          f.x += ((player.x - f.x) / distP) * pullSpeed;
+          f.y += ((player.y - f.y) / distP) * pullSpeed;
         }
 
         // Magnet attraction to Flower Man if in aura
@@ -2282,6 +3559,13 @@
           let multiplier = baseValueMultiplier;
           if (collectedByFlowerMan) multiplier *= fmValueMultiplier;
 
+          // Invisibility Spectral Multiplier
+          if (gameState.isInvisible) {
+            const invisPow = COSMIC_POWERS.find(p => p.id === 'pow_invis');
+            const invisLvl = invisPow ? invisPow.level : 1;
+            multiplier *= (3 + invisLvl);
+          }
+
           // Check for Golden Touch Crit
           const isCrit = Math.random() < critChance;
           if (isCrit) multiplier *= 5;
@@ -2294,25 +3578,29 @@
           if (f.tier === 'emerald') {
             gameState.emeraldFruitsFound += 1;
             triggerEmeraldAlert();
-            createFloatingText(f.x, f.y, `+$${earned} EMERALD! ✨`, '#10b981');
+            createFloatingText(f.x, f.y, `+$${formatMoney(earned)} EMERALD! ✨`, '#10b981');
             createConfetti(f.x, f.y, 25);
           } else if (f.tier === 'diamond') {
             gameState.diamondFruitsFound += 1;
             triggerDiamondAlert();
-            createFloatingText(f.x, f.y, `+$${earned} DIAMOND! 💎`, '#38bdf8');
+            createFloatingText(f.x, f.y, `+$${formatMoney(earned)} DIAMOND! 💎`, '#38bdf8');
             createConfetti(f.x, f.y, 20);
           } else if (f.tier === 'golden') {
             gameState.goldenItemsFound += 1;
             triggerGoldenAlert();
-            createFloatingText(f.x, f.y, `+$${earned} GOLDEN! ⭐`, '#facc15');
+            createFloatingText(f.x, f.y, `+$${formatMoney(earned)} GOLDEN! ⭐`, '#facc15');
             createConfetti(f.x, f.y, 18);
+          } else if (f.tier === 'celestial') {
+            sfx.cosmicFanfare();
+            createFloatingText(f.x, f.y, `+$${formatMoney(earned)} COSMIC! 🌌`, f.color || '#a855f7');
+            createConfetti(f.x, f.y, 22);
           } else {
             sfx.fruitCollect(f.value);
             if (isCrit) {
-              createFloatingText(f.x, f.y, `+$${earned} 5x CRIT! 🔥`, '#f59e0b');
+              createFloatingText(f.x, f.y, `+$${formatMoney(earned)} 5x CRIT! 🔥`, '#f59e0b');
               createConfetti(f.x, f.y, 14);
             } else {
-              createFloatingText(f.x, f.y, `+$${earned}`, collectedByFlowerMan ? '#34d399' : '#22c55e');
+              createFloatingText(f.x, f.y, `+$${formatMoney(earned)}`, collectedByFlowerMan ? '#34d399' : '#22c55e');
             }
           }
 
@@ -2342,27 +3630,58 @@
         spawnFruit();
       }
 
-      // 8. Nearest unowned plot for "FOR SALE" prompt
-      let nearestUnowned = null;
-      let minDistance = 160;
+      // 8. Nearest unowned plot or celestial building for "FOR SALE / CONSTRUCT" prompt
+      if (gameState.currentLocation === 'nh') {
+        gameState.activeBuyStructure = null;
+        let nearestUnowned = null;
+        let minDistance = 160;
 
-      LAND_PLOTS.filter(p => !p.owned).forEach(plot => {
-        const distToGate = Math.hypot(player.x - plot.gate.x, player.y - plot.gate.y);
-        if (distToGate < minDistance) {
-          minDistance = distToGate;
-          nearestUnowned = plot;
+        LAND_PLOTS.filter(p => !p.owned).forEach(plot => {
+          const distToGate = Math.hypot(player.x - plot.gate.x, player.y - plot.gate.y);
+          if (distToGate < minDistance) {
+            minDistance = distToGate;
+            nearestUnowned = plot;
+          }
+        });
+
+        if (nearestUnowned) {
+          gameState.activeBuyPlot = nearestUnowned.id;
+          buyPromptTitle.textContent = `${nearestUnowned.name} (${nearestUnowned.region})`;
+          buyPromptDesc.textContent = nearestUnowned.desc;
+          buyPromptPrice.textContent = `$${nearestUnowned.price}`;
+          btnQuickBuy.textContent = `Buy Plot ($${nearestUnowned.price})`;
+          buyPromptBanner.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-6');
+        } else {
+          gameState.activeBuyPlot = null;
+          buyPromptBanner.classList.add('opacity-0', 'pointer-events-none', 'translate-y-6');
         }
-      });
-
-      if (nearestUnowned) {
-        gameState.activeBuyPlot = nearestUnowned.id;
-        buyPromptTitle.textContent = `${nearestUnowned.name} (${nearestUnowned.region})`;
-        buyPromptDesc.textContent = nearestUnowned.desc;
-        buyPromptPrice.textContent = `${nearestUnowned.price}`;
-        buyPromptBanner.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-6');
       } else {
         gameState.activeBuyPlot = null;
-        buyPromptBanner.classList.add('opacity-0', 'pointer-events-none', 'translate-y-6');
+        const bList = REALM_BUILDINGS[gameState.currentLocation] || [];
+        let nearestUnbuilt = null;
+        let minDistance = 160;
+
+        bList.filter(b => !b.built).forEach(b => {
+          const bx = b.pos.x + b.pos.w / 2;
+          const by = b.pos.y + b.pos.h / 2;
+          const dist = Math.hypot(player.x - bx, player.y - by);
+          if (dist < minDistance) {
+            minDistance = dist;
+            nearestUnbuilt = b;
+          }
+        });
+
+        if (nearestUnbuilt) {
+          gameState.activeBuyStructure = nearestUnbuilt.id;
+          buyPromptTitle.textContent = `${nearestUnbuilt.icon} ${nearestUnbuilt.name}`;
+          buyPromptDesc.textContent = `${nearestUnbuilt.desc} (+${formatMoney(nearestUnbuilt.passive)}/s)`;
+          buyPromptPrice.textContent = `${formatMoney(nearestUnbuilt.price)}`;
+          btnQuickBuy.textContent = `Construct (${formatMoney(nearestUnbuilt.price)})`;
+          buyPromptBanner.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-6');
+        } else {
+          gameState.activeBuyStructure = null;
+          buyPromptBanner.classList.add('opacity-0', 'pointer-events-none', 'translate-y-6');
+        }
       }
 
       // 9. Update particles
@@ -2384,29 +3703,655 @@
       ctx.save();
       ctx.translate(-camera.x, -camera.y);
 
-      // 1. Draw Ground & Terrain for all 6 New Hampshire Parcels
-      drawWorldTerrain();
+      // 1. Draw Ground & Terrain for Earth (NH) or Celestial Realm (Planets & Galaxies)
+      if (gameState.currentLocation === 'nh') {
+        drawWorldTerrain();
+        drawCosmicAtmosphere();
+        drawPlotBoundaries();
+      } else {
+        drawCelestialRealmTerrain(gameState.currentLocation);
+        drawRealmBuildings(gameState.currentLocation);
+      }
 
-      // 2. Draw Cosmic / Atmospheric Sky Layers if in higher evolution eras
-      drawCosmicAtmosphere();
+      // 2. Draw Active Cosmic Laser Blaster Beams
+      drawLasers();
 
-      // 3. Draw Plot Boundaries & For Sale Gates
-      drawPlotBoundaries();
-
-      // 4. Draw Fruits (including Golden, Diamond & Emerald!)
+      // 3. Draw Fruits (including Golden, Diamond & Emerald and Celestial Fruits!)
       drawFruits();
 
-      // 5. Draw Characters
+      // 4. Draw Characters
       drawFlowerMan();
       drawPlayer();
 
-      // 6. Draw Particles & Confetti
+      // 5. Draw Particles & Confetti
       drawParticles();
 
       ctx.restore();
 
-      // 7. Update Minimap
+      // 6. Update Minimap
       drawMinimap();
+    }
+
+    // Draw active laser beams
+    function drawLasers() {
+      const now = performance.now();
+      gameState.lasers.forEach(laser => {
+        const age = now - laser.time;
+        const alpha = Math.max(0, 1 - age / 180);
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        // Outer glow
+        ctx.strokeStyle = laser.color || '#f43f5e';
+        ctx.lineWidth = 6;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(laser.x1, laser.y1);
+        ctx.lineTo(laser.x2, laser.y2);
+        ctx.stroke();
+        // Inner core
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(laser.x1, laser.y1);
+        ctx.lineTo(laser.x2, laser.y2);
+        ctx.stroke();
+        ctx.restore();
+      });
+    }
+
+    // Celestial Realm Terrain Renderers (Planets & Galaxies)
+    function drawCelestialRealmTerrain(locId) {
+      const realm = REALMS[locId];
+      if (!realm) return;
+
+      const time = performance.now();
+
+      if (locId === 'w_moon') {
+        // Lunar sky: Deep black space
+        ctx.fillStyle = '#060913';
+        ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+
+        // Distant stars
+        gameState.cosmicStars.forEach(s => {
+          ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha})`;
+          ctx.fillRect(s.x, s.y, s.size, s.size);
+        });
+
+        // The Earth in the lunar sky
+        ctx.save();
+        const earthX = 500;
+        const earthY = 220;
+        const earthR = 85;
+        // Earth atmosphere glow
+        const earthGlow = ctx.createRadialGradient(earthX, earthY, earthR * 0.8, earthX, earthY, earthR * 1.4);
+        earthGlow.addColorStop(0, 'rgba(56, 189, 248, 0.45)');
+        earthGlow.addColorStop(1, 'rgba(56, 189, 248, 0)');
+        ctx.fillStyle = earthGlow;
+        ctx.beginPath();
+        ctx.arc(earthX, earthY, earthR * 1.4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Earth Ocean
+        ctx.fillStyle = '#1e40af';
+        ctx.beginPath();
+        ctx.arc(earthX, earthY, earthR, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Continents (Green/Emerald swirls)
+        ctx.fillStyle = '#10b981';
+        ctx.beginPath();
+        ctx.arc(earthX - 15, earthY - 20, 32, 0.2, Math.PI * 1.2);
+        ctx.arc(earthX + 25, earthY + 15, 28, 0.5, Math.PI * 1.5);
+        ctx.fill();
+
+        // White cloud swirls
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+        ctx.beginPath();
+        ctx.ellipse(earthX - 10, earthY - 10, 45, 12, 0.3, 0, Math.PI * 2);
+        ctx.ellipse(earthX + 15, earthY + 25, 40, 10, -0.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // Moon Regolith Surface
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(0, 480, WORLD_WIDTH, WORLD_HEIGHT - 480);
+
+        // Moon Craters
+        const craters = [
+          { x: 380, y: 620, r: 55 },
+          { x: 780, y: 820, r: 70 },
+          { x: 1200, y: 580, r: 40 },
+          { x: 1600, y: 760, r: 65 },
+          { x: 2100, y: 640, r: 50 },
+          { x: 950, y: 1100, r: 80 },
+          { x: 1450, y: 1200, r: 60 }
+        ];
+        craters.forEach(c => {
+          ctx.save();
+          ctx.fillStyle = '#1e293b';
+          ctx.beginPath();
+          ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#475569';
+          ctx.lineWidth = 3;
+          ctx.stroke();
+          // Inner shadow
+          ctx.fillStyle = '#0f172a';
+          ctx.beginPath();
+          ctx.arc(c.x + c.r * 0.25, c.y + c.r * 0.2, c.r * 0.65, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        });
+
+        // Apollo Flag planted on Moon
+        drawApolloFlag(650, 530);
+
+      } else if (locId === 'w_mars') {
+        // Mars Sky: Rusty amber/red
+        const skyGrad = ctx.createLinearGradient(0, 0, 0, 550);
+        skyGrad.addColorStop(0, '#451a03');
+        skyGrad.addColorStop(0.7, '#7c2d12');
+        skyGrad.addColorStop(1, '#991b1b');
+        ctx.fillStyle = skyGrad;
+        ctx.fillRect(0, 0, WORLD_WIDTH, 550);
+
+        // Phobos & Deimos moons
+        ctx.fillStyle = '#d6d3d1';
+        ctx.beginPath();
+        ctx.ellipse(350, 160, 18, 12, 0.4, 0, Math.PI * 2);
+        ctx.arc(1400, 120, 8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Mars Red Desert Surface
+        ctx.fillStyle = '#991b1b';
+        ctx.fillRect(0, 520, WORLD_WIDTH, WORLD_HEIGHT - 520);
+
+        // Canyon ridges & Orange Geothermal Veins
+        ctx.strokeStyle = '#f97316';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(100, 750); ctx.lineTo(450, 780); ctx.lineTo(800, 720); ctx.lineTo(1300, 810); ctx.lineTo(1800, 760); ctx.lineTo(2300, 800);
+        ctx.moveTo(300, 1100); ctx.lineTo(750, 1150); ctx.lineTo(1200, 1080); ctx.lineTo(1700, 1140); ctx.lineTo(2200, 1100);
+        ctx.stroke();
+
+        // Red Sand Dunes
+        ctx.fillStyle = '#7f1d1d';
+        for (let i = 0; i < 8; i++) {
+          const dx = 150 + i * 290;
+          const dy = 580 + (i % 3) * 160;
+          ctx.beginPath();
+          ctx.ellipse(dx, dy, 120, 35, 0.1, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+      } else if (locId === 'w_europa') {
+        // Europa Sky: Frozen deep indigo
+        ctx.fillStyle = '#020617';
+        ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+
+        // Huge Striped Jupiter dominating the sky
+        ctx.save();
+        const jupX = 1450;
+        const jupY = 240;
+        const jupR = 140;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(jupX, jupY, jupR, 0, Math.PI * 2);
+        ctx.clip();
+        // Striped atmospheric bands
+        const bandColors = ['#d97706', '#92400e', '#b45309', '#78350f', '#d97706', '#f59e0b', '#b45309'];
+        bandColors.forEach((color, idx) => {
+          ctx.fillStyle = color;
+          ctx.fillRect(jupX - jupR, jupY - jupR + idx * 40, jupR * 2, 40);
+        });
+        // Great Red Spot
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath();
+        ctx.ellipse(jupX + 35, jupY + 30, 32, 18, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        ctx.restore();
+
+        // Europa Ice Crust Surface
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(0, 500, WORLD_WIDTH, WORLD_HEIGHT - 500);
+
+        // Glowing Cyan Hydrothermal Fissures
+        ctx.strokeStyle = '#06b6d4';
+        ctx.lineWidth = 3.5;
+        ctx.shadowColor = '#22d3ee';
+        ctx.shadowBlur = 12;
+        ctx.beginPath();
+        ctx.moveTo(120, 600); ctx.lineTo(380, 640); ctx.lineTo(650, 590); ctx.lineTo(920, 660); ctx.lineTo(1400, 620); ctx.lineTo(1900, 680); ctx.lineTo(2350, 630);
+        ctx.moveTo(250, 950); ctx.lineTo(580, 990); ctx.lineTo(980, 930); ctx.lineTo(1450, 1020); ctx.lineTo(1850, 960); ctx.lineTo(2250, 1010);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Ice crystal spires
+        for (let i = 0; i < 9; i++) {
+          const sx = 200 + i * 250;
+          const sy = 540 + (i % 4) * 170;
+          drawIceSpire(sx, sy);
+        }
+
+      } else if (locId === 'w_saturn') {
+        // Saturn Sky: Golden Starlight
+        const satSky = ctx.createLinearGradient(0, 0, 0, 600);
+        satSky.addColorStop(0, '#1c1917');
+        satSky.addColorStop(0.6, '#451a03');
+        satSky.addColorStop(1, '#78350f');
+        ctx.fillStyle = satSky;
+        ctx.fillRect(0, 0, WORLD_WIDTH, 600);
+
+        // Huge Golden Rings across the sky
+        ctx.save();
+        ctx.strokeStyle = 'rgba(250, 204, 21, 0.45)';
+        ctx.lineWidth = 14;
+        ctx.beginPath();
+        ctx.ellipse(1200, 180, 1100, 260, -0.15, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.strokeStyle = 'rgba(234, 179, 8, 0.3)';
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.ellipse(1200, 180, 1140, 275, -0.15, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+
+        // Saturn Golden Asteroid Plateau Surface
+        ctx.fillStyle = '#78350f';
+        ctx.fillRect(0, 520, WORLD_WIDTH, WORLD_HEIGHT - 520);
+
+        // Golden Stardust Flecks
+        ctx.fillStyle = '#facc15';
+        for (let i = 0; i < 40; i++) {
+          const fx = 50 + (i * 61) % (WORLD_WIDTH - 100);
+          const fy = 550 + (i * 47) % (WORLD_HEIGHT - 580);
+          ctx.fillRect(fx, fy, 4, 4);
+        }
+
+      } else if (locId === 'w_kepler') {
+        // Kepler Sky: Alien bioluminescent green/purple
+        const kepSky = ctx.createLinearGradient(0, 0, 0, 550);
+        kepSky.addColorStop(0, '#1e1b4b');
+        kepSky.addColorStop(0.5, '#022c22');
+        kepSky.addColorStop(1, '#064e3b');
+        ctx.fillStyle = kepSky;
+        ctx.fillRect(0, 0, WORLD_WIDTH, 550);
+
+        // Twin Suns (One violet, one teal)
+        ctx.fillStyle = '#c084fc';
+        ctx.beginPath();
+        ctx.arc(450, 150, 40, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#2dd4bf';
+        ctx.beginPath();
+        ctx.arc(550, 180, 25, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Alien Bioluminescent Forest Floor
+        ctx.fillStyle = '#064e3b';
+        ctx.fillRect(0, 500, WORLD_WIDTH, WORLD_HEIGHT - 500);
+
+        // Giant Bioluminescent Alien Mushrooms
+        for (let i = 0; i < 10; i++) {
+          const mx = 180 + i * 225;
+          const my = 540 + (i % 4) * 160;
+          drawAlienMushroom(mx, my, i);
+        }
+
+      } else {
+        // Galaxies: Deep space with huge rotating spiral nebula vortex & high-tech space station platform
+        ctx.fillStyle = '#050510';
+        ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+
+        // Twinkling galactic stars
+        gameState.cosmicStars.forEach(s => {
+          ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha})`;
+          ctx.fillRect(s.x, s.y, s.size * 1.2, s.size * 1.2);
+        });
+
+        // Massive Rotating Spiral Galaxy Nebula
+        ctx.save();
+        const vortexX = WORLD_WIDTH / 2;
+        const vortexY = WORLD_HEIGHT / 2;
+        const rot = time * 0.00015;
+
+        let nebColors = ['#8b5cf6', '#ec4899', '#3b82f6'];
+        if (locId === 'g_andromeda') nebColors = ['#a855f7', '#d946ef', '#f43f5e'];
+        else if (locId === 'g_triangulum') nebColors = ['#06b6d4', '#38bdf8', '#facc15'];
+        else if (locId === 'g_supercluster') nebColors = ['#6366f1', '#8b5cf6', '#c084fc'];
+        else if (locId === 'g_multiverse') nebColors = ['#f43f5e', '#facc15', '#10b981', '#38bdf8', '#a855f7'];
+
+        nebColors.forEach((color, idx) => {
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 4 + idx * 2;
+          ctx.globalAlpha = 0.35;
+          ctx.beginPath();
+          for (let a = 0; a < Math.PI * 6; a += 0.15) {
+            const r = 40 + a * 55;
+            const sx = vortexX + Math.cos(a + rot + idx * 1.2) * r;
+            const sy = vortexY + Math.sin(a + rot + idx * 1.2) * (r * 0.55);
+            if (a === 0) ctx.moveTo(sx, sy);
+            else ctx.lineTo(sx, sy);
+          }
+          ctx.stroke();
+        });
+        ctx.restore();
+
+        // High-tech galactic deck grid
+        ctx.save();
+        ctx.strokeStyle = 'rgba(99, 102, 241, 0.2)';
+        ctx.lineWidth = 1.5;
+        for (let x = 0; x < WORLD_WIDTH; x += 120) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0); ctx.lineTo(x, WORLD_HEIGHT);
+          ctx.stroke();
+        }
+        for (let y = 0; y < WORLD_HEIGHT; y += 120) {
+          ctx.beginPath();
+          ctx.moveTo(0, y); ctx.lineTo(WORLD_WIDTH, y);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        if (locId === 'g_multiverse') {
+          // Floating golden crown relics in multiverse
+          ctx.save();
+          ctx.font = '28px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('👑', 400 + Math.sin(time * 0.002) * 20, 300);
+          ctx.fillText('👑', 1800 + Math.cos(time * 0.002) * 20, 350);
+          ctx.fillText('👑', 1100 + Math.sin(time * 0.003) * 25, 1100);
+          ctx.restore();
+        }
+      }
+    }
+
+    function drawApolloFlag(x, y) {
+      ctx.save();
+      ctx.strokeStyle = '#f8fafc';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x, y - 50);
+      ctx.stroke();
+
+      // USA Flag
+      ctx.fillStyle = '#ef4444';
+      ctx.fillRect(x, y - 50, 30, 18);
+      ctx.fillStyle = '#1e40af';
+      ctx.fillRect(x, y - 50, 12, 10);
+      ctx.restore();
+    }
+
+    function drawIceSpire(x, y) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.65)';
+      ctx.beginPath();
+      ctx.moveTo(x - 14, y);
+      ctx.lineTo(x, y - 65);
+      ctx.lineTo(x + 14, y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = '#bae6fd';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawAlienMushroom(x, y, seed) {
+      ctx.save();
+      ctx.fillStyle = '#065f46';
+      ctx.fillRect(x - 6, y - 40, 12, 40);
+
+      const capColors = ['#a855f7', '#06b6d4', '#10b981', '#f43f5e'];
+      ctx.fillStyle = capColors[seed % capColors.length];
+      ctx.beginPath();
+      ctx.arc(x, y - 40, 24, Math.PI, 0);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(x - 10, y - 48, 3, 0, Math.PI * 2);
+      ctx.arc(x + 10, y - 48, 3, 0, Math.PI * 2);
+      ctx.arc(x, y - 55, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Planetary & Galactic Constructible Buildings Renderer
+    function drawRealmBuildings(locId) {
+      const bList = REALM_BUILDINGS[locId] || [];
+      const time = performance.now();
+
+      bList.forEach(b => {
+        const { x, y, w, h } = b.pos;
+        const cx = x + w / 2;
+        const cy = y + h / 2;
+
+        // Skip if outside viewport
+        if (
+          x + w < camera.x - 60 || x > camera.x + camera.width + 60 ||
+          y + h < camera.y - 60 || y > camera.y + camera.height + 60
+        ) return;
+
+        ctx.save();
+
+        if (b.built) {
+          // --- FULLY OPERATIONAL CELESTIAL FACILITY ---
+          // High-Tech Hexagonal Foundation Pad
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+          ctx.beginPath();
+          ctx.roundRect(x, y + 20, w, h - 20, 16);
+          ctx.fill();
+
+          ctx.strokeStyle = '#06b6d4';
+          ctx.lineWidth = 2.5;
+          ctx.stroke();
+
+          // Foundation energy conduits
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(x + 15, y + h); ctx.lineTo(cx, cy + 20); ctx.lineTo(x + w - 15, y + h);
+          ctx.stroke();
+
+          // Draw Distinct Structure Graphic
+          const icon = b.icon;
+          if (icon === '🔮' || icon === '🌱' || icon === '🔬') {
+            // Bio-Dome: Glass dome with glowing interior
+            const domeR = Math.min(w, h) * 0.36;
+            ctx.fillStyle = 'rgba(6, 182, 212, 0.25)';
+            ctx.beginPath();
+            ctx.arc(cx, cy - 5, domeR, Math.PI, 0);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = '#67e8f9';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Interior flora / crystal
+            ctx.fillStyle = '#10b981';
+            ctx.beginPath();
+            ctx.arc(cx, cy - 8, domeR * 0.45, 0, Math.PI * 2);
+            ctx.fill();
+
+          } else if (icon === '📡' || icon === '🗼' || icon === '⚡') {
+            // Radar Dish / Energy Spire
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy + 25); ctx.lineTo(cx, cy - 25);
+            ctx.stroke();
+
+            // Dish
+            ctx.fillStyle = '#cbd5e1';
+            ctx.beginPath();
+            ctx.arc(cx, cy - 25, 26, Math.PI * 0.9, Math.PI * 2.1);
+            ctx.fill();
+
+            // Animated ping pulses
+            const pulseR = 10 + (time * 0.05) % 35;
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.7)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(cx, cy - 35, pulseR, -Math.PI * 0.75, -Math.PI * 0.25);
+            ctx.stroke();
+
+          } else if (icon === '🚀' || icon === '🛸' || icon === '🚙') {
+            // Launchpad with rocket / orbital starbase
+            ctx.fillStyle = '#64748b';
+            ctx.fillRect(cx - 30, cy + 10, 60, 10);
+
+            // Rocket Body
+            ctx.fillStyle = '#f8fafc';
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - 45);
+            ctx.lineTo(cx + 12, cy - 15);
+            ctx.lineTo(cx + 12, cy + 10);
+            ctx.lineTo(cx - 12, cy + 10);
+            ctx.lineTo(cx - 12, cy - 15);
+            ctx.closePath();
+            ctx.fill();
+
+            // Rocket red nosecone
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - 45);
+            ctx.lineTo(cx + 12, cy - 15);
+            ctx.lineTo(cx - 12, cy - 15);
+            ctx.closePath();
+            ctx.fill();
+
+          } else if (icon === '☀️' || icon === '🪨' || icon === '⛏️') {
+            // Solar panels / extractor
+            ctx.fillStyle = '#1e3a8a';
+            ctx.beginPath();
+            ctx.roundRect(cx - 35, cy - 20, 70, 35, 6);
+            ctx.fill();
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Solar grid
+            ctx.strokeStyle = '#60a5fa';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(cx - 35, cy - 2); ctx.lineTo(cx + 35, cy - 2);
+            ctx.moveTo(cx - 12, cy - 20); ctx.lineTo(cx - 12, cy + 15);
+            ctx.moveTo(cx + 12, cy - 20); ctx.lineTo(cx + 12, cy + 15);
+            ctx.stroke();
+
+          } else {
+            // Fortress / Citadel / Palace / Super-Core
+            ctx.fillStyle = '#1e1b4b';
+            ctx.fillRect(cx - 28, cy - 25, 56, 45);
+
+            // Spires
+            ctx.fillStyle = '#8b5cf6';
+            ctx.beginPath();
+            ctx.moveTo(cx - 28, cy - 25); ctx.lineTo(cx - 20, cy - 45); ctx.lineTo(cx - 12, cy - 25);
+            ctx.moveTo(cx + 12, cy - 25); ctx.lineTo(cx + 20, cy - 45); ctx.lineTo(cx + 28, cy - 25);
+            ctx.moveTo(cx - 10, cy - 25); ctx.lineTo(cx, cy - 55); ctx.lineTo(cx + 10, cy - 25);
+            ctx.fill();
+
+            // Glowing core crystal
+            ctx.fillStyle = '#facc15';
+            ctx.beginPath();
+            ctx.arc(cx, cy - 5, 8, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // Operational Badge Overhead
+          const badgeY = y - 10 + Math.sin(time * 0.003 + cx) * 3;
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+          ctx.beginPath();
+          ctx.roundRect(cx - 75, badgeY - 26, 150, 32, 8);
+          ctx.fill();
+          ctx.strokeStyle = '#06b6d4';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+
+          ctx.fillStyle = '#67e8f9';
+          ctx.font = 'bold 11px Fredoka, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(`${b.icon} ${b.name}`, cx, badgeY - 14);
+
+          ctx.fillStyle = '#facc15';
+          ctx.font = 'bold 10px Fredoka, sans-serif';
+          ctx.fillText(`+${formatMoney(b.passive)}/s`, cx, badgeY - 2);
+
+        } else {
+          // --- HOLOGRAPHIC BLUEPRINT SITE ---
+          ctx.save();
+          // Pulsing Blueprint Pad
+          const pulse = (Math.sin(time * 0.004) + 1) * 0.5;
+          ctx.fillStyle = `rgba(14, 165, 233, ${0.08 + pulse * 0.08})`;
+          ctx.beginPath();
+          ctx.roundRect(x, y, w, h, 14);
+          ctx.fill();
+
+          ctx.strokeStyle = '#0284c7';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([8, 6]);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          // Blueprint Grid lines
+          ctx.strokeStyle = 'rgba(56, 189, 248, 0.2)';
+          ctx.lineWidth = 1;
+          for (let gx = x + 20; gx < x + w; gx += 20) {
+            ctx.beginPath();
+            ctx.moveTo(gx, y); ctx.lineTo(gx, y + h);
+            ctx.stroke();
+          }
+          for (let gy = y + 20; gy < y + h; gy += 20) {
+            ctx.beginPath();
+            ctx.moveTo(x, gy); ctx.lineTo(x + w, gy);
+            ctx.stroke();
+          }
+
+          // Hologram Icon & Scaffolding
+          ctx.font = '32px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.globalAlpha = 0.65 + pulse * 0.35;
+          ctx.fillText(b.icon, cx, cy + 10);
+          ctx.globalAlpha = 1.0;
+
+          // Overhead Blueprint Header
+          const badgeY = y - 12;
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+          ctx.beginPath();
+          ctx.roundRect(cx - 80, badgeY - 26, 160, 32, 8);
+          ctx.fill();
+          ctx.strokeStyle = '#f59e0b';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+
+          ctx.fillStyle = '#fef08a';
+          ctx.font = 'bold 11px Fredoka, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(`🏗️ ${b.name}`, cx, badgeY - 14);
+
+          ctx.fillStyle = '#38bdf8';
+          ctx.font = 'bold 10px Fredoka, sans-serif';
+          ctx.fillText(`Cost: ${formatMoney(b.price)}`, cx, badgeY - 2);
+
+          // Proximity construct prompt
+          const distToPlayer = Math.hypot(player.x - cx, player.y - cy);
+          if (distToPlayer < 160) {
+            ctx.fillStyle = '#22c55e';
+            ctx.font = 'bold 11px Fredoka, sans-serif';
+            ctx.fillText('[Press E or Space to Construct]', cx, y + h + 18);
+          }
+          ctx.restore();
+        }
+
+        ctx.restore();
+      });
     }
 
     // World Terrain Renderers
@@ -2912,21 +4857,72 @@
             ctx.lineTo(f.x, floatY - 20);
             ctx.lineTo(f.x + 6, floatY - 11);
             ctx.fill();
+          } else {
+            // Celestial & Exotic Space Fruits (Native to Planets & Galaxies)
+            ctx.fillStyle = f.color || '#a855f7';
+            ctx.beginPath();
+            ctx.arc(f.x, floatY, 12, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Rotating stardust halo ring
+            ctx.strokeStyle = f.leafColor || '#ffffff';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.ellipse(f.x, floatY, 18, 7, time * 2, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Diamond sparkle highlight
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(f.x - 3, floatY - 4, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Crown leaves / stardust spires
+            ctx.fillStyle = f.leafColor || '#38bdf8';
+            ctx.beginPath();
+            ctx.moveTo(f.x - 6, floatY - 10);
+            ctx.lineTo(f.x, floatY - 20);
+            ctx.lineTo(f.x + 6, floatY - 10);
+            ctx.fill();
+
+            // Price badge
+            ctx.fillStyle = f.color || '#fef08a';
+            ctx.font = 'bold 10px Fredoka, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(`+${formatMoney(f.value)}`, f.x, floatY - 24);
           }
           ctx.restore();
         }
       });
     }
 
-    // Draw Pineapple Head (Matching Child's Drawing)
+    // Draw Pineapple Head (Matching Child's Drawing + Cosmic Superpowers)
     function drawPlayer() {
       ctx.save();
-      ctx.translate(player.x, player.y);
+
+      // Cosmic Power: Anti-Gravity Levitation (Flight)
+      const flightPow = COSMIC_POWERS.find(p => p.id === 'pow_flight');
+      let hoverY = 0;
+      if (flightPow && flightPow.level > 0) {
+        hoverY = Math.sin(performance.now() * 0.004) * 8 - 10;
+      }
+
+      ctx.translate(player.x, player.y + hoverY);
       if (player.dir === -1) {
         ctx.scale(-1, 1);
       }
 
       const bob = Math.sin(player.stepAnim) * 3;
+
+      // Cosmic Power: Invisibility Ghost Phasing
+      if (gameState.isInvisible) {
+        ctx.globalAlpha = 0.38;
+        const t = performance.now() * 0.005;
+        ctx.fillStyle = 'rgba(168, 85, 247, 0.35)';
+        ctx.beginPath();
+        ctx.arc(0, -10 + bob, 38 + Math.sin(t) * 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
 
       // Cosmic / Galaxy Crown if in galaxies era
       if (gameState.currentEra === 'galaxies') {
@@ -2937,11 +4933,37 @@
         ctx.stroke();
       }
 
-      // Soft shadow
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+      // Anti-Gravity Levitation halo beneath feet
+      if (flightPow && flightPow.level > 0) {
+        ctx.save();
+        ctx.strokeStyle = '#06b6d4';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.ellipse(0, 26, 22, 6, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // Soft shadow (fades if levitating)
+      ctx.fillStyle = flightPow && flightPow.level > 0 ? 'rgba(0, 0, 0, 0.12)' : 'rgba(0, 0, 0, 0.25)';
       ctx.beginPath();
-      ctx.ellipse(0, 22, 18, 7, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 22 - hoverY * 0.5, 18, 7, 0, 0, Math.PI * 2);
       ctx.fill();
+
+      // Super Speed Sprint Booster Rocket Flames
+      if (gameState.boostActive) {
+        ctx.save();
+        ctx.fillStyle = '#f59e0b';
+        ctx.beginPath();
+        ctx.moveTo(-11, 24 + bob);
+        ctx.lineTo(-7, 36 + bob + Math.random() * 8);
+        ctx.lineTo(-3, 24 + bob);
+        ctx.moveTo(4, 24 + bob);
+        ctx.lineTo(8, 36 + bob + Math.random() * 8);
+        ctx.lineTo(12, 24 + bob);
+        ctx.fill();
+        ctx.restore();
+      }
 
       // Body (Green outfit matching original drawing)
       ctx.fillStyle = '#16a34a';
@@ -3020,7 +5042,7 @@
       ctx.restore();
     }
 
-    // Draw Flower Man (Matching Child's Drawing)
+    // Draw Flower Man (Matching Child's Drawing + Cosmic Astro-Suit)
     function drawFlowerMan() {
       ctx.save();
       ctx.translate(flowerMan.x, flowerMan.y);
@@ -3109,6 +5131,36 @@
       ctx.arc(0, -16 + bob, 5, 0.1, Math.PI - 0.1);
       ctx.stroke();
 
+      // Cosmic Power: Flower Man Interstellar Astro-Suit
+      const fmAstroPow = COSMIC_POWERS.find(p => p.id === 'pow_fm_astro');
+      if (fmAstroPow && fmAstroPow.level > 0) {
+        // Interstellar spacesuit chest control panel
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath();
+        ctx.roundRect(-8, 3 + bob, 16, 11, 3);
+        ctx.fill();
+        ctx.fillStyle = '#10b981';
+        ctx.fillRect(-5, 6 + bob, 3, 3);
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillRect(2, 6 + bob, 3, 3);
+
+        // Glass bubble astronaut helmet over sunflower face
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.28)';
+        ctx.beginPath();
+        ctx.arc(0, -18 + bob, 27, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        // Curved glass glare reflection
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, -18 + bob, 22, -Math.PI * 0.7, -Math.PI * 0.25);
+        ctx.stroke();
+      }
+
       // Meeting Prompt badge if waiting
       if (!gameState.metFlowerMan) {
         ctx.fillStyle = '#fef08a';
@@ -3133,31 +5185,48 @@
       });
     }
 
-    // Minimap Rendering in corner
+    // Minimap Rendering in corner (Earth Parcels or Celestial World Outposts)
     function drawMinimap() {
       minimapCtx.clearRect(0, 0, minimapCanvas.width, minimapCanvas.height);
       const scaleX = minimapCanvas.width / WORLD_WIDTH;
       const scaleY = minimapCanvas.height / WORLD_HEIGHT;
 
-      // Draw plots
-      LAND_PLOTS.forEach(plot => {
-        const mx = plot.bounds.x * scaleX;
-        const my = plot.bounds.y * scaleY;
-        const mw = plot.bounds.w * scaleX;
-        const mh = plot.bounds.h * scaleY;
+      if (gameState.currentLocation === 'nh') {
+        // Draw NH plots
+        LAND_PLOTS.forEach(plot => {
+          const mx = plot.bounds.x * scaleX;
+          const my = plot.bounds.y * scaleY;
+          const mw = plot.bounds.w * scaleX;
+          const mh = plot.bounds.h * scaleY;
 
-        minimapCtx.fillStyle = plot.owned ? 'rgba(34, 197, 94, 0.65)' : 'rgba(71, 85, 105, 0.65)';
-        minimapCtx.fillRect(mx, my, mw, mh);
-        minimapCtx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+          minimapCtx.fillStyle = plot.owned ? 'rgba(34, 197, 94, 0.65)' : 'rgba(71, 85, 105, 0.65)';
+          minimapCtx.fillRect(mx, my, mw, mh);
+          minimapCtx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+          minimapCtx.lineWidth = 1;
+          minimapCtx.strokeRect(mx, my, mw, mh);
+        });
+      } else {
+        // Celestial Realm minimap
+        minimapCtx.fillStyle = '#0b0f19';
+        minimapCtx.fillRect(0, 0, minimapCanvas.width, minimapCanvas.height);
+        minimapCtx.strokeStyle = '#3b82f6';
         minimapCtx.lineWidth = 1;
-        minimapCtx.strokeRect(mx, my, mw, mh);
-      });
+        minimapCtx.strokeRect(0, 0, minimapCanvas.width, minimapCanvas.height);
+
+        // Draw Realm Infrastructure Buildings
+        const bList = REALM_BUILDINGS[gameState.currentLocation] || [];
+        bList.forEach(b => {
+          minimapCtx.fillStyle = b.built ? '#06b6d4' : '#f59e0b';
+          minimapCtx.fillRect(b.pos.x * scaleX, b.pos.y * scaleY, b.pos.w * scaleX, b.pos.h * scaleY);
+        });
+      }
 
       // Draw Fruits
       gameState.fruits.forEach(f => {
         if (f.tier === 'emerald') minimapCtx.fillStyle = '#10b981';
         else if (f.tier === 'diamond') minimapCtx.fillStyle = '#06b6d4';
         else if (f.tier === 'golden') minimapCtx.fillStyle = '#facc15';
+        else if (f.tier === 'celestial') minimapCtx.fillStyle = f.color || '#a855f7';
         else minimapCtx.fillStyle = '#ef4444';
 
         minimapCtx.fillRect(f.x * scaleX, f.y * scaleY, 2.5, 2.5);

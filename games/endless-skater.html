@@ -501,13 +501,13 @@
       </div>
     </div>
 
-    <!-- Silly wipeout notification overlay -->
+    <!-- Wipeout "Oof" notification overlay -->
     <div id="bail-overlay" class="absolute inset-0 z-20 pointer-events-none flex flex-col items-center justify-center opacity-0 transition-opacity duration-200">
-      <div class="text-4xl sm:text-6xl font-marker text-amber-300 drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] tracking-wider transform -rotate-3">
-        🐥 PLOP! BOARD MEETING!
+      <div id="bail-title" class="text-6xl sm:text-8xl font-marker text-red-500 drop-shadow-[0_4px_16px_rgba(239,68,68,0.9)] tracking-wider transform -rotate-3 animate-pulse">
+        Oof!
       </div>
-      <div class="text-sm sm:text-base font-bold text-amber-100 bg-slate-900/90 px-4 py-1.5 rounded-full border border-amber-400/50 mt-2">
-        A tiny bird called dibs on your skateboard!
+      <div id="bail-subtitle" class="text-sm sm:text-base font-bold text-amber-100 bg-slate-900/90 px-4 py-1.5 rounded-full border border-red-500/50 mt-3 shadow-lg">
+        Skater got mad and threw the skateboard!
       </div>
     </div>
 
@@ -794,6 +794,8 @@
         isBusModalOpen: false,
         isBailed: false,
         bailTimer: 0,
+        bailDuration: 2.0,
+        wipeoutType: 0, // 0: throw board, 1: rage kick, 2: overhead slam
         // Active combo
         activeComboTricks: [],
         comboScore: 0,
@@ -1562,7 +1564,9 @@
       function triggerBail() {
         if (state.isBailed) return;
         state.isBailed = true;
-        state.bailTimer = 1.8;
+        state.bailDuration = 2.2;
+        state.bailTimer = 2.2;
+        state.wipeoutType = Math.floor(Math.random() * 3);
         state.isGrinding = false;
         state.currentGrindRail = null;
         skater.grabDuration = 0;
@@ -1575,28 +1579,39 @@
 
         playSound('bail');
 
-        // Show the playful wipeout overlay.
+        // Show the playful wipeout overlay with "Oof".
         const bailOverlay = document.getElementById('bail-overlay');
+        const bailTitle = document.getElementById('bail-title');
+        const bailSubtitle = document.getElementById('bail-subtitle');
+        if (bailTitle) bailTitle.textContent = 'Oof!';
+        if (bailSubtitle) {
+          const subtitles = [
+            'Skater got mad and chucked the board!',
+            'Skater rage-kicked the board away!',
+            'Skater slammed the board in pure frustration!'
+          ];
+          bailSubtitle.textContent = subtitles[state.wipeoutType] || 'Oof! Tantrum time!';
+        }
         bailOverlay.classList.remove('opacity-0');
-        setTimeout(() => bailOverlay.classList.add('opacity-0'), 1600);
+        setTimeout(() => bailOverlay.classList.add('opacity-0'), 1800);
 
-        // Skater gently sits down on the ground to rest
+        // Skater on ground
         skater.vy = 0;
         skater.angle = 0;
         skater.vAngle = 0;
         skater.y = groundY;
         skater.isGrounded = true;
 
-        // Toss up a few bright comic-book stars around the harmless tumble.
-        for (let i = 0; i < 8; i++) {
+        // Toss up angry comic-book particles (red/orange sparks and steam)
+        for (let i = 0; i < 14; i++) {
           addParticle(
-            skater.worldX + (Math.random() - 0.5) * 34,
-            skater.y - 18 - Math.random() * 20,
-            (Math.random() - 0.5) * 2.2,
-            -Math.random() * 2.5 - 0.6,
-            ['#fde047', '#fb7185', '#60a5fa', '#34d399'][i % 4],
-            4,
-            1
+            skater.worldX + (Math.random() - 0.5) * 40,
+            skater.y - 18 - Math.random() * 25,
+            (Math.random() - 0.5) * 3.5,
+            -Math.random() * 3.2 - 0.8,
+            ['#ef4444', '#f97316', '#fbbf24', '#f8fafc'][i % 4],
+            5,
+            1.2
           );
         }
       }
@@ -2774,76 +2789,466 @@
         const isTrickFlipping = skater.trickFlipProgress > 0;
         const flipAngle = skater.trickFlipProgress * Math.PI * 2;
 
-        // --- SKATEBOARD DECK & TRUCKS ---
-        ctx.save();
-        ctx.translate(0, 10);
+        function drawSkateboard(bx, by, bAngle = 0, scaleY = 1, rot2 = 0) {
+          ctx.save();
+          ctx.translate(bx, by);
+          if (bAngle !== 0) ctx.rotate(bAngle);
+          if (rot2 !== 0) ctx.rotate(rot2);
+          if (scaleY !== 1) ctx.scale(1, scaleY);
 
-        if (isTrickFlipping && (skater.trickType === 'kickflip' || skater.trickType === 'heelflip')) {
-          ctx.scale(1, Math.cos(flipAngle));
-        } else if (isTrickFlipping && skater.trickType === 'shuvit') {
-          ctx.rotate(flipAngle);
+          const deck = getCurrentDeck();
+          const trucks = getCurrentTrucks();
+          const bearings = getCurrentBearings();
+
+          // 1. Skateboard Deck
+          const deckColor = deck.id === 3 ? '#eab308' : deck.id === 2 ? '#06b6d4' : '#ea580c';
+          ctx.fillStyle = deckColor;
+          ctx.beginPath();
+          ctx.moveTo(-32, -4);
+          ctx.lineTo(32, -4);
+          ctx.quadraticCurveTo(36, -6, 38, -10);
+          ctx.quadraticCurveTo(36, -2, 32, 2);
+          ctx.lineTo(-32, 2);
+          ctx.quadraticCurveTo(-36, -2, -38, -10);
+          ctx.quadraticCurveTo(-36, -6, -32, -4);
+          ctx.closePath();
+          ctx.fill();
+          ctx.strokeStyle = '#0f172a';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+
+          // Black Grip Tape on top
+          ctx.fillStyle = '#1e293b';
+          ctx.fillRect(-28, -6, 56, 2);
+
+          // 2. Trucks
+          const truckColor = trucks.tier >= 4 ? '#e2e8f0' : trucks.tier >= 2 ? '#94a3b8' : '#475569';
+          ctx.fillStyle = truckColor;
+          ctx.fillRect(18, 0, 7, 5);
+          ctx.fillRect(-25, 0, 7, 5);
+
+          // 3. Wheels & Bearings
+          const wheelColor = bearings.tier >= 4 ? '#ef4444' : bearings.tier >= 2 ? '#f59e0b' : '#f8fafc';
+          ctx.fillStyle = wheelColor;
+          ctx.beginPath();
+          ctx.arc(21, 6, 5.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#334155';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+
+          ctx.fillStyle = bearings.tier >= 4 ? '#fbbf24' : '#1e293b';
+          ctx.beginPath();
+          ctx.arc(21, 6, 1.8, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = wheelColor;
+          ctx.beginPath();
+          ctx.arc(-22, 6, 5.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#334155';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+
+          ctx.fillStyle = bearings.tier >= 4 ? '#fbbf24' : '#1e293b';
+          ctx.beginPath();
+          ctx.arc(-22, 6, 1.8, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.restore();
         }
 
-        const deck = getCurrentDeck();
-        const trucks = getCurrentTrucks();
-        const bearings = getCurrentBearings();
+        function drawAngryFaceAndCap(headX, headY) {
+          // Head
+          ctx.fillStyle = '#f8fafc';
+          ctx.beginPath();
+          ctx.arc(headX, headY, 7, 0, Math.PI * 2);
+          ctx.fill();
 
-        // 1. Skateboard Deck
-        const deckColor = deck.id === 3 ? '#eab308' : deck.id === 2 ? '#06b6d4' : '#ea580c';
-        ctx.fillStyle = deckColor;
-        ctx.beginPath();
-        ctx.moveTo(-32, -4);
-        ctx.lineTo(32, -4);
-        ctx.quadraticCurveTo(36, -6, 38, -10);
-        ctx.quadraticCurveTo(36, -2, 32, 2);
-        ctx.lineTo(-32, 2);
-        ctx.quadraticCurveTo(-36, -2, -38, -10);
-        ctx.quadraticCurveTo(-36, -6, -32, -4);
-        ctx.closePath();
-        ctx.fill();
-        ctx.strokeStyle = '#0f172a';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
+          // Angry flushed face tint
+          ctx.fillStyle = 'rgba(239, 68, 68, 0.45)';
+          ctx.beginPath();
+          ctx.arc(headX, headY, 7, 0, Math.PI * 2);
+          ctx.fill();
 
-        // Black Grip Tape on top
-        ctx.fillStyle = '#1e293b';
-        ctx.fillRect(-28, -6, 56, 2);
+          // Cap (red skate cap tilted with rage)
+          ctx.fillStyle = '#ef4444';
+          ctx.beginPath();
+          ctx.arc(headX, headY - 1, 7.5, Math.PI * 0.75, Math.PI * 1.95);
+          ctx.lineTo(headX + 11, headY + 1);
+          ctx.closePath();
+          ctx.fill();
 
-        // 2. Trucks
-        const truckColor = trucks.tier >= 4 ? '#e2e8f0' : trucks.tier >= 2 ? '#94a3b8' : '#475569';
-        ctx.fillStyle = truckColor;
-        ctx.fillRect(18, 0, 7, 5);
-        ctx.fillRect(-25, 0, 7, 5);
+          // Angry slanted eyebrows
+          ctx.strokeStyle = '#0f172a';
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.moveTo(headX - 4, headY - 3); ctx.lineTo(headX - 1, headY - 1);
+          ctx.moveTo(headX + 4, headY - 3); ctx.lineTo(headX + 1, headY - 1);
+          ctx.stroke();
 
-        // 3. Wheels & Bearings
-        const wheelColor = bearings.tier >= 4 ? '#ef4444' : bearings.tier >= 2 ? '#f59e0b' : '#f8fafc';
-        ctx.fillStyle = wheelColor;
-        ctx.beginPath();
-        ctx.arc(21, 6, 5.5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#334155';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
+          // Eyes
+          ctx.fillStyle = '#0f172a';
+          ctx.beginPath();
+          ctx.arc(headX - 2.5, headY, 1.1, 0, Math.PI * 2);
+          ctx.arc(headX + 2.5, headY, 1.1, 0, Math.PI * 2);
+          ctx.fill();
 
-        ctx.fillStyle = bearings.tier >= 4 ? '#fbbf24' : '#1e293b';
-        ctx.beginPath();
-        ctx.arc(21, 6, 1.8, 0, Math.PI * 2);
-        ctx.fill();
+          // Shouting mouth with gritted teeth
+          ctx.fillStyle = '#7f1d1d';
+          ctx.beginPath();
+          ctx.ellipse(headX, headY + 3.2, 3.2, 2.5, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(headX - 2.5, headY + 1.8, 5, 1.6);
 
-        ctx.fillStyle = wheelColor;
-        ctx.beginPath();
-        ctx.arc(-22, 6, 5.5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#334155';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
+          // Comic anger vein mark 💢
+          const veinX = headX + 9;
+          const veinY = headY - 13;
+          ctx.strokeStyle = '#ef4444';
+          ctx.lineWidth = 2.2;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.moveTo(veinX - 4, veinY - 3); ctx.quadraticCurveTo(veinX, veinY - 1, veinX + 4, veinY - 3);
+          ctx.moveTo(veinX - 4, veinY + 3); ctx.quadraticCurveTo(veinX, veinY + 1, veinX + 4, veinY + 3);
+          ctx.moveTo(veinX - 3, veinY - 4); ctx.quadraticCurveTo(veinX - 1, veinY, veinX - 3, veinY + 4);
+          ctx.moveTo(veinX + 3, veinY - 4); ctx.quadraticCurveTo(veinX + 1, veinY, veinX + 3, veinY + 4);
+          ctx.stroke();
 
-        ctx.fillStyle = bearings.tier >= 4 ? '#fbbf24' : '#1e293b';
-        ctx.beginPath();
-        ctx.arc(-22, 6, 1.8, 0, Math.PI * 2);
-        ctx.fill();
+          // Steam puffs puffing from ears
+          const stm = 2 + Math.abs(Math.sin(performance.now() * 0.015)) * 2;
+          ctx.fillStyle = 'rgba(248, 250, 252, 0.7)';
+          ctx.beginPath();
+          ctx.arc(headX - 10, headY - 5, stm, 0, Math.PI * 2);
+          ctx.arc(headX - 15, headY - 10, stm * 1.3, 0, Math.PI * 2);
+          ctx.arc(headX + 10, headY - 5, stm, 0, Math.PI * 2);
+          ctx.arc(headX + 15, headY - 10, stm * 1.3, 0, Math.PI * 2);
+          ctx.fill();
+        }
 
-        ctx.restore();
+        // Check if player is bailed (wipeout animation)
+        if (state.isBailed) {
+          const totalDur = state.bailDuration || 2.2;
+          const t = Math.max(0, Math.min(1, 1 - (state.bailTimer / totalDur)));
+          const mode = state.wipeoutType % 3;
+
+          ctx.strokeStyle = '#f8fafc';
+          ctx.lineWidth = 3.5;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+
+          if (mode === 0) {
+            // === ANIMATION 1: SKATER GETS MAD & HURLS/THROWS SKATEBOARD ===
+            if (t < 0.35) {
+              // Phase A: Stoops down furiously to grab the skateboard
+              const p = t / 0.35;
+              const hipX = 0, hipY = 2;
+              const chestX = 4, chestY = -14;
+              const headX = 8, headY = -26;
+
+              ctx.beginPath();
+              ctx.moveTo(hipX, hipY); ctx.lineTo(-10, 6); ctx.lineTo(-14, 10);
+              ctx.moveTo(hipX, hipY); ctx.lineTo(10, 6); ctx.lineTo(14, 10);
+              ctx.stroke();
+
+              ctx.beginPath(); ctx.moveTo(hipX, hipY); ctx.lineTo(chestX, chestY); ctx.stroke();
+
+              ctx.beginPath();
+              ctx.moveTo(chestX, chestY); ctx.lineTo(8, -2); ctx.lineTo(6, 6);
+              ctx.moveTo(chestX, chestY); ctx.lineTo(-4, -2); ctx.lineTo(-6, 6);
+              ctx.stroke();
+
+              drawAngryFaceAndCap(headX, headY);
+              drawSkateboard(0, 10 - p * 4, -p * 0.2);
+            } else if (t < 0.55) {
+              // Phase B: Stands tall, winds back overhead in extreme anger
+              const p = (t - 0.35) / 0.2;
+              const hipX = 0, hipY = -2;
+              const chestX = -10, chestY = -26;
+              const headX = -8, headY = -40;
+
+              ctx.beginPath();
+              ctx.moveTo(hipX, hipY); ctx.lineTo(-12, 4); ctx.lineTo(-16, 10);
+              ctx.moveTo(hipX, hipY); ctx.lineTo(10, 4); ctx.lineTo(12, 10);
+              ctx.stroke();
+
+              ctx.beginPath(); ctx.moveTo(hipX, hipY); ctx.lineTo(chestX, chestY); ctx.stroke();
+
+              ctx.beginPath();
+              ctx.moveTo(chestX, chestY); ctx.lineTo(-18, -36); ctx.lineTo(-24, -44);
+              ctx.moveTo(chestX, chestY); ctx.lineTo(-12, -34); ctx.lineTo(-18, -44);
+              ctx.stroke();
+
+              drawAngryFaceAndCap(headX, headY);
+              drawSkateboard(-22, -44, -0.6 - p * 0.3);
+            } else if (t < 0.8) {
+              // Phase C: VIOLENT CHUCK / THROW FORWARD!
+              const p = (t - 0.55) / 0.25;
+              const hipX = 0, hipY = -2;
+              const chestX = 14, chestY = -22;
+              const headX = 18, headY = -36;
+
+              ctx.beginPath();
+              ctx.moveTo(hipX, hipY); ctx.lineTo(-10, 4); ctx.lineTo(-14, 10);
+              ctx.moveTo(hipX, hipY); ctx.lineTo(12, 4); ctx.lineTo(18, 10);
+              ctx.stroke();
+
+              ctx.beginPath(); ctx.moveTo(hipX, hipY); ctx.lineTo(chestX, chestY); ctx.stroke();
+
+              ctx.beginPath();
+              ctx.moveTo(chestX, chestY); ctx.lineTo(26, -24); ctx.lineTo(36, -20);
+              ctx.moveTo(chestX, chestY); ctx.lineTo(22, -18); ctx.lineTo(32, -14);
+              ctx.stroke();
+
+              drawAngryFaceAndCap(headX, headY);
+
+              // Thrown skateboard flying across the air spinning!
+              const bx = -10 + p * 150;
+              const by = -40 - Math.sin(p * Math.PI) * 45 + p * 50;
+              const bRot = p * Math.PI * 6;
+              drawSkateboard(bx, by, bRot);
+
+              // Speed lines behind board
+              ctx.strokeStyle = '#facc15';
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.moveTo(bx - 30, by - 6); ctx.lineTo(bx - 10, by);
+              ctx.moveTo(bx - 26, by + 6); ctx.lineTo(bx - 8, by + 4);
+              ctx.stroke();
+            } else {
+              // Phase D: Skateboard landed far away; skater stands fuming with clenched fists
+              const heave = Math.sin(t * 30) * 2;
+              const hipX = 0, hipY = -2;
+              const chestX = 2, chestY = -24 + heave;
+              const headX = 4, headY = -38 + heave;
+
+              ctx.beginPath();
+              ctx.moveTo(hipX, hipY); ctx.lineTo(-8, 4); ctx.lineTo(-12, 10);
+              ctx.moveTo(hipX, hipY); ctx.lineTo(8, 4); ctx.lineTo(12, 10);
+              ctx.stroke();
+
+              ctx.beginPath(); ctx.moveTo(hipX, hipY); ctx.lineTo(chestX, chestY); ctx.stroke();
+
+              ctx.beginPath();
+              ctx.moveTo(chestX, chestY); ctx.lineTo(-12, -16); ctx.lineTo(-6, -8);
+              ctx.moveTo(chestX, chestY); ctx.lineTo(14, -16); ctx.lineTo(8, -8);
+              ctx.stroke();
+
+              drawAngryFaceAndCap(headX, headY);
+              drawSkateboard(135, 8, 0.08);
+            }
+          } else if (mode === 1) {
+            // === ANIMATION 2: FURIOUS DROP-KICK / SOCCER KICK ===
+            if (t < 0.35) {
+              const hipX = 0, hipY = 0;
+              const chestX = -2, chestY = -22;
+              const headX = 2, headY = -36;
+
+              ctx.beginPath();
+              ctx.moveTo(hipX, hipY); ctx.lineTo(-8, 5); ctx.lineTo(-10, 10);
+              ctx.moveTo(hipX, hipY); ctx.lineTo(8, 5); ctx.lineTo(10, 10);
+              ctx.stroke();
+
+              ctx.beginPath(); ctx.moveTo(hipX, hipY); ctx.lineTo(chestX, chestY); ctx.stroke();
+
+              ctx.beginPath();
+              ctx.moveTo(chestX, chestY); ctx.lineTo(6, -10); ctx.lineTo(12, 0);
+              ctx.moveTo(chestX, chestY); ctx.lineTo(-2, -10); ctx.lineTo(4, 0);
+              ctx.stroke();
+
+              drawAngryFaceAndCap(headX, headY);
+              drawSkateboard(8, 2, 0.15);
+            } else if (t < 0.55) {
+              const hipX = 0, hipY = 0;
+              const chestX = -12, chestY = -24;
+              const headX = -8, headY = -38;
+
+              ctx.beginPath();
+              ctx.moveTo(hipX, hipY); ctx.lineTo(-4, 5); ctx.lineTo(-6, 10);
+              ctx.stroke();
+
+              ctx.beginPath();
+              ctx.moveTo(hipX, hipY); ctx.lineTo(-18, -6); ctx.lineTo(-24, 4);
+              ctx.stroke();
+
+              ctx.beginPath(); ctx.moveTo(hipX, hipY); ctx.lineTo(chestX, chestY); ctx.stroke();
+
+              ctx.beginPath();
+              ctx.moveTo(chestX, chestY); ctx.lineTo(-18, -26); ctx.lineTo(-24, -20);
+              ctx.moveTo(chestX, chestY); ctx.lineTo(12, -22); ctx.lineTo(18, -14);
+              ctx.stroke();
+
+              drawAngryFaceAndCap(headX, headY);
+              drawSkateboard(12, 4, 0.4);
+            } else if (t < 0.8) {
+              const p = (t - 0.55) / 0.25;
+              const hipX = 0, hipY = 0;
+              const chestX = -4, chestY = -24;
+              const headX = 0, headY = -38;
+
+              ctx.beginPath();
+              ctx.moveTo(hipX, hipY); ctx.lineTo(-6, 5); ctx.lineTo(-8, 10);
+              ctx.stroke();
+
+              ctx.beginPath();
+              ctx.moveTo(hipX, hipY); ctx.lineTo(16, -10); ctx.lineTo(26, -6);
+              ctx.stroke();
+
+              ctx.beginPath(); ctx.moveTo(hipX, hipY); ctx.lineTo(chestX, chestY); ctx.stroke();
+
+              ctx.beginPath();
+              ctx.moveTo(chestX, chestY); ctx.lineTo(-14, -20); ctx.lineTo(-22, -14);
+              ctx.moveTo(chestX, chestY); ctx.lineTo(10, -26); ctx.lineTo(18, -32);
+              ctx.stroke();
+
+              drawAngryFaceAndCap(headX, headY);
+
+              const bx = 14 + p * 160;
+              const by = 2 - Math.sin(p * Math.PI) * 35 + p * 6;
+              const bRot = p * Math.PI * 7;
+              drawSkateboard(bx, by, bRot);
+
+              if (p < 0.4) {
+                ctx.fillStyle = '#ef4444';
+                ctx.beginPath();
+                ctx.arc(16, -2, 10, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#fde047';
+                ctx.beginPath();
+                ctx.arc(16, -2, 6, 0, Math.PI * 2);
+                ctx.fill();
+              }
+            } else {
+              const shake = Math.sin(t * 35) * 3;
+              const hipX = 0, hipY = 0;
+              const chestX = 0, chestY = -24;
+              const headX = 2, headY = -38;
+
+              ctx.beginPath();
+              ctx.moveTo(hipX, hipY); ctx.lineTo(-8, 5); ctx.lineTo(-10, 10);
+              ctx.moveTo(hipX, hipY); ctx.lineTo(8, 5); ctx.lineTo(10, 10);
+              ctx.stroke();
+
+              ctx.beginPath(); ctx.moveTo(hipX, hipY); ctx.lineTo(chestX, chestY); ctx.stroke();
+
+              ctx.beginPath();
+              ctx.moveTo(chestX, chestY); ctx.lineTo(-12, -34 + shake); ctx.lineTo(-10, -44 + shake);
+              ctx.moveTo(chestX, chestY); ctx.lineTo(12, -34 - shake); ctx.lineTo(10, -44 - shake);
+              ctx.stroke();
+
+              drawAngryFaceAndCap(headX, headY);
+              drawSkateboard(150, 8, 0.12);
+            }
+          } else {
+            // === ANIMATION 3: OVERHEAD BOARD SLAM & TANTRUM STOMP ===
+            if (t < 0.35) {
+              const p = t / 0.35;
+              const jump = Math.sin(p * Math.PI) * 5;
+              const hipX = 0, hipY = -2 - jump;
+              const chestX = 0, chestY = -24 - jump;
+              const headX = 0, headY = -38 - jump;
+
+              ctx.beginPath();
+              ctx.moveTo(hipX, hipY); ctx.lineTo(-8, 4); ctx.lineTo(-10, 10 - jump * 0.3);
+              ctx.moveTo(hipX, hipY); ctx.lineTo(8, 4); ctx.lineTo(10, 10 - jump * 0.3);
+              ctx.stroke();
+
+              ctx.beginPath(); ctx.moveTo(hipX, hipY); ctx.lineTo(chestX, chestY); ctx.stroke();
+
+              ctx.beginPath();
+              ctx.moveTo(chestX, chestY); ctx.lineTo(-8, -40 - jump); ctx.lineTo(-6, -50 - jump);
+              ctx.moveTo(chestX, chestY); ctx.lineTo(8, -40 - jump); ctx.lineTo(6, -50 - jump);
+              ctx.stroke();
+
+              drawAngryFaceAndCap(headX, headY);
+              drawSkateboard(0, -52 - jump, 0.1);
+            } else if (t < 0.55) {
+              const p = (t - 0.35) / 0.2;
+              const hipX = 0, hipY = 2;
+              const chestX = 6, chestY = -16;
+              const headX = 10, headY = -28;
+
+              ctx.beginPath();
+              ctx.moveTo(hipX, hipY); ctx.lineTo(-10, 6); ctx.lineTo(-12, 10);
+              ctx.moveTo(hipX, hipY); ctx.lineTo(10, 6); ctx.lineTo(12, 10);
+              ctx.stroke();
+
+              ctx.beginPath(); ctx.moveTo(hipX, hipY); ctx.lineTo(chestX, chestY); ctx.stroke();
+
+              const armY = -48 + p * 54;
+              ctx.beginPath();
+              ctx.moveTo(chestX, chestY); ctx.lineTo(4, armY - 8); ctx.lineTo(2, armY);
+              ctx.moveTo(chestX, chestY); ctx.lineTo(10, armY - 8); ctx.lineTo(8, armY);
+              ctx.stroke();
+
+              drawAngryFaceAndCap(headX, headY);
+
+              const by = -48 + p * 56;
+              drawSkateboard(4, by, (Math.sin(p * Math.PI)) * 0.4);
+            } else if (t < 0.75) {
+              const p = (t - 0.55) / 0.2;
+              const bounce = Math.abs(Math.sin(p * Math.PI * 2)) * (1 - p) * 12;
+              const hipX = 0, hipY = 0;
+              const chestX = 2, chestY = -20;
+              const headX = 4, headY = -34;
+
+              ctx.beginPath();
+              ctx.moveTo(hipX, hipY); ctx.lineTo(-10, 5); ctx.lineTo(-12, 10);
+              ctx.moveTo(hipX, hipY); ctx.lineTo(10, 5); ctx.lineTo(12, 10);
+              ctx.stroke();
+
+              ctx.beginPath(); ctx.moveTo(hipX, hipY); ctx.lineTo(chestX, chestY); ctx.stroke();
+
+              const shk = Math.sin(p * 40) * 2;
+              ctx.beginPath();
+              ctx.moveTo(chestX, chestY); ctx.lineTo(-12, -18 + shk); ctx.lineTo(-8, -10 + shk);
+              ctx.moveTo(chestX, chestY); ctx.lineTo(12, -18 - shk); ctx.lineTo(8, -10 - shk);
+              ctx.stroke();
+
+              drawAngryFaceAndCap(headX, headY);
+              drawSkateboard(4, 8 - bounce, (Math.sin(p * 30)) * 0.15);
+
+              ctx.strokeStyle = '#f59e0b';
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.arc(4, 10, 10 + p * 20, Math.PI, Math.PI * 2);
+              ctx.stroke();
+            } else {
+              const stompL = Math.max(0, Math.sin(t * 32) * 6);
+              const stompR = Math.max(0, -Math.sin(t * 32) * 6);
+              const hipX = 0, hipY = -2;
+              const chestX = 0, chestY = -22;
+              const headX = 0, headY = -36;
+
+              ctx.beginPath();
+              ctx.moveTo(hipX, hipY); ctx.lineTo(-8, 4 - stompL); ctx.lineTo(-10, 10 - stompL);
+              ctx.moveTo(hipX, hipY); ctx.lineTo(8, 4 - stompR); ctx.lineTo(10, 10 - stompR);
+              ctx.stroke();
+
+              ctx.beginPath(); ctx.moveTo(hipX, hipY); ctx.lineTo(chestX, chestY); ctx.stroke();
+
+              const armWiggle = Math.sin(t * 28) * 6;
+              ctx.beginPath();
+              ctx.moveTo(chestX, chestY); ctx.lineTo(-14, -22 + armWiggle); ctx.lineTo(-18, -14 - armWiggle);
+              ctx.moveTo(chestX, chestY); ctx.lineTo(14, -22 - armWiggle); ctx.lineTo(18, -14 + armWiggle);
+              ctx.stroke();
+
+              drawAngryFaceAndCap(headX, headY);
+              drawSkateboard(4, 8, 0);
+            }
+          }
+
+          ctx.restore();
+          return;
+        }
+
+        // Draw normal skateboard when not bailed
+        drawSkateboard(
+          0,
+          10,
+          isTrickFlipping && skater.trickType === 'shuvit' ? flipAngle : 0,
+          isTrickFlipping && (skater.trickType === 'kickflip' || skater.trickType === 'heelflip') ? Math.cos(flipAngle) : 1
+        );
 
         // --- SKATER BODY ---
         const crouchOffset = keys.space && skater.isGrounded ? 8 : 0;
@@ -2858,89 +3263,6 @@
         ctx.lineWidth = 3.5;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
-
-        if (state.isBailed) {
-          // Goofy harmless sit-down after a tumble, with a surprised face.
-
-          // Sitting legs stretched forward on the board
-          ctx.beginPath();
-          ctx.moveTo(-6, 4);
-          ctx.lineTo(8, 5);
-          ctx.lineTo(20, 3);
-          ctx.stroke();
-
-          // Leaning back torso after the surprise landing
-          ctx.beginPath();
-          ctx.moveTo(-6, 4);
-          ctx.lineTo(-12, -14);
-          ctx.stroke();
-
-          // One arm gives a tiny "ta-da!" shrug
-          ctx.beginPath();
-          ctx.moveTo(-12, -12);
-          ctx.lineTo(-23, -21);
-          ctx.stroke();
-
-          // Other arm points at the little board guest
-          ctx.beginPath();
-          ctx.moveTo(-10, -10);
-          ctx.lineTo(17, -3);
-          ctx.stroke();
-
-          const funnyHeadX = -10;
-          const funnyHeadY = -24;
-          ctx.fillStyle = '#f8fafc';
-          ctx.beginPath();
-          ctx.arc(funnyHeadX, funnyHeadY, 7, 0, Math.PI * 2);
-          ctx.fill();
-
-          // Crooked cap from the tumble
-          ctx.fillStyle = '#ef4444';
-          ctx.beginPath();
-          ctx.arc(funnyHeadX, funnyHeadY - 1, 7.5, Math.PI * 0.75, Math.PI * 1.95);
-          ctx.lineTo(funnyHeadX + 11, funnyHeadY + 1);
-          ctx.closePath();
-          ctx.fill();
-
-          // Wide eyes and a tiny "oops" mouth
-          ctx.fillStyle = '#0f172a';
-          ctx.beginPath();
-          ctx.arc(funnyHeadX - 2, funnyHeadY + 1, 1, 0, Math.PI * 2);
-          ctx.arc(funnyHeadX + 3, funnyHeadY + 1, 1, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = '#fb7185';
-          ctx.beginPath();
-          ctx.arc(funnyHeadX + 1, funnyHeadY + 4, 1.3, 0, Math.PI * 2);
-          ctx.fill();
-
-          // A tiny yellow bird has mistaken the board for a perch.
-          ctx.fillStyle = '#fde047';
-          ctx.beginPath();
-          ctx.arc(28, 2, 4, 0, Math.PI * 2);
-          ctx.arc(31, -2, 2.8, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = '#f97316';
-          ctx.beginPath();
-          ctx.moveTo(33, -2);
-          ctx.lineTo(37, -1);
-          ctx.lineTo(33, 1);
-          ctx.closePath();
-          ctx.fill();
-          ctx.fillStyle = '#0f172a';
-          ctx.beginPath();
-          ctx.arc(31, -3, 0.7, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.font = 'bold 9px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillStyle = '#fef08a';
-          ctx.strokeStyle = '#0f172a';
-          ctx.lineWidth = 2;
-          ctx.strokeText('?', 38, -8);
-          ctx.fillText('?', 38, -8);
-
-          ctx.restore();
-          return;
-        }
 
         // Back Leg
         ctx.beginPath();
