@@ -42,6 +42,43 @@
     .animate-emerald-glow {
       animation: emerald-pulse 1.6s infinite ease-in-out;
     }
+    @keyframes galaxy-slow-spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @keyframes star-glimmer {
+      0%, 100% { opacity: 0.35; transform: scale(0.85); filter: drop-shadow(0 0 4px #e0e7ff); }
+      50% { opacity: 1; transform: scale(1.25); filter: drop-shadow(0 0 12px #f472b6); }
+    }
+    @keyframes math-shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+    .animate-galaxy-spin {
+      animation: galaxy-slow-spin 36s linear infinite;
+    }
+    .animate-star-glimmer {
+      animation: star-glimmer 2.2s ease-in-out infinite;
+    }
+    .animate-math-shake {
+      animation: math-shake 0.4s ease-in-out;
+    }
+    .galaxy-epic-card {
+      position: relative;
+      overflow: hidden;
+      background: radial-gradient(circle at 50% 40%, rgba(88, 28, 135, 0.5) 0%, rgba(15, 23, 42, 0.95) 85%);
+      box-shadow: 0 0 25px rgba(147, 51, 234, 0.35), inset 0 0 20px rgba(236, 72, 153, 0.18);
+      border-color: rgba(192, 132, 252, 0.6) !important;
+    }
+    .galaxy-epic-card::before {
+      content: "";
+      position: absolute;
+      inset: -60%;
+      background: conic-gradient(from 0deg, transparent 0deg, rgba(168, 85, 247, 0.18) 60deg, transparent 120deg, rgba(236, 72, 153, 0.22) 180deg, transparent 240deg, rgba(56, 189, 248, 0.18) 300deg, transparent 360deg);
+      animation: galaxy-slow-spin 32s linear infinite;
+      pointer-events: none;
+    }
     @keyframes float-up {
       0% { opacity: 1; transform: translateY(0) scale(1); }
       100% { opacity: 0; transform: translateY(-45px) scale(1.1); }
@@ -546,6 +583,9 @@
         <button id="tab-travel-all" class="px-3 sm:px-4 py-1.5 font-game font-bold text-xs sm:text-sm rounded-t-xl transition border-b-2 border-indigo-400 text-indigo-300 bg-indigo-950/30 whitespace-nowrap cursor-pointer">
           <span>🌌 All Destinations</span>
         </button>
+        <button id="tab-travel-earth" class="px-3 sm:px-4 py-1.5 font-game font-bold text-xs sm:text-sm rounded-t-xl transition border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap cursor-pointer">
+          <span>🌍 Earth & Countries</span>
+        </button>
         <button id="tab-travel-planets" class="px-3 sm:px-4 py-1.5 font-game font-bold text-xs sm:text-sm rounded-t-xl transition border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap cursor-pointer">
           <span>🪐 Planets</span>
         </button>
@@ -595,6 +635,52 @@
         <div>Wallet: <strong id="building-modal-money" class="text-emerald-400 font-game text-sm">$0</strong></div>
         <div class="text-[11px] text-cyan-300">Each structure generates massive permanent $/s and boosts fruit yields!</div>
       </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Educational Math Superpower Challenge -->
+  <div id="modal-math" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-6 hidden">
+    <div class="bg-gradient-to-b from-slate-900 via-slate-800 to-indigo-950 border-2 border-amber-400/80 rounded-3xl max-w-lg w-full shadow-2xl p-5 sm:p-7 relative overflow-hidden text-center">
+      <!-- Glow background -->
+      <div class="absolute -top-24 -left-24 w-52 h-52 bg-amber-500/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-24 -right-24 w-52 h-52 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+      <!-- Header -->
+      <div class="flex items-center justify-between border-b border-slate-700/60 pb-3 mb-4">
+        <div class="flex items-center gap-2">
+          <span class="text-3xl animate-bounce">🍍</span>
+          <div class="text-left">
+            <h3 class="font-game font-bold text-lg text-amber-300">Piney's Math Superpower! ✏️</h3>
+            <p id="math-modal-subtitle" class="text-xs text-slate-300">Solve the 3rd grade math problem to unlock this!</p>
+          </div>
+        </div>
+        <button id="btn-close-math" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-sm font-bold cursor-pointer transition">✕</button>
+      </div>
+
+      <!-- Problem Prompt Box -->
+      <div id="math-box-container" class="my-3 p-5 rounded-2xl bg-slate-950/80 border border-amber-500/40 shadow-inner flex flex-col items-center">
+        <div id="math-target-name" class="text-xs font-semibold uppercase tracking-wider text-emerald-400 mb-1">Unlocking: New England</div>
+        <div id="math-grade-badge" class="text-[11px] px-2 py-0.5 rounded-full bg-amber-950/70 border border-amber-500/50 text-amber-300 font-bold mb-3">Grade 3 Math Challenge</div>
+        <div id="math-problem-display" class="font-game font-bold text-4xl sm:text-5xl text-amber-300 tracking-wider my-2 filter drop-shadow">
+          24 + 18 = ?
+        </div>
+        <div id="math-feedback-text" class="text-xs font-medium text-slate-300 min-h-[22px] transition-all">
+          Tap or type the correct answer:
+        </div>
+      </div>
+
+      <!-- Multiple-Choice Quick Option Buttons -->
+      <div id="math-options-grid" class="grid grid-cols-2 gap-3 mb-4">
+        <!-- Injected via JavaScript -->
+      </div>
+
+      <!-- Manual Number Input & Submit for Keyboard users -->
+      <form id="math-input-form" class="flex gap-2">
+        <input type="number" id="math-typed-answer" placeholder="Or type answer here..." class="flex-1 px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 focus:border-amber-400 text-white font-game text-lg text-center outline-none">
+        <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-game font-bold text-sm rounded-xl shadow cursor-pointer active:scale-95 transition">
+          Submit
+        </button>
+      </form>
     </div>
   </div>
 
@@ -882,6 +968,23 @@
       pop() {
         this.playTone(320, 'sine', 0.08, 0.1);
       }
+      mathCorrect() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((freq, idx) => {
+          setTimeout(() => {
+            this.playTone(freq, 'triangle', 0.22, 0.16);
+          }, idx * 60);
+        });
+      }
+      mathWrong() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        this.playTone(220, 'sine', 0.18, 0.25);
+      }
     }
 
     const sfx = new SoundFX();
@@ -968,6 +1071,490 @@
         gate: { x: 1620, y: 720 }
       }
     ];
+
+    // Country Regions: Each country is shaped with 6 distinct regional parcels to buy!
+    const COUNTRY_REGIONS = {
+      c_usa: [
+        {
+          id: 0,
+          countryId: 'c_usa',
+          name: "New England",
+          region: "Atlantic Northeast",
+          subname: "Cradle of Independence & Granite Hills",
+          price: 0,
+          owned: true,
+          bounds: { x: 1550, y: 120, w: 750, h: 500 },
+          theme: "new_england",
+          desc: "Historic harbors, maple sugar woods, coastal lighthouses, and wild blueberries.",
+          gate: { x: 1600, y: 350 }
+        },
+        {
+          id: 1,
+          countryId: 'c_usa',
+          name: "Tri-State Area",
+          region: "Mid-Atlantic Corridor",
+          subname: "Empire Skylines & Hudson Orchards",
+          price: 1500,
+          owned: false,
+          bounds: { x: 1350, y: 620, w: 750, h: 430 },
+          theme: "tri_state",
+          desc: "Bustling city skylines, sweet apple cider orchards, and sunny seaside boardwalks.",
+          gate: { x: 1400, y: 700 }
+        },
+        {
+          id: 2,
+          countryId: 'c_usa',
+          name: "The South",
+          region: "Sunbelt & Gulf Coast",
+          subname: "Sunny Peach Groves & Warm Bayous",
+          price: 3500,
+          owned: false,
+          bounds: { x: 880, y: 720, w: 550, h: 580 },
+          theme: "south",
+          desc: "Sweet Georgia peach orchards, blooming white magnolias, and warm Gulf sunshine.",
+          gate: { x: 920, y: 800 }
+        },
+        {
+          id: 3,
+          countryId: 'c_usa',
+          name: "Midwest Heartland",
+          region: "Great Lakes Plains",
+          subname: "Great Lakes & Golden Cornfields",
+          price: 8000,
+          owned: false,
+          bounds: { x: 780, y: 120, w: 800, h: 600 },
+          theme: "midwest",
+          desc: "Endless golden wheat & cornfields, red barns, and crisp Great Lakes freshwater breezes.",
+          gate: { x: 820, y: 380 }
+        },
+        {
+          id: 4,
+          countryId: 'c_usa',
+          name: "Rocky Mountains & Southwest",
+          region: "Four Corners & Canyonlands",
+          subname: "Red Rock Canyons & Alpine Peaks",
+          price: 18000,
+          owned: false,
+          bounds: { x: 380, y: 580, w: 520, h: 720 },
+          theme: "southwest",
+          desc: "Majestic snow-capped Rocky peaks, saguaro cactus blossoms, and turquoise desert skies.",
+          gate: { x: 450, y: 650 }
+        },
+        {
+          id: 5,
+          countryId: 'c_usa',
+          name: "Pacific Coast",
+          region: "West Coast & Cascades",
+          subname: "Redwood Giants & Golden Orange Groves",
+          price: 40000,
+          owned: false,
+          bounds: { x: 80, y: 120, w: 720, h: 600 },
+          theme: "pacific",
+          desc: "Towering ancient coastal redwoods, sunny California citrus, and Pacific ocean waves.",
+          gate: { x: 320, y: 250 }
+        }
+      ],
+      c_can: [
+        {
+          id: 0,
+          countryId: 'c_can',
+          name: "Atlantic Maritime Shores",
+          region: "East Coast Havens",
+          subname: "Blueberry Headlands & Coastal Coves",
+          price: 0,
+          owned: true,
+          bounds: { x: 1550, y: 580, w: 750, h: 620 },
+          theme: "maritime",
+          desc: "Colorful coastal lighthouses, wild cliffside blueberries, and rolling ocean tides.",
+          gate: { x: 1600, y: 700 }
+        },
+        {
+          id: 1,
+          countryId: 'c_can',
+          name: "Quebec Sugar Maple Forests",
+          region: "St. Lawrence Valley",
+          subname: "Sweet Maple Groves & Wild Lilies",
+          price: 5000,
+          owned: false,
+          bounds: { x: 1280, y: 160, w: 620, h: 600 },
+          theme: "sugar_maple",
+          desc: "Centuries-old sugar shack traditions producing sweet golden maple syrup and red apples.",
+          gate: { x: 1320, y: 380 }
+        },
+        {
+          id: 2,
+          countryId: 'c_can',
+          name: "Ontario Great Lakes Orchards",
+          region: "Peninsula & Lakes",
+          subname: "Vineyards & Apple Valleys",
+          price: 12000,
+          owned: false,
+          bounds: { x: 880, y: 680, w: 620, h: 620 },
+          theme: "ontario",
+          desc: "Lakeside cherry orchards, crisp sweet apples, and majestic roaring waterfalls.",
+          gate: { x: 940, y: 750 }
+        },
+        {
+          id: 3,
+          countryId: 'c_can',
+          name: "Prairie Wheat Heartland",
+          region: "Saskatchewan & Manitoba",
+          subname: "Golden Horizons & Sunflowers",
+          price: 25000,
+          owned: false,
+          bounds: { x: 480, y: 480, w: 520, h: 720 },
+          theme: "prairie",
+          desc: "Vast sunny skies over endless golden grain fields and blooming sunflowers.",
+          gate: { x: 550, y: 550 }
+        },
+        {
+          id: 4,
+          countryId: 'c_can',
+          name: "Rocky Mountain Alberta Peaks",
+          region: "Banff & Jasper Ranges",
+          subname: "Turquoise Glacier Lakes",
+          price: 50000,
+          owned: false,
+          bounds: { x: 180, y: 580, w: 420, h: 720 },
+          theme: "can_rockies",
+          desc: "Crystal-clear turquoise alpine lakes reflecting snow-dusted evergreen spires.",
+          gate: { x: 250, y: 650 }
+        },
+        {
+          id: 5,
+          countryId: 'c_can',
+          name: "Pacific Coast & Yukon Aurora",
+          region: "Rainforests & Northern Skies",
+          subname: "Dancing Northern Lights",
+          price: 100000,
+          owned: false,
+          bounds: { x: 80, y: 80, w: 720, h: 620 },
+          theme: "yukon",
+          desc: "Mystical green and purple aurora borealis dancing over ancient mossy cedar forests.",
+          gate: { x: 200, y: 200 }
+        }
+      ],
+      c_bra: [
+        {
+          id: 0,
+          countryId: 'c_bra',
+          name: "Rio Sun Coast",
+          region: "Atlantic Coastline",
+          subname: "Golden Sand & Palm Breeze",
+          price: 0,
+          owned: true,
+          bounds: { x: 1180, y: 780, w: 720, h: 520 },
+          theme: "rio",
+          desc: "Famous sunny beaches, gentle waves, and sweet refreshing coconut water.",
+          gate: { x: 1240, y: 850 }
+        },
+        {
+          id: 1,
+          countryId: 'c_bra',
+          name: "Amazon Rainforest Canopy",
+          region: "Northern Biosphere",
+          subname: "Heart of the Tropical World",
+          price: 15000,
+          owned: false,
+          bounds: { x: 180, y: 120, w: 920, h: 660 },
+          theme: "amazon",
+          desc: "Towering green trees, giant waterlilies, and wild golden pineapples growing in abundance.",
+          gate: { x: 350, y: 350 }
+        },
+        {
+          id: 2,
+          countryId: 'c_bra',
+          name: "Bahia Tropical Groves",
+          region: "Eastern Coconut Coast",
+          subname: "Mango & Coconut Paradise",
+          price: 35000,
+          owned: false,
+          bounds: { x: 1280, y: 320, w: 720, h: 480 },
+          theme: "bahia",
+          desc: "Vibrant coastal orchards filled with sweet ripe mangoes and colorful tropical birds.",
+          gate: { x: 1350, y: 400 }
+        },
+        {
+          id: 3,
+          countryId: 'c_bra',
+          name: "Pantanal Wetland Garden",
+          region: "Western Waterways",
+          subname: "Paradise of Gentle Animals",
+          price: 75000,
+          owned: false,
+          bounds: { x: 380, y: 740, w: 620, h: 560 },
+          theme: "pantanal",
+          desc: "Gentle waterways teeming with giant lotus flowers, colorful toucans, and friendly capybaras.",
+          gate: { x: 450, y: 800 }
+        },
+        {
+          id: 4,
+          countryId: 'c_bra',
+          name: "Cerrado Flower Savanna",
+          region: "Central Highlands",
+          subname: "Vibrant Wildflower Plateaus",
+          price: 150000,
+          owned: false,
+          bounds: { x: 780, y: 380, w: 620, h: 520 },
+          theme: "cerrado",
+          desc: "Endless rolling plateaus carpeted in rare blooming wildflowers and wild cashew fruits.",
+          gate: { x: 850, y: 450 }
+        },
+        {
+          id: 5,
+          countryId: 'c_bra',
+          name: "Southern Pine Highlands",
+          region: "Southern Valleys",
+          subname: "Cool Mountain Orchards",
+          price: 300000,
+          owned: false,
+          bounds: { x: 880, y: 980, w: 620, h: 370 },
+          theme: "southern_brazil",
+          desc: "Cool mountain breezes, emerald araucaria pine trees, and sweet purple grape vineyards.",
+          gate: { x: 950, y: 1050 }
+        }
+      ],
+      c_jpn: [
+        {
+          id: 0,
+          countryId: 'c_jpn',
+          name: "Tokyo Cherry Blossom Garden",
+          region: "Kanto Plain",
+          subname: "Sakura Petals & Lantern Paths",
+          price: 0,
+          owned: true,
+          bounds: { x: 980, y: 530, w: 620, h: 470 },
+          theme: "tokyo",
+          desc: "Delicate pink cherry blossom petals fluttering down onto peaceful stone garden paths.",
+          gate: { x: 1040, y: 600 }
+        },
+        {
+          id: 1,
+          countryId: 'c_jpn',
+          name: "Mount Fuji Highlands",
+          region: "Chubu Alpine",
+          subname: "Snow-Capped Alpine Orchards",
+          price: 45000,
+          owned: false,
+          bounds: { x: 730, y: 580, w: 470, h: 470 },
+          theme: "fuji",
+          desc: "Pristine mountain vistas where crisp sweet white peaches are grown with care.",
+          gate: { x: 790, y: 650 }
+        },
+        {
+          id: 2,
+          countryId: 'c_jpn',
+          name: "Kyoto Bamboo & Tea Groves",
+          region: "Kansai Historic Valley",
+          subname: "Ancient Emerald Serenity",
+          price: 100000,
+          owned: false,
+          bounds: { x: 480, y: 730, w: 470, h: 470 },
+          theme: "kyoto",
+          desc: "Whispering emerald bamboo groves, calming green tea terraces, and golden persimmons.",
+          gate: { x: 540, y: 800 }
+        },
+        {
+          id: 3,
+          countryId: 'c_jpn',
+          name: "Hokkaido Snowberry Meadows",
+          region: "Northern Island",
+          subname: "Lavender Hills & Melon Fields",
+          price: 250000,
+          owned: false,
+          bounds: { x: 1280, y: 80, w: 820, h: 570 },
+          theme: "hokkaido",
+          desc: "Cool northern island of rolling purple lavender fields and prize-winning sweet Yubari melons.",
+          gate: { x: 1340, y: 250 }
+        },
+        {
+          id: 4,
+          countryId: 'c_jpn',
+          name: "Tohoku Apple Valleys",
+          region: "North Honshu Orchards",
+          subname: "Honeycrisp Springs",
+          price: 500000,
+          owned: false,
+          bounds: { x: 1180, y: 380, w: 520, h: 420 },
+          theme: "tohoku",
+          desc: "Crisp autumn orchards producing world-famous giant sweet apples alongside hot springs.",
+          gate: { x: 1240, y: 450 }
+        },
+        {
+          id: 5,
+          countryId: 'c_jpn',
+          name: "Kyushu & Okinawa Tropical Isles",
+          region: "Southern Archipelago",
+          subname: "Coral Seas & Star Pineapples",
+          price: 1000000,
+          owned: false,
+          bounds: { x: 130, y: 930, w: 570, h: 420 },
+          theme: "okinawa",
+          desc: "Warm turquoise coral reef lagoons producing sweet dwarf pineapples and citrus shikuwasa.",
+          gate: { x: 240, y: 1000 }
+        }
+      ],
+      c_uk: [
+        {
+          id: 0,
+          countryId: 'c_uk',
+          name: "London Royal Botanical Gardens",
+          region: "Greater London",
+          subname: "Historic Rose Glasshouses",
+          price: 0,
+          owned: true,
+          bounds: { x: 1180, y: 780, w: 620, h: 520 },
+          theme: "london",
+          desc: "Magnificent Victorian glasshouses cultivating the sweetest royal strawberries and prize roses.",
+          gate: { x: 1240, y: 850 }
+        },
+        {
+          id: 1,
+          countryId: 'c_uk',
+          name: "Cotswolds Countryside",
+          region: "Heart of England",
+          subname: "Honey-Stone Villages & Orchards",
+          price: 100000,
+          owned: false,
+          bounds: { x: 880, y: 630, w: 520, h: 420 },
+          theme: "cotswolds",
+          desc: "Charming stone cottages surrounded by rolling green hills, wild blackberries, and apple trees.",
+          gate: { x: 940, y: 700 }
+        },
+        {
+          id: 2,
+          countryId: 'c_uk',
+          name: "Cornwall Coastal Cliffs",
+          region: "Southwest Peninsula",
+          subname: "Wild Atlantic Blue Seas",
+          price: 250000,
+          owned: false,
+          bounds: { x: 480, y: 880, w: 520, h: 420 },
+          theme: "cornwall",
+          desc: "Sunlit coastal cliffs bordered by sparkling blue waves, wild thyme, and cider apple orchards.",
+          gate: { x: 540, y: 950 }
+        },
+        {
+          id: 3,
+          countryId: 'c_uk',
+          name: "Welsh Emerald Valleys",
+          region: "Principality of Wales",
+          subname: "Castles & Woodland Streams",
+          price: 600000,
+          owned: false,
+          bounds: { x: 630, y: 630, w: 470, h: 420 },
+          theme: "wales",
+          desc: "Lush mossy oak woodlands, gentle mountain sheep pastures, and wild sweet raspberries.",
+          gate: { x: 690, y: 700 }
+        },
+        {
+          id: 4,
+          countryId: 'c_uk',
+          name: "Scottish Highlands & Lochs",
+          region: "Northern Scotland",
+          subname: "Purple Heather & Misty Peaks",
+          price: 1500000,
+          owned: false,
+          bounds: { x: 780, y: 80, w: 820, h: 620 },
+          theme: "highlands",
+          desc: "Vast purple heather moors, ancient mist-shrouded lochs, and wild mountain brambles.",
+          gate: { x: 840, y: 300 }
+        },
+        {
+          id: 5,
+          countryId: 'c_uk',
+          name: "Northern Ireland Emerald Coast",
+          region: "Ulster Coastline",
+          subname: "Giant's Causeway & Clover Meadows",
+          price: 3500000,
+          owned: false,
+          bounds: { x: 280, y: 330, w: 520, h: 470 },
+          theme: "ni_coast",
+          desc: "Dramatic hexagonal basalt cliffs, sparkling emerald clover meadows, and crisp sea breezes.",
+          gate: { x: 340, y: 400 }
+        }
+      ],
+      c_earth: [
+        {
+          id: 0,
+          countryId: 'c_earth',
+          name: "North America Garden",
+          region: "Continental North",
+          subname: "Maple & Pine Heartland",
+          price: 0,
+          owned: true,
+          bounds: { x: 80, y: 120, w: 720, h: 620 },
+          theme: "earth_na",
+          desc: "Rolling pine forests, sweet apple orchards, and boundless blue skies.",
+          gate: { x: 240, y: 350 }
+        },
+        {
+          id: 1,
+          countryId: 'c_earth',
+          name: "South America Tropical Haven",
+          region: "Continental South",
+          subname: "Amazon Canopy & Golden Pines",
+          price: 350000,
+          owned: false,
+          bounds: { x: 380, y: 730, w: 620, h: 620 },
+          theme: "earth_sa",
+          desc: "Lush tropical rainforests teeming with giant pineapples and exotic blossoms.",
+          gate: { x: 440, y: 800 }
+        },
+        {
+          id: 2,
+          countryId: 'c_earth',
+          name: "Europe Botanical Realm",
+          region: "Continental Europe",
+          subname: "Orchards & Rose Gardens",
+          price: 900000,
+          owned: false,
+          bounds: { x: 930, y: 120, w: 620, h: 520 },
+          theme: "earth_eu",
+          desc: "Historic gardens, stone aqueducts, and prize fruit orchards nurtured for centuries.",
+          gate: { x: 990, y: 250 }
+        },
+        {
+          id: 3,
+          countryId: 'c_earth',
+          name: "Africa Sunshine Savanna",
+          region: "Equatorial Heart",
+          subname: "Golden Baobabs & Sunbursts",
+          price: 2000000,
+          owned: false,
+          bounds: { x: 980, y: 630, w: 620, h: 720 },
+          theme: "earth_af",
+          desc: "Sun-drenched savanna plains under warm golden skies, home to ancient baobabs and starfruits.",
+          gate: { x: 1040, y: 700 }
+        },
+        {
+          id: 4,
+          countryId: 'c_earth',
+          name: "Asia Harmony Orchards",
+          region: "Eastern Valleys",
+          subname: "Lotus Terraces & Cherry Valleys",
+          price: 5000000,
+          owned: false,
+          bounds: { x: 1530, y: 120, w: 780, h: 620 },
+          theme: "earth_as",
+          desc: "Terraced emerald hills, peaceful lotus ponds, and abundant sweet melons.",
+          gate: { x: 1590, y: 300 }
+        },
+        {
+          id: 5,
+          countryId: 'c_earth',
+          name: "Oceania Coral Isles",
+          region: "Pacific Atolls",
+          subname: "Turquoise Atolls & Palm Shores",
+          price: 12000000,
+          owned: false,
+          bounds: { x: 1630, y: 730, w: 680, h: 620 },
+          theme: "earth_oc",
+          desc: "Crystal-clear lagoon atolls where coconuts, pineapples, and sea breezes bring eternal summer.",
+          gate: { x: 1690, y: 800 }
+        }
+      ]
+    };
 
     // 2. Evolution Stage: Countries of Earth
     const COUNTRIES = [
@@ -1076,14 +1663,14 @@
       }
     ];
 
-    // 4. Evolution Stage: Cosmic Galaxies
+    // 4. Evolution Stage: Cosmic Galaxies (Epic & Prestigous!)
     const GALAXIES = [
       {
         id: 'g_milkyway',
         name: 'The Milky Way Galaxy',
         icon: '🌀',
-        price: 5000000000,
-        passive: 500000000,
+        price: 25000000000,
+        passive: 2500000000,
         owned: false,
         desc: 'Colonize 100 billion star systems with Pineapple & Flower orbital starbases!'
       },
@@ -1091,8 +1678,8 @@
         id: 'g_andromeda',
         name: 'Andromeda Galaxy',
         icon: '💫',
-        price: 25000000000,
-        passive: 3000000000,
+        price: 150000000000,
+        passive: 15000000000,
         owned: false,
         desc: 'The giant neighboring spiral galaxy woven into a dual-galaxy fruit web.'
       },
@@ -1100,8 +1687,8 @@
         id: 'g_triangulum',
         name: 'Triangulum Galaxy',
         icon: '✨',
-        price: 100000000000,
-        passive: 15000000000,
+        price: 850000000000,
+        passive: 90000000000,
         owned: false,
         desc: 'Luminous stellar nurseries generating infinite diamond & emerald fruit stars!'
       },
@@ -1109,8 +1696,8 @@
         id: 'g_supercluster',
         name: 'The Virgo Supercluster',
         icon: '🌠',
-        price: 500000000000,
-        passive: 90000000000,
+        price: 5000000000000,
+        passive: 600000000000,
         owned: false,
         desc: 'Tens of thousands of galaxies bound together by cosmic fruit gravity!'
       },
@@ -1118,8 +1705,8 @@
         id: 'g_multiverse',
         name: 'Pineapple & Flower Multiverse',
         icon: '👑',
-        price: 2500000000000,
-        passive: 500000000000,
+        price: 50000000000000,
+        passive: 5000000000000,
         owned: false,
         desc: 'Infinite dimensions where all beings in reality enjoy sweet fruits together!'
       }
@@ -1360,6 +1947,96 @@
         spawnPos: { x: 200, y: 350 },
         fruits: null
       },
+      c_usa: {
+        id: 'c_usa',
+        name: 'United States',
+        icon: '🇺🇸',
+        type: 'country',
+        tagline: '50 States of Agriculture & Coastal Wonders',
+        gravity: 1.0,
+        skyTheme: 'blue',
+        spawnPos: { x: 1800, y: 350 },
+        fruits: [
+          { type: 'usa_apple', name: 'Macintosh Apple', value: 45, color: '#ef4444', leafColor: '#22c55e' },
+          { type: 'usa_peach', name: 'Georgia Peach', value: 120, color: '#fb923c', leafColor: '#fdba74' },
+          { type: 'usa_cranberry', name: 'Golden Cranberry', value: 350, color: '#f59e0b', leafColor: '#fde68a' }
+        ]
+      },
+      c_can: {
+        id: 'c_can',
+        name: 'Canada',
+        icon: '🇨🇦',
+        type: 'country',
+        tagline: 'Vast Northern Maple Groves & Coastal Fjords',
+        gravity: 1.0,
+        skyTheme: 'blue',
+        spawnPos: { x: 1800, y: 750 },
+        fruits: [
+          { type: 'can_maple', name: 'Maple Leaf Berry', value: 90, color: '#dc2626', leafColor: '#fca5a5' },
+          { type: 'can_blue', name: 'Maritime Blueberry', value: 240, color: '#2563eb', leafColor: '#93c5fd' },
+          { type: 'can_glacier', name: 'Glacier Melon', value: 750, color: '#06b6d4', leafColor: '#a5f3fc' }
+        ]
+      },
+      c_bra: {
+        id: 'c_bra',
+        name: 'Brazil',
+        icon: '🇧🇷',
+        type: 'country',
+        tagline: 'Amazonian Tropical Rainforest & Golden Coast',
+        gravity: 1.0,
+        skyTheme: 'tropical',
+        spawnPos: { x: 1400, y: 900 },
+        fruits: [
+          { type: 'bra_pine', name: 'Amazon Gold Pineapple', value: 300, color: '#eab308', leafColor: '#16a34a' },
+          { type: 'bra_acai', name: 'Açai Cluster', value: 800, color: '#7e22ce', leafColor: '#d8b4fe' },
+          { type: 'bra_star', name: 'Emerald Starfruit', value: 2400, color: '#10b981', leafColor: '#6ee7b7' }
+        ]
+      },
+      c_jpn: {
+        id: 'c_jpn',
+        name: 'Japan',
+        icon: '🇯🇵',
+        type: 'country',
+        tagline: 'Island Archipelago of Blossoms & Luxury Fruit',
+        gravity: 1.0,
+        skyTheme: 'sakura',
+        spawnPos: { x: 1200, y: 650 },
+        fruits: [
+          { type: 'jpn_sakura', name: 'Sakura Cherry Plum', value: 950, color: '#ec4899', leafColor: '#fbcfe8' },
+          { type: 'jpn_yubari', name: 'Yubari King Melon', value: 2800, color: '#f59e0b', leafColor: '#fef08a' },
+          { type: 'jpn_grape', name: 'Ruby Roman Grape', value: 8500, color: '#e11d48', leafColor: '#fda4af' }
+        ]
+      },
+      c_uk: {
+        id: 'c_uk',
+        name: 'United Kingdom',
+        icon: '🇬🇧',
+        type: 'country',
+        tagline: 'Royal Botanical Glasshouses & Rolling Moors',
+        gravity: 1.0,
+        skyTheme: 'royal',
+        spawnPos: { x: 1350, y: 900 },
+        fruits: [
+          { type: 'uk_berry', name: 'Royal Strawberry', value: 3200, color: '#f43f5e', leafColor: '#4ade80' },
+          { type: 'uk_apple', name: 'Bramley Honey Apple', value: 9500, color: '#84cc16', leafColor: '#d9f99d' },
+          { type: 'uk_quince', name: 'Golden Crown Quince', value: 28000, color: '#eab308', leafColor: '#fef08a' }
+        ]
+      },
+      c_earth: {
+        id: 'c_earth',
+        name: 'Planet Earth United',
+        icon: '🌐',
+        type: 'country',
+        tagline: 'All Continents United in Sweet Fruit Harmony',
+        gravity: 1.0,
+        skyTheme: 'earth',
+        spawnPos: { x: 300, y: 350 },
+        fruits: [
+          { type: 'earth_unity', name: 'Global Unity Berry', value: 12000, color: '#3b82f6', leafColor: '#60a5fa' },
+          { type: 'earth_harmony', name: 'Continental Golden Melon', value: 45000, color: '#facc15', leafColor: '#fde047' },
+          { type: 'earth_peace', name: 'World Peace Pineapple', value: 160000, color: '#10b981', leafColor: '#34d399' }
+        ]
+      },
       w_moon: {
         id: 'w_moon',
         name: 'The Moon',
@@ -1545,34 +2222,34 @@
         { id: 'b_kepler_4', name: 'Transcendence Warp Gate', icon: '🌌', price: 75000000000, passive: 12000000000, desc: 'Direct wormhole connection to the Cosmic Galaxies.', pos: { x: 1850, y: 960, w: 190, h: 160 }, built: false }
       ],
       g_milkyway: [
-        { id: 'b_milkyway_1', name: 'Galactic Orbital Starbase', icon: '🛸', price: 12000000000, passive: 1500000000, desc: 'A colossal orbital hub coordinating 100 billion star systems.', pos: { x: 320, y: 280, w: 160, h: 140 }, built: false },
-        { id: 'b_milkyway_2', name: 'Dyson Swarm Collector', icon: '☀️', price: 40000000000, passive: 6000000000, desc: 'Encloses stars in solar collectors for astronomical wattage.', pos: { x: 1900, y: 280, w: 160, h: 140 }, built: false },
-        { id: 'b_milkyway_3', name: 'Hyperspace Fruit Conduit', icon: '💫', price: 150000000000, passive: 25000000000, desc: 'Transports ripe pineapples instantaneously across lightyears.', pos: { x: 350, y: 980, w: 160, h: 140 }, built: false },
-        { id: 'b_milkyway_4', name: 'Sagittarius A* Core Harvester', icon: '🕳️', price: 450000000000, passive: 80000000000, desc: 'Taps the supermassive black hole at the galaxy center.', pos: { x: 1850, y: 960, w: 190, h: 160 }, built: false }
+        { id: 'b_milkyway_1', name: 'Galactic Orbital Starbase', icon: '🛸', price: 50000000000, passive: 5000000000, desc: 'A colossal orbital hub coordinating 100 billion star systems.', pos: { x: 320, y: 280, w: 160, h: 140 }, built: false },
+        { id: 'b_milkyway_2', name: 'Dyson Swarm Collector', icon: '☀️', price: 180000000000, passive: 20000000000, desc: 'Encloses stars in solar collectors for astronomical wattage.', pos: { x: 1900, y: 280, w: 160, h: 140 }, built: false },
+        { id: 'b_milkyway_3', name: 'Hyperspace Fruit Conduit', icon: '💫', price: 600000000000, passive: 70000000000, desc: 'Transports ripe pineapples instantaneously across lightyears.', pos: { x: 350, y: 980, w: 160, h: 140 }, built: false },
+        { id: 'b_milkyway_4', name: 'Sagittarius A* Core Harvester', icon: '🕳️', price: 2000000000000, passive: 250000000000, desc: 'Taps the supermassive black hole at the galaxy center.', pos: { x: 1850, y: 960, w: 190, h: 160 }, built: false }
       ],
       g_andromeda: [
-        { id: 'b_andromeda_1', name: 'Spiral Arm Resonator', icon: '🌀', price: 60000000000, passive: 10000000000, desc: 'Harmonizes Andromeda spiral arm fruit frequencies.', pos: { x: 320, y: 280, w: 160, h: 140 }, built: false },
-        { id: 'b_andromeda_2', name: 'Dark Matter Forge', icon: '🔮', price: 200000000000, passive: 35000000000, desc: 'Synthesizes exotic matter into emerald crystal fruits.', pos: { x: 1900, y: 280, w: 160, h: 140 }, built: false },
-        { id: 'b_andromeda_3', name: 'Intergalactic Bridge Core', icon: '🌉', price: 600000000000, passive: 120000000000, desc: 'Connects the Milky Way and Andromeda in fruit commerce.', pos: { x: 350, y: 980, w: 160, h: 140 }, built: false },
-        { id: 'b_andromeda_4', name: 'Andromeda Overlord Citadel', icon: '👑', price: 2000000000000, passive: 450000000000, desc: 'The seat of supreme pineapple & flower galactic authority.', pos: { x: 1850, y: 960, w: 190, h: 160 }, built: false }
+        { id: 'b_andromeda_1', name: 'Spiral Arm Resonator', icon: '🌀', price: 300000000000, passive: 35000000000, desc: 'Harmonizes Andromeda spiral arm fruit frequencies.', pos: { x: 320, y: 280, w: 160, h: 140 }, built: false },
+        { id: 'b_andromeda_2', name: 'Dark Matter Forge', icon: '🔮', price: 1000000000000, passive: 120000000000, desc: 'Synthesizes exotic matter into emerald crystal fruits.', pos: { x: 1900, y: 280, w: 160, h: 140 }, built: false },
+        { id: 'b_andromeda_3', name: 'Intergalactic Bridge Core', icon: '🌉', price: 3500000000000, passive: 450000000000, desc: 'Connects the Milky Way and Andromeda in fruit commerce.', pos: { x: 350, y: 980, w: 160, h: 140 }, built: false },
+        { id: 'b_andromeda_4', name: 'Andromeda Overlord Citadel', icon: '👑', price: 12000000000000, passive: 1600000000000, desc: 'The seat of supreme pineapple & flower galactic authority.', pos: { x: 1850, y: 960, w: 190, h: 160 }, built: false }
       ],
       g_triangulum: [
-        { id: 'b_triangulum_1', name: 'Stellar Nursery Crucible', icon: '✨', price: 250000000000, passive: 45000000000, desc: 'Ignites newborn proto-stars that rain golden light.', pos: { x: 320, y: 280, w: 160, h: 140 }, built: false },
-        { id: 'b_triangulum_2', name: 'Plasma Energy Dynamo', icon: '⚡', price: 800000000000, passive: 160000000000, desc: 'Converts ionized plasma into pure golden revenue.', pos: { x: 1900, y: 280, w: 160, h: 140 }, built: false },
-        { id: 'b_triangulum_3', name: 'Nova Burst Synthesizer', icon: '💥', price: 2500000000000, passive: 550000000000, desc: 'Harnesses safe supernova pulses to enrich planetary soil.', pos: { x: 350, y: 980, w: 160, h: 140 }, built: false },
-        { id: 'b_triangulum_4', name: 'Triangulum Prime Sanctuary', icon: '🏛️', price: 8000000000000, passive: 2000000000000, desc: 'A golden stellar temple celebrating eternal friendship.', pos: { x: 1850, y: 960, w: 190, h: 160 }, built: false }
+        { id: 'b_triangulum_1', name: 'Stellar Nursery Crucible', icon: '✨', price: 1500000000000, passive: 200000000000, desc: 'Ignites newborn proto-stars that rain golden light.', pos: { x: 320, y: 280, w: 160, h: 140 }, built: false },
+        { id: 'b_triangulum_2', name: 'Plasma Energy Dynamo', icon: '⚡', price: 5000000000000, passive: 700000000000, desc: 'Converts ionized plasma into pure golden revenue.', pos: { x: 1900, y: 280, w: 160, h: 140 }, built: false },
+        { id: 'b_triangulum_3', name: 'Nova Burst Synthesizer', icon: '💥', price: 18000000000000, passive: 2600000000000, desc: 'Harnesses safe supernova pulses to enrich planetary soil.', pos: { x: 350, y: 980, w: 160, h: 140 }, built: false },
+        { id: 'b_triangulum_4', name: 'Triangulum Prime Sanctuary', icon: '🏛️', price: 60000000000000, passive: 9000000000000, desc: 'A golden stellar temple celebrating eternal friendship.', pos: { x: 1850, y: 960, w: 190, h: 160 }, built: false }
       ],
       g_supercluster: [
-        { id: 'b_supercluster_1', name: 'Supercluster Gravity Anchor', icon: '⚓', price: 1200000000000, passive: 250000000000, desc: 'Binds 50,000 galaxies into a single cosmic orchard.', pos: { x: 320, y: 280, w: 160, h: 140 }, built: false },
-        { id: 'b_supercluster_2', name: 'Cosmic Web Filament Tap', icon: '🕸️', price: 4000000000000, passive: 900000000000, desc: 'Draws endless energy from the connective tissue of space.', pos: { x: 1900, y: 280, w: 160, h: 140 }, built: false },
-        { id: 'b_supercluster_3', name: 'Dark Energy Amplifier', icon: '🌌', price: 15000000000000, passive: 3500000000000, desc: 'Rides universal expansion to generate infinite fruit value.', pos: { x: 350, y: 980, w: 160, h: 140 }, built: false },
-        { id: 'b_supercluster_4', name: 'Omniverse Super-Core', icon: '🌟', price: 40000000000000, passive: 10000000000000, desc: 'A transcendent core shining across hundreds of millions of lightyears.', pos: { x: 1850, y: 960, w: 190, h: 160 }, built: false }
+        { id: 'b_supercluster_1', name: 'Supercluster Gravity Anchor', icon: '⚓', price: 10000000000000, passive: 1500000000000, desc: 'Binds 50,000 galaxies into a single cosmic orchard.', pos: { x: 320, y: 280, w: 160, h: 140 }, built: false },
+        { id: 'b_supercluster_2', name: 'Cosmic Web Filament Tap', icon: '🕸️', price: 35000000000000, passive: 5500000000000, desc: 'Draws endless energy from the connective tissue of space.', pos: { x: 1900, y: 280, w: 160, h: 140 }, built: false },
+        { id: 'b_supercluster_3', name: 'Dark Energy Amplifier', icon: '🌌', price: 120000000000000, passive: 20000000000000, desc: 'Rides universal expansion to generate infinite fruit value.', pos: { x: 350, y: 980, w: 160, h: 140 }, built: false },
+        { id: 'b_supercluster_4', name: 'Omniverse Super-Core', icon: '🌟', price: 400000000000000, passive: 70000000000000, desc: 'A transcendent core shining across hundreds of millions of lightyears.', pos: { x: 1850, y: 960, w: 190, h: 160 }, built: false }
       ],
       g_multiverse: [
-        { id: 'b_multiverse_1', name: 'Infinite Reality Nexus', icon: '♾️', price: 8000000000000, passive: 1800000000000, desc: 'Unifies every timeline where pineapples and flowers grow.', pos: { x: 320, y: 280, w: 160, h: 140 }, built: false },
-        { id: 'b_multiverse_2', name: 'Dimensional Loom of Eternity', icon: '🧵', price: 30000000000000, passive: 7500000000000, desc: 'Weaves infinite parallel universes into eternal joy.', pos: { x: 1900, y: 280, w: 160, h: 140 }, built: false },
-        { id: 'b_multiverse_3', name: 'Divine Flower Shrine', icon: '🌸', price: 100000000000000, passive: 30000000000000, desc: 'Flower Man apotheosis shrine radiating unconditional friendship.', pos: { x: 350, y: 980, w: 160, h: 140 }, built: false },
-        { id: 'b_multiverse_4', name: 'Pineapple God Supreme Throne', icon: '👑', price: 350000000000000, passive: 120000000000000, desc: 'Ultimate cosmic throne: Pineapple Head & Flower Man rule reality!', pos: { x: 1850, y: 960, w: 190, h: 160 }, built: false }
+        { id: 'b_multiverse_1', name: 'Infinite Reality Nexus', icon: '♾️', price: 80000000000000, passive: 12000000000000, desc: 'Unifies every timeline where pineapples and flowers grow.', pos: { x: 320, y: 280, w: 160, h: 140 }, built: false },
+        { id: 'b_multiverse_2', name: 'Dimensional Loom of Eternity', icon: '🧵', price: 300000000000000, passive: 50000000000000, desc: 'Weaves infinite parallel universes into eternal joy.', pos: { x: 1900, y: 280, w: 160, h: 140 }, built: false },
+        { id: 'b_multiverse_3', name: 'Divine Flower Shrine', icon: '🌸', price: 1000000000000000, passive: 180000000000000, desc: 'Flower Man apotheosis shrine radiating unconditional friendship.', pos: { x: 350, y: 980, w: 160, h: 140 }, built: false },
+        { id: 'b_multiverse_4', name: 'Pineapple God Supreme Throne', icon: '👑', price: 4000000000000000, passive: 800000000000000, desc: 'Ultimate cosmic throne: Pineapple Head & Flower Man rule reality!', pos: { x: 1850, y: 960, w: 190, h: 160 }, built: false }
       ]
     };
 
@@ -1619,6 +2296,20 @@
         size: 1 + Math.random() * 2.5,
         alpha: 0.3 + Math.random() * 0.7,
         twinkleSpeed: 0.002 + Math.random() * 0.005
+      });
+    }
+
+    // Epic Glimmering Stars with diffraction flares for Cosmic Galaxies
+    const GALAXY_STARS = [];
+    for (let i = 0; i < 280; i++) {
+      GALAXY_STARS.push({
+        x: Math.random() * WORLD_WIDTH,
+        y: Math.random() * WORLD_HEIGHT,
+        size: 1 + Math.random() * 3.5,
+        speed: 0.0018 + Math.random() * 0.004,
+        phase: Math.random() * Math.PI * 2,
+        hasCrossFlare: i % 4 === 0,
+        color: ['#ffffff', '#e0e7ff', '#fbcfe8', '#fed7aa', '#a7f3d0', '#c7d2fe', '#fde047'][i % 7]
       });
     }
 
@@ -1747,113 +2438,150 @@
     }
 
     function spawnFruit(forcedPlotId = null, forcedType = null) {
-      // 1. If currently visiting a Planet or Galaxy, spawn native celestial fruits!
-      if (gameState.currentLocation !== 'nh') {
-        const realm = REALMS[gameState.currentLocation];
-        if (realm && realm.fruits && realm.fruits.length > 0) {
-          let chosen = realm.fruits[Math.floor(Math.random() * realm.fruits.length)];
-          // High luck roll can yield rare diamonds or emeralds with cosmic scaling
-          const luckLvl = PH_UPGRADES.find(u => u.id === 'ph_luck').level;
-          const roll = Math.random() * 100;
-          if (roll > 94 - luckLvl * 2) {
-            chosen = {
-              type: 'emerald_cosmic',
-              name: `${realm.name} Cosmic Emerald`,
-              value: chosen.value * 5,
-              color: '#10b981',
-              leafColor: '#a7f3d0'
-            };
-          } else if (roll > 84 - luckLvl * 3) {
-            chosen = {
-              type: 'diamond_cosmic',
-              name: `${realm.name} Star Diamond`,
-              value: chosen.value * 2.5,
-              color: '#06b6d4',
-              leafColor: '#e0f2fe'
-            };
+      const plots = getCurrentPlots();
+      const realm = REALMS[gameState.currentLocation];
+      const isCountry = isCountryRealm(gameState.currentLocation);
+
+      // 1. Earth (NH or Country) Parcel Fruit Spawning
+      if (plots) {
+        const ownedPlots = plots.filter(p => p.owned);
+        if (ownedPlots.length === 0) return;
+
+        const plot = (forcedPlotId !== null && plots[forcedPlotId])
+          ? plots[forcedPlotId]
+          : ownedPlots[Math.floor(Math.random() * ownedPlots.length)];
+        if (!plot) return;
+
+        let chosen = null;
+
+        if (forcedType) {
+          if (isCountry && realm && realm.fruits) {
+            chosen = realm.fruits.find(f => f.type === forcedType) || realm.fruits[0];
+          } else {
+            chosen = FRUIT_TYPES.find(f => f.type === forcedType) || FRUIT_TYPES[0];
           }
-
-          const padding = 80;
-          const fx = padding + Math.random() * (WORLD_WIDTH - padding * 2);
-          const fy = 240 + Math.random() * (WORLD_HEIGHT - 320);
-
-          gameState.fruits.push({
-            x: fx,
-            y: fy,
-            type: chosen.type,
-            name: chosen.name,
-            value: chosen.value,
-            tier: chosen.type.includes('emerald') ? 'emerald' : chosen.type.includes('diamond') ? 'diamond' : 'celestial',
-            color: chosen.color,
-            leafColor: chosen.leafColor,
-            bobOffset: Math.random() * Math.PI * 2,
-            spawnTime: performance.now()
-          });
-          return;
-        }
-      }
-
-      // 2. Earth / New Hampshire parcel fruit spawning
-      const ownedPlots = LAND_PLOTS.filter(p => p.owned);
-      if (ownedPlots.length === 0) return;
-
-      const plot = (forcedPlotId !== null)
-        ? LAND_PLOTS[forcedPlotId]
-        : ownedPlots[Math.floor(Math.random() * ownedPlots.length)];
-
-      let chosen = null;
-
-      if (forcedType) {
-        chosen = FRUIT_TYPES.find(f => f.type === forcedType) || FRUIT_TYPES[0];
-      } else {
-        // Luck upgrade factor
-        const luckLvl = PH_UPGRADES.find(u => u.id === 'ph_luck').level;
-        const luckMultiplier = 1 + (luckLvl * 0.25);
-
-        // Cosmic era bonus to gem spawns
-        let eraLuckBonus = 1;
-        if (gameState.currentEra === 'countries') eraLuckBonus = 1.3;
-        if (gameState.currentEra === 'worlds') eraLuckBonus = 1.7;
-        if (gameState.currentEra === 'galaxies') eraLuckBonus = 2.4;
-
-        const roll = Math.random() * 100;
-
-        // Roll for Emerald Fruit ($1,000)
-        const emeraldThreshold = 97 - (luckMultiplier * eraLuckBonus * 1.2);
-        // Roll for Diamond Fruit ($150)
-        const diamondThreshold = 89 - (luckMultiplier * eraLuckBonus * 2.0);
-        // Roll for Golden Stuff ($100)
-        const goldenThreshold = 78 - (luckMultiplier * eraLuckBonus * 2.8);
-
-        if (roll > Math.max(emeraldThreshold, 85)) {
-          chosen = FRUIT_TYPES.find(f => f.type === 'emerald');
-        } else if (roll > Math.max(diamondThreshold, 70)) {
-          chosen = FRUIT_TYPES.find(f => f.type === 'diamond');
-        } else if (roll > Math.max(goldenThreshold, 52)) {
-          chosen = FRUIT_TYPES.find(f => f.type === 'golden_pineapple');
         } else {
-          // Regular fruits
-          const regulars = FRUIT_TYPES.filter(f => f.tier === 'common' || f.tier === 'uncommon');
-          chosen = regulars[Math.floor(Math.random() * regulars.length)];
+          const luckLvl = PH_UPGRADES.find(u => u.id === 'ph_luck').level;
+          const luckMultiplier = 1 + (luckLvl * 0.25);
+
+          let eraLuckBonus = 1;
+          if (gameState.currentEra === 'countries') eraLuckBonus = 1.3;
+          if (gameState.currentEra === 'worlds') eraLuckBonus = 1.7;
+          if (gameState.currentEra === 'galaxies') eraLuckBonus = 2.4;
+
+          const roll = Math.random() * 100;
+          const emeraldThreshold = 97 - (luckMultiplier * eraLuckBonus * 1.2);
+          const diamondThreshold = 89 - (luckMultiplier * eraLuckBonus * 2.0);
+          const goldenThreshold = 78 - (luckMultiplier * eraLuckBonus * 2.8);
+
+          if (roll > Math.max(emeraldThreshold, 85)) {
+            if (isCountry && realm && realm.fruits) {
+              chosen = {
+                type: `${realm.id}_emerald`,
+                name: `${realm.name} Royal Emerald Fruit`,
+                value: (realm.fruits[0].value || 400) * 8,
+                tier: 'emerald',
+                color: '#10b981',
+                leafColor: '#6ee7b7'
+              };
+            } else {
+              chosen = FRUIT_TYPES.find(f => f.type === 'emerald');
+            }
+          } else if (roll > Math.max(diamondThreshold, 70)) {
+            if (isCountry && realm && realm.fruits) {
+              chosen = {
+                type: `${realm.id}_diamond`,
+                name: `${realm.name} Star Diamond Fruit`,
+                value: (realm.fruits[0].value || 400) * 4,
+                tier: 'diamond',
+                color: '#06b6d4',
+                leafColor: '#a5f3fc'
+              };
+            } else {
+              chosen = FRUIT_TYPES.find(f => f.type === 'diamond');
+            }
+          } else if (roll > Math.max(goldenThreshold, 52)) {
+            if (isCountry && realm && realm.fruits) {
+              chosen = {
+                type: `${realm.id}_gold`,
+                name: `${realm.name} Golden Treasure Fruit`,
+                value: (realm.fruits[0].value || 400) * 2.5,
+                tier: 'golden',
+                color: '#facc15',
+                leafColor: '#fde047'
+              };
+            } else {
+              chosen = FRUIT_TYPES.find(f => f.type === 'golden_pineapple');
+            }
+          } else {
+            if (isCountry && realm && realm.fruits) {
+              chosen = realm.fruits[Math.floor(Math.random() * realm.fruits.length)];
+            } else {
+              const regulars = FRUIT_TYPES.filter(f => f.tier === 'common' || f.tier === 'uncommon');
+              chosen = regulars[Math.floor(Math.random() * regulars.length)];
+            }
+          }
         }
+
+        const padding = 55;
+        const fx = plot.bounds.x + padding + Math.random() * Math.max(20, plot.bounds.w - padding * 2);
+        const fy = plot.bounds.y + padding + Math.random() * Math.max(20, plot.bounds.h - padding * 2);
+
+        gameState.fruits.push({
+          x: fx,
+          y: fy,
+          type: chosen.type,
+          name: chosen.name,
+          value: chosen.value,
+          tier: chosen.tier || (chosen.type.includes('emerald') ? 'emerald' : chosen.type.includes('diamond') ? 'diamond' : chosen.type.includes('gold') ? 'golden' : 'common'),
+          color: chosen.color,
+          leafColor: chosen.leafColor,
+          bobOffset: Math.random() * Math.PI * 2,
+          spawnTime: performance.now()
+        });
+        return;
       }
 
-      const padding = 55;
-      const fx = plot.bounds.x + padding + Math.random() * (plot.bounds.w - padding * 2);
-      const fy = plot.bounds.y + padding + Math.random() * (plot.bounds.h - padding * 2);
+      // 2. Planet & Galaxy Celestial Fruit Spawning (Unrestricted Bounds)
+      if (realm && realm.fruits && realm.fruits.length > 0) {
+        let chosen = realm.fruits[Math.floor(Math.random() * realm.fruits.length)];
+        const luckLvl = PH_UPGRADES.find(u => u.id === 'ph_luck').level;
+        const roll = Math.random() * 100;
+        if (roll > 94 - luckLvl * 2) {
+          chosen = {
+            type: 'emerald_cosmic',
+            name: `${realm.name} Cosmic Emerald`,
+            value: chosen.value * 5,
+            color: '#10b981',
+            leafColor: '#a7f3d0'
+          };
+        } else if (roll > 84 - luckLvl * 3) {
+          chosen = {
+            type: 'diamond_cosmic',
+            name: `${realm.name} Star Diamond`,
+            value: chosen.value * 2.5,
+            color: '#06b6d4',
+            leafColor: '#e0f2fe'
+          };
+        }
 
-      gameState.fruits.push({
-        x: fx,
-        y: fy,
-        type: chosen.type,
-        name: chosen.name,
-        value: chosen.value,
-        tier: chosen.tier,
-        color: chosen.color,
-        leafColor: chosen.leafColor,
-        bobOffset: Math.random() * Math.PI * 2,
-        spawnTime: performance.now()
-      });
+        const padding = 80;
+        const fx = padding + Math.random() * (WORLD_WIDTH - padding * 2);
+        const fy = 240 + Math.random() * (WORLD_HEIGHT - 320);
+
+        gameState.fruits.push({
+          x: fx,
+          y: fy,
+          type: chosen.type,
+          name: chosen.name,
+          value: chosen.value,
+          tier: chosen.type.includes('emerald') ? 'emerald' : chosen.type.includes('diamond') ? 'diamond' : 'celestial',
+          color: chosen.color,
+          leafColor: chosen.leafColor,
+          bobOffset: Math.random() * Math.PI * 2,
+          spawnTime: performance.now()
+        });
+      }
     }
 
     // Seed initial fruits
@@ -1882,28 +2610,37 @@
       else if (ownedCountries > 0) era = 'countries';
       gameState.currentEra = era;
 
-      // Update Era Badge in top header
+      // Update Era Badge in top header (Highest progression achieved)
       if (era === 'galaxies') {
         badgeEra.className = "text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full bg-purple-950 text-purple-300 border border-purple-500 shadow-sm flex items-center gap-1 animate-pulse";
         badgeEraText.textContent = "Cosmic Galaxies Era";
-        statRealmIcon.textContent = "🌌";
-        statRealmLabel.textContent = "Galaxies";
-        statRealmCount.textContent = `${ownedGalaxies} / ${GALAXIES.length}`;
       } else if (era === 'worlds') {
         badgeEra.className = "text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full bg-indigo-950 text-indigo-300 border border-indigo-500 shadow-sm flex items-center gap-1";
         badgeEraText.textContent = "Interplanetary Era";
-        statRealmIcon.textContent = "🪐";
-        statRealmLabel.textContent = "Worlds";
-        statRealmCount.textContent = `${ownedWorlds} / ${WORLDS.length}`;
       } else if (era === 'countries') {
         badgeEra.className = "text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full bg-sky-950 text-sky-300 border border-sky-500 shadow-sm flex items-center gap-1";
         badgeEraText.textContent = "Global Nations Era";
-        statRealmIcon.textContent = "🌍";
-        statRealmLabel.textContent = "Countries";
-        statRealmCount.textContent = `${ownedCountries} / ${COUNTRIES.length}`;
       } else {
         badgeEra.className = "text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-600/50 shadow-sm flex items-center gap-1";
         badgeEraText.textContent = "New Hampshire";
+      }
+
+      // Update Current Location Stats in HUD header
+      if (isCountryRealm(gameState.currentLocation)) {
+        const countryRealm = REALMS[gameState.currentLocation];
+        const countryPlots = COUNTRY_REGIONS[gameState.currentLocation] || [];
+        const ownedPlotsCount = countryPlots.filter(p => p.owned).length;
+        statRealmIcon.textContent = countryRealm ? countryRealm.icon : '🌍';
+        statRealmLabel.textContent = countryRealm ? countryRealm.name : 'Country';
+        statRealmCount.textContent = `${ownedPlotsCount} / ${countryPlots.length}`;
+      } else if (gameState.currentLocation !== 'nh') {
+        const celestialRealm = REALMS[gameState.currentLocation];
+        const bList = REALM_BUILDINGS[gameState.currentLocation] || [];
+        const builtCount = bList.filter(b => b.built).length;
+        statRealmIcon.textContent = celestialRealm ? celestialRealm.icon : '🪐';
+        statRealmLabel.textContent = celestialRealm ? celestialRealm.name : 'Outpost';
+        statRealmCount.textContent = `${builtCount} / ${bList.length}`;
+      } else {
         statRealmIcon.textContent = "🏞️";
         statRealmLabel.textContent = "NH Land";
         statRealmCount.textContent = `${ownedNH} / ${LAND_PLOTS.length}`;
@@ -2034,34 +2771,267 @@
       }
     }
 
+    // --- REALM & PARCEL HELPERS ---
+    function isCountryRealm(locId) {
+      return Boolean(COUNTRY_REGIONS && COUNTRY_REGIONS[locId]);
+    }
+
+    function getCurrentPlots() {
+      if (gameState.currentLocation === 'nh') {
+        return LAND_PLOTS;
+      }
+      if (isCountryRealm(gameState.currentLocation)) {
+        return COUNTRY_REGIONS[gameState.currentLocation];
+      }
+      return null;
+    }
+
+    // --- 3RD GRADE EDUCATIONAL MATH SYSTEM ---
+    function generateMathProblem(type) {
+      if (type === 'region') {
+        // Easy 3rd grade level: multiplication, addition, or subtraction problem.
+        // Max 2 numbers, and max 2 digits each.
+        const ops = ['+', '-', '×'];
+        const op = ops[Math.floor(Math.random() * ops.length)];
+        let num1, num2, answer, promptText;
+
+        if (op === '+') {
+          // 2 digits + 1 or 2 digits, sum <= 99
+          num1 = Math.floor(Math.random() * 45) + 12; // 12..56
+          num2 = Math.floor(Math.random() * 35) + 6;  // 6..40
+          answer = num1 + num2;
+          promptText = `${num1} + ${num2}`;
+        } else if (op === '-') {
+          // 2 digits - 1 or 2 digits, answer positive
+          num1 = Math.floor(Math.random() * 50) + 25; // 25..74
+          num2 = Math.floor(Math.random() * (num1 - 8)) + 5; // 5..(num1-4)
+          answer = num1 - num2;
+          promptText = `${num1} - ${num2}`;
+        } else { // '×'
+          // 3rd grade times tables (2-12 x 2-10, max 2 digits each)
+          num1 = Math.floor(Math.random() * 9) + 3; // 3..11
+          num2 = Math.floor(Math.random() * 8) + 2; // 2..9
+          answer = num1 * num2;
+          promptText = `${num1} × ${num2}`;
+        }
+
+        return {
+          type: 'region',
+          num1,
+          num2,
+          op,
+          promptText,
+          answer
+        };
+      } else {
+        // Machine upgrade on planets and galaxies:
+        // 3rd grade multiplication or division,
+        // max 2 digits for top number and 1 digit for bottom number.
+        const ops = ['×', '÷'];
+        const op = ops[Math.floor(Math.random() * ops.length)];
+        let num1, num2, answer, promptText;
+
+        if (op === '×') {
+          // Top number: max 2 digits (10..35)
+          // Bottom number: 1 digit (2..9)
+          num1 = Math.floor(Math.random() * 26) + 10;
+          num2 = Math.floor(Math.random() * 8) + 2;
+          answer = num1 * num2;
+          promptText = `${num1} × ${num2}`;
+        } else { // '÷'
+          // Clean integer division (no remainder)
+          // Divisor (bottom): 1 digit (2..8)
+          // Quotient: 2..11
+          // Dividend (top): quotient * divisor <= 99 (max 2 digits)
+          num2 = Math.floor(Math.random() * 7) + 2;
+          const maxQuotient = Math.min(11, Math.floor(99 / num2));
+          const quotient = Math.floor(Math.random() * (maxQuotient - 2)) + 2;
+          num1 = quotient * num2;
+          answer = quotient;
+          promptText = `${num1} ÷ ${num2}`;
+        }
+
+        return {
+          type: 'machine',
+          num1,
+          num2,
+          op,
+          promptText,
+          answer
+        };
+      }
+    }
+
+    function generateMathOptions(answer) {
+      const options = new Set([answer]);
+      const offsets = [-2, -1, 1, 2, -10, 10, -5, 5, 3, -3, 4, -4];
+      for (let i = offsets.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [offsets[i], offsets[j]] = [offsets[j], offsets[i]];
+      }
+      for (const off of offsets) {
+        const candidate = answer + off;
+        if (candidate > 0 && candidate !== answer) {
+          options.add(candidate);
+          if (options.size === 4) break;
+        }
+      }
+      while (options.size < 4) {
+        const r = Math.max(1, answer + Math.floor(Math.random() * 15) - 7);
+        options.add(r);
+      }
+      const arr = Array.from(options);
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    let currentMathChallenge = null;
+
+    function openMathChallenge({ type, targetTitle, onCorrect }) {
+      const problem = generateMathProblem(type);
+      currentMathChallenge = { problem, onCorrect };
+
+      const modal = document.getElementById('modal-math');
+      const targetNameEl = document.getElementById('math-target-name');
+      const gradeBadgeEl = document.getElementById('math-grade-badge');
+      const problemDisplayEl = document.getElementById('math-problem-display');
+      const feedbackEl = document.getElementById('math-feedback-text');
+      const optionsGridEl = document.getElementById('math-options-grid');
+      const typedInputEl = document.getElementById('math-typed-answer');
+
+      if (targetNameEl) targetNameEl.textContent = targetTitle || 'Unlock Challenge';
+      if (gradeBadgeEl) {
+        gradeBadgeEl.textContent = type === 'region'
+          ? 'Grade 3 Math Challenge: Regional Parcel'
+          : 'Grade 3 Math Challenge: Planetary Machine';
+      }
+      if (problemDisplayEl) {
+        problemDisplayEl.textContent = `${problem.promptText} = ?`;
+      }
+      if (feedbackEl) {
+        feedbackEl.textContent = 'Tap the correct answer or type it below:';
+        feedbackEl.className = 'text-xs font-medium text-slate-300 min-h-[22px] transition-all';
+      }
+      if (typedInputEl) typedInputEl.value = '';
+
+      if (optionsGridEl) {
+        optionsGridEl.innerHTML = '';
+        const options = generateMathOptions(problem.answer);
+        options.forEach(opt => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'py-3 px-4 rounded-2xl bg-slate-800/90 hover:bg-amber-500/20 active:bg-amber-500/40 border-2 border-amber-500/40 hover:border-amber-400 font-game font-bold text-2xl text-amber-200 hover:text-amber-100 shadow transition transform active:scale-95 cursor-pointer';
+          btn.textContent = opt;
+          btn.addEventListener('click', () => {
+            checkMathAnswer(opt);
+          });
+          optionsGridEl.appendChild(btn);
+        });
+      }
+
+      if (modal) {
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+          if (typedInputEl) typedInputEl.focus();
+        }, 100);
+      }
+    }
+
+    function closeMathChallenge() {
+      const modal = document.getElementById('modal-math');
+      if (modal) modal.classList.add('hidden');
+      currentMathChallenge = null;
+    }
+
+    function checkMathAnswer(userVal) {
+      if (!currentMathChallenge) return;
+      const expected = currentMathChallenge.problem.answer;
+      const numVal = parseInt(userVal, 10);
+      const feedbackEl = document.getElementById('math-feedback-text');
+      const boxContainer = document.getElementById('math-box-container');
+
+      if (numVal === expected) {
+        sfx.mathCorrect();
+        createConfetti(player.x, player.y, 45);
+        if (feedbackEl) {
+          feedbackEl.textContent = '🎉 Brilliant! Correct Answer! Unlocking now... 🌟';
+          feedbackEl.className = 'text-sm font-bold text-emerald-400 min-h-[22px] transition-all animate-bounce';
+        }
+        const callback = currentMathChallenge.onCorrect;
+        currentMathChallenge = null;
+        setTimeout(() => {
+          closeMathChallenge();
+          if (typeof callback === 'function') callback();
+        }, 600);
+      } else {
+        sfx.mathWrong();
+        if (boxContainer) {
+          boxContainer.classList.remove('animate-math-shake');
+          void boxContainer.offsetWidth;
+          boxContainer.classList.add('animate-math-shake');
+        }
+        if (feedbackEl) {
+          feedbackEl.textContent = '🤔 Not quite! Give it another try! You can do it! 💪';
+          feedbackEl.className = 'text-xs font-bold text-rose-400 min-h-[22px] transition-all';
+        }
+        const typedInputEl = document.getElementById('math-typed-answer');
+        if (typedInputEl) {
+          typedInputEl.value = '';
+          typedInputEl.focus();
+        }
+      }
+    }
+
     // --- LAND & EMPIRE LOGIC ---
     function getPlotAt(wx, wy) {
-      return LAND_PLOTS.find(p =>
+      const plots = getCurrentPlots();
+      if (!plots) return null;
+      return plots.find(p =>
         wx >= p.bounds.x && wx < p.bounds.x + p.bounds.w &&
         wy >= p.bounds.y && wy < p.bounds.y + p.bounds.h
       );
     }
 
     function tryBuyPlot(plotId) {
-      const plot = LAND_PLOTS[plotId];
+      const plots = getCurrentPlots();
+      if (!plots) return false;
+      const plot = plots[plotId];
       if (!plot || plot.owned) return false;
 
       if (gameState.money >= plot.price) {
-        gameState.money -= plot.price;
-        plot.owned = true;
-        sfx.buyLand();
-        createConfetti(player.x, player.y);
-        showDialog(`Hooray! We bought ${plot.name}! New Hampshire is expanding! 🌲`, 4500);
-        updateHUD();
-        renderEmpireNH();
-
-        for (let i = 0; i < 6; i++) spawnFruit(plot.id);
+        if (plot.price === 0) {
+          executeBuyPlot(plot);
+          return true;
+        }
+        openMathChallenge({
+          type: 'region',
+          targetTitle: `Unlock ${plot.name} ($${formatMoney(plot.price)})`,
+          onCorrect: () => {
+            executeBuyPlot(plot);
+          }
+        });
         return true;
       } else {
         sfx.pop();
-        showDialog(`We need $${plot.price - gameState.money} more to buy ${plot.name}! Keep gathering fruits & gems!`, 3500);
+        showDialog(`We need $${formatMoney(plot.price - gameState.money)} more to unlock ${plot.name}! Keep gathering fruits & gems!`, 3500);
         return false;
       }
+    }
+
+    function executeBuyPlot(plot) {
+      gameState.money -= plot.price;
+      plot.owned = true;
+      sfx.buyLand();
+      createConfetti(player.x, player.y);
+      showDialog(`Hooray! We unlocked ${plot.name}! ${plot.subname ? '(' + plot.subname + ')' : ''}! 🎉`, 4500);
+      updateHUD();
+      if (gameState.currentLocation === 'nh') {
+        renderEmpireNH();
+      }
+      for (let i = 0; i < 6; i++) spawnFruit(plot.id);
     }
 
     function tryBuyCountry(countryId) {
@@ -2127,17 +3097,27 @@
       if (!found || found.built) return;
 
       if (gameState.money >= found.price) {
-        gameState.money -= found.price;
-        found.built = true;
-        sfx.build();
-        createConfetti(found.pos.x + found.pos.w / 2, found.pos.y + found.pos.h / 2, 45);
-        showDialog(`Infrastructure Constructed! Completed ${found.name} ${found.icon}! (+${formatMoney(found.passive)}/s)`, 5000);
-        updateHUD();
-        renderBuildingModal();
+        openMathChallenge({
+          type: 'machine',
+          targetTitle: `Construct ${found.name} (${formatMoney(found.price)})`,
+          onCorrect: () => {
+            executeBuildStructure(found);
+          }
+        });
       } else {
         sfx.pop();
         showDialog(`Need ${formatMoney(found.price - gameState.money)} more to build ${found.name}!`, 3000);
       }
+    }
+
+    function executeBuildStructure(found) {
+      gameState.money -= found.price;
+      found.built = true;
+      sfx.build();
+      createConfetti(found.pos.x + found.pos.w / 2, found.pos.y + found.pos.h / 2, 45);
+      showDialog(`Infrastructure Constructed! Completed ${found.name} ${found.icon}! (+${formatMoney(found.passive)}/s)`, 5000);
+      updateHUD();
+      renderBuildingModal();
     }
 
     function tryBuyPower(powerId) {
@@ -2162,8 +3142,13 @@
     function travelTo(destId) {
       if (!REALMS[destId]) return;
       if (destId !== 'nh') {
+        const isCountry = COUNTRIES.find(c => c.id === destId);
         const isWorld = WORLDS.find(w => w.id === destId);
         const isGalaxy = GALAXIES.find(g => g.id === destId);
+        if (isCountry && !isCountry.owned) {
+          showDialog(`Acquire ${isCountry.name} ${isCountry.flag} first in Empire or Star-Map!`, 3000);
+          return;
+        }
         if (isWorld && !isWorld.owned) {
           showDialog(`Colonize ${isWorld.name} first in Empire or Star-Map!`, 3000);
           return;
@@ -2582,7 +3567,12 @@
           <p class="text-[11px] text-slate-300 mb-3">${c.desc}</p>
           ${
             isOwned
-              ? `<div class="text-center py-1.5 text-xs font-semibold text-sky-400 bg-sky-900/30 rounded-xl">✓ Nation Colonized</div>`
+              ? `<div class="flex items-center gap-2">
+                  <div class="flex-1 text-center py-1.5 text-xs font-semibold text-sky-400 bg-sky-900/30 rounded-xl">✓ Acquired</div>
+                  <button data-country-id="${c.id}" class="btn-travel-country px-3 py-1.5 bg-gradient-to-r from-sky-500 to-emerald-500 hover:from-sky-400 hover:to-emerald-400 text-slate-950 font-game font-bold text-xs rounded-xl shadow transition transform active:scale-95 flex items-center gap-1 cursor-pointer">
+                    <span>🚀</span><span>Travel</span>
+                  </button>
+                </div>`
               : `<button data-country-id="${c.id}" class="btn-buy-country w-full py-1.5 rounded-xl font-game text-xs font-bold transition ${
                   canAfford
                     ? 'bg-sky-500 hover:bg-sky-400 text-slate-950 shadow-md cursor-pointer'
@@ -2598,6 +3588,13 @@
       viewEmpireCountries.querySelectorAll('.btn-buy-country').forEach(btn => {
         btn.addEventListener('click', () => {
           tryBuyCountry(btn.getAttribute('data-country-id'));
+        });
+      });
+
+      viewEmpireCountries.querySelectorAll('.btn-travel-country').forEach(btn => {
+        btn.addEventListener('click', () => {
+          modalDeeds.classList.add('hidden');
+          travelTo(btn.getAttribute('data-country-id'));
         });
       });
     }
@@ -2674,42 +3671,49 @@
         const isOwned = g.owned;
         const canAfford = gameState.money >= g.price;
         const card = document.createElement('div');
-        card.className = `p-3 rounded-2xl border transition ${
+        card.className = `p-3.5 rounded-2xl border-2 transition galaxy-epic-card ${
           isOwned
-            ? 'bg-purple-950/40 border-purple-500/50 text-purple-100'
-            : 'bg-slate-800/60 border-slate-700 text-slate-300'
+            ? 'border-purple-400/80 text-purple-100 shadow-xl'
+            : 'border-purple-600/50 text-slate-300'
         }`;
 
         card.innerHTML = `
-          <div class="flex items-center justify-between mb-1.5">
-            <div class="flex items-center gap-1.5">
-              <span class="text-xl">${g.icon}</span>
-              <h4 class="font-bold font-game text-sm ${isOwned ? 'text-purple-300' : 'text-slate-100'}">${g.name}</h4>
+          <div class="flex items-center justify-between mb-1.5 relative z-10">
+            <div class="flex items-center gap-2">
+              <span class="text-2xl inline-block animate-galaxy-spin">${g.icon}</span>
+              <div>
+                <div class="flex items-center gap-1.5">
+                  <h4 class="font-bold font-game text-sm text-purple-200 drop-shadow">${g.name}</h4>
+                  <span class="text-[10px] text-pink-300 font-bold animate-star-glimmer">✨ COSMIC</span>
+                </div>
+                <div class="text-[10px] text-yellow-300 font-semibold">+${formatMoney(g.passive)}/sec</div>
+              </div>
             </div>
-            <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-              isOwned ? 'bg-purple-800 text-purple-200' : 'bg-slate-700 text-amber-300'
+            <span class="text-[10px] font-bold px-2.5 py-1 rounded-full ${
+              isOwned ? 'bg-purple-800/90 text-purple-200 border border-purple-400' : 'bg-slate-900/90 text-amber-300 border border-amber-500/50'
             }">
-              ${isOwned ? '✓ OWNED' : formatMoney(g.price)}
+              ${isOwned ? '✓ CONQUERED' : formatMoney(g.price)}
             </span>
           </div>
-          <div class="text-[10px] text-yellow-400 font-semibold mb-1">Income: +${formatMoney(g.passive)}/sec</div>
-          <p class="text-[11px] text-slate-300 mb-3">${g.desc}</p>
-          ${
-            isOwned
-              ? `<div class="flex items-center gap-2">
-                  <div class="flex-1 text-center py-1.5 text-xs font-semibold text-purple-400 bg-purple-900/30 rounded-xl">✓ Conquered</div>
-                  <button data-galaxy-id="${g.id}" class="btn-travel-galaxy px-3 py-1.5 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-400 hover:to-pink-500 text-white font-game font-bold text-xs rounded-xl shadow transition transform active:scale-95 flex items-center gap-1 cursor-pointer">
-                    <span>🌌</span><span>Warp</span>
-                  </button>
-                </div>`
-              : `<button data-galaxy-id="${g.id}" class="btn-buy-galaxy w-full py-1.5 rounded-xl font-game text-xs font-bold transition ${
-                  canAfford
-                    ? 'bg-purple-500 hover:bg-purple-400 text-slate-950 shadow-md cursor-pointer'
-                    : 'bg-slate-700 text-slate-400 cursor-not-allowed'
-                }">
-                  ${canAfford ? `Conquer Galaxy (${formatMoney(g.price)})` : `Need ${formatMoney(g.price - gameState.money)} More`}
-                </button>`
-          }
+          <p class="text-[11px] text-purple-200/90 mb-3 relative z-10">${g.desc}</p>
+          <div class="relative z-10">
+            ${
+              isOwned
+                ? `<div class="flex items-center gap-2">
+                    <div class="flex-1 text-center py-1.5 text-xs font-semibold text-purple-300 bg-purple-900/40 rounded-xl border border-purple-500/30">✓ Conquered Cosmic Realm</div>
+                    <button data-galaxy-id="${g.id}" class="btn-travel-galaxy px-4 py-1.5 bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500 hover:from-purple-400 hover:to-pink-400 text-white font-game font-bold text-xs rounded-xl shadow-lg transition transform active:scale-95 flex items-center gap-1.5 cursor-pointer">
+                      <span class="animate-galaxy-spin">🌀</span><span>Warp</span>
+                    </button>
+                  </div>`
+                : `<button data-galaxy-id="${g.id}" class="btn-buy-galaxy w-full py-2 rounded-xl font-game text-xs font-bold transition shadow-md ${
+                    canAfford
+                      ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400 text-white cursor-pointer active:scale-95'
+                      : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                  }">
+                    ${canAfford ? `Conquer Galaxy (${formatMoney(g.price)})` : `Need ${formatMoney(g.price - gameState.money)} More`}
+                  </button>`
+            }
+          </div>
         `;
         viewEmpireGalaxies.appendChild(card);
       });
@@ -2735,11 +3739,13 @@
 
       const dests = [
         { id: 'nh', name: 'New Hampshire', icon: '🌲', type: 'state', desc: 'Granite State home base with rolling green meadows & lake shores.', price: 0, owned: true, passive: 0 },
+        ...COUNTRIES.map(c => ({ id: c.id, name: c.name, icon: c.flag, type: 'country', desc: c.desc, price: c.price, owned: c.owned, passive: c.passive })),
         ...WORLDS.map(w => ({ id: w.id, name: w.name, icon: w.icon, type: 'world', desc: w.desc, price: w.price, owned: w.owned, passive: w.passive })),
         ...GALAXIES.map(g => ({ id: g.id, name: g.name, icon: g.icon, type: 'galaxy', desc: g.desc, price: g.price, owned: g.owned, passive: g.passive }))
       ];
 
       const filtered = dests.filter(d => {
+        if (filter === 'earth') return d.type === 'state' || d.type === 'country';
         if (filter === 'planets') return d.type === 'world';
         if (filter === 'galaxies') return d.type === 'galaxy';
         return true;
@@ -2748,21 +3754,34 @@
       filtered.forEach(d => {
         const isCurrent = gameState.currentLocation === d.id;
         const canAfford = gameState.money >= d.price;
+        const isGalaxy = d.type === 'galaxy';
         const card = document.createElement('div');
-        card.className = `p-3 rounded-2xl border transition flex flex-col justify-between ${
-          isCurrent
-            ? 'bg-indigo-950/70 border-emerald-400 text-indigo-100 ring-2 ring-emerald-400/40'
-            : d.owned
-            ? 'bg-slate-800/80 border-indigo-500/50 text-indigo-100'
-            : 'bg-slate-900/60 border-slate-700 text-slate-400'
-        }`;
+
+        if (isGalaxy) {
+          card.className = `p-3.5 rounded-2xl border-2 transition flex flex-col justify-between galaxy-epic-card ${
+            isCurrent
+              ? 'border-emerald-400 ring-2 ring-emerald-400/50 shadow-2xl'
+              : d.owned
+              ? 'border-purple-400/80 shadow-lg'
+              : 'border-purple-600/40 text-slate-300'
+          }`;
+        } else {
+          card.className = `p-3 rounded-2xl border transition flex flex-col justify-between ${
+            isCurrent
+              ? 'bg-indigo-950/70 border-emerald-400 text-indigo-100 ring-2 ring-emerald-400/40'
+              : d.owned
+              ? 'bg-slate-800/80 border-indigo-500/50 text-indigo-100'
+              : 'bg-slate-900/60 border-slate-700 text-slate-400'
+          }`;
+        }
 
         card.innerHTML = `
-          <div>
+          <div class="relative z-10">
             <div class="flex items-center justify-between mb-1">
               <div class="flex items-center gap-1.5">
-                <span class="text-2xl">${d.icon}</span>
+                <span class="text-2xl ${isGalaxy ? 'inline-block animate-galaxy-spin' : ''}">${d.icon}</span>
                 <h4 class="font-bold font-game text-sm ${d.owned ? 'text-white' : 'text-slate-300'}">${d.name}</h4>
+                ${isGalaxy ? '<span class="text-[10px] text-pink-300 font-bold animate-star-glimmer">✨</span>' : ''}
               </div>
               <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${
                 isCurrent ? 'bg-emerald-600 text-white' : d.owned ? 'bg-indigo-800 text-indigo-200' : 'bg-slate-700 text-amber-300'
@@ -2773,20 +3792,20 @@
             <p class="text-[11px] text-slate-300 mb-2">${d.desc}</p>
             ${d.passive > 0 ? `<div class="text-[10px] text-yellow-400 font-semibold mb-2">Base Income: +${formatMoney(d.passive)}/s</div>` : ''}
           </div>
-          <div>
+          <div class="relative z-10">
             ${
               isCurrent
                 ? `<div class="text-center py-2 text-xs font-bold text-emerald-400 bg-emerald-950/50 rounded-xl border border-emerald-500/30">Currently Exploring</div>`
                 : d.owned
-                ? `<button data-dest-id="${d.id}" class="btn-do-travel w-full py-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-400 hover:to-pink-400 text-white font-game font-bold text-xs rounded-xl shadow-md transition transform active:scale-95 cursor-pointer">
-                    🚀 Travel to ${d.name}
+                ? `<button data-dest-id="${d.id}" class="btn-do-travel w-full py-2 bg-gradient-to-r ${isGalaxy ? 'from-purple-500 via-pink-500 to-indigo-500 hover:from-purple-400 hover:to-pink-400' : 'from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-400 hover:to-pink-400'} text-white font-game font-bold text-xs rounded-xl shadow-md transition transform active:scale-95 cursor-pointer">
+                    ${isGalaxy ? '🌌 Warp to' : '🚀 Travel to'} ${d.name}
                   </button>`
                 : `<button data-buy-dest="${d.id}" data-dest-type="${d.type}" class="btn-buy-and-travel w-full py-2 rounded-xl font-game text-xs font-bold transition ${
                     canAfford
-                      ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-md cursor-pointer'
+                      ? isGalaxy ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400 text-white shadow-md cursor-pointer' : 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-md cursor-pointer'
                       : 'bg-slate-800 text-slate-500 cursor-not-allowed'
                   }">
-                    ${canAfford ? `Colonize (${formatMoney(d.price)})` : `Need ${formatMoney(d.price - gameState.money)}`}
+                    ${canAfford ? `${isGalaxy ? 'Conquer Galaxy' : d.type === 'country' ? 'Acquire Nation' : 'Colonize'} (${formatMoney(d.price)})` : `Need ${formatMoney(d.price - gameState.money)}`}
                   </button>`
             }
           </div>
@@ -2806,7 +3825,8 @@
         btn.addEventListener('click', () => {
           const destId = btn.getAttribute('data-buy-dest');
           const type = btn.getAttribute('data-dest-type');
-          if (type === 'world') tryBuyWorld(destId);
+          if (type === 'country') tryBuyCountry(destId);
+          else if (type === 'world') tryBuyWorld(destId);
           else if (type === 'galaxy') tryBuyGalaxy(destId);
           renderTravelModal(filter);
         });
@@ -3184,17 +4204,20 @@
     }
 
     const tabTravelAll = document.getElementById('tab-travel-all');
+    const tabTravelEarth = document.getElementById('tab-travel-earth');
     const tabTravelPlanets = document.getElementById('tab-travel-planets');
     const tabTravelGalaxies = document.getElementById('tab-travel-galaxies');
 
     const switchTravelFilter = (filter) => {
       sfx.init();
-      [tabTravelAll, tabTravelPlanets, tabTravelGalaxies].forEach(btn => {
+      [tabTravelAll, tabTravelEarth, tabTravelPlanets, tabTravelGalaxies].forEach(btn => {
         if (!btn) return;
         btn.className = 'px-3 sm:px-4 py-1.5 font-game font-bold text-xs sm:text-sm rounded-t-xl transition border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap cursor-pointer';
       });
       if (filter === 'all' && tabTravelAll) {
         tabTravelAll.className = 'px-3 sm:px-4 py-1.5 font-game font-bold text-xs sm:text-sm rounded-t-xl transition border-b-2 border-indigo-400 text-indigo-300 bg-indigo-950/30 whitespace-nowrap cursor-pointer';
+      } else if (filter === 'earth' && tabTravelEarth) {
+        tabTravelEarth.className = 'px-3 sm:px-4 py-1.5 font-game font-bold text-xs sm:text-sm rounded-t-xl transition border-b-2 border-indigo-400 text-indigo-300 bg-indigo-950/30 whitespace-nowrap cursor-pointer';
       } else if (filter === 'planets' && tabTravelPlanets) {
         tabTravelPlanets.className = 'px-3 sm:px-4 py-1.5 font-game font-bold text-xs sm:text-sm rounded-t-xl transition border-b-2 border-indigo-400 text-indigo-300 bg-indigo-950/30 whitespace-nowrap cursor-pointer';
       } else if (filter === 'galaxies' && tabTravelGalaxies) {
@@ -3204,8 +4227,29 @@
     };
 
     if (tabTravelAll) tabTravelAll.addEventListener('click', () => switchTravelFilter('all'));
+    if (tabTravelEarth) tabTravelEarth.addEventListener('click', () => switchTravelFilter('earth'));
     if (tabTravelPlanets) tabTravelPlanets.addEventListener('click', () => switchTravelFilter('planets'));
     if (tabTravelGalaxies) tabTravelGalaxies.addEventListener('click', () => switchTravelFilter('galaxies'));
+
+    // Math Challenge Modal Controls
+    const btnCloseMath = document.getElementById('btn-close-math');
+    if (btnCloseMath) {
+      btnCloseMath.addEventListener('click', () => {
+        sfx.pop();
+        closeMathChallenge();
+      });
+    }
+
+    const mathForm = document.getElementById('math-input-form');
+    if (mathForm) {
+      mathForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const typedInputEl = document.getElementById('math-typed-answer');
+        if (typedInputEl && typedInputEl.value.trim() !== '') {
+          checkMathAnswer(typedInputEl.value.trim());
+        }
+      });
+    }
 
     // Planetary Construction Modal Openers
     const btnOpenBuild = document.getElementById('btn-open-build');
@@ -3239,11 +4283,13 @@
     });
 
     // Close modals on clicking backdrop
-    [modalStory, modalDeeds, modalShop, modalHelp, modalVictory, modalTravel, modalBuilding].forEach(modal => {
+    const modalMathEl = document.getElementById('modal-math');
+    [modalStory, modalDeeds, modalShop, modalHelp, modalVictory, modalTravel, modalBuilding, modalMathEl].forEach(modal => {
       if (!modal) return;
       modal.addEventListener('click', (e) => {
         if (e.target === modal) {
           modal.classList.add('hidden');
+          if (modal === modalMathEl) closeMathChallenge();
         }
       });
     });
@@ -3332,8 +4378,9 @@
       // Boundary collisions & ghost phasing
       const nextX = player.x + player.vx;
       const nextY = player.y + player.vy;
+      const currentPlots = getCurrentPlots();
 
-      if (gameState.currentLocation !== 'nh') {
+      if (!currentPlots) {
         // Celestial worlds have open exploration bounds
         player.x = Math.max(30, Math.min(WORLD_WIDTH - 30, nextX));
         player.y = Math.max(30, Math.min(WORLD_HEIGHT - 30, nextY));
@@ -3631,12 +4678,13 @@
       }
 
       // 8. Nearest unowned plot or celestial building for "FOR SALE / CONSTRUCT" prompt
-      if (gameState.currentLocation === 'nh') {
+      const currentPlotsForPrompt = getCurrentPlots();
+      if (currentPlotsForPrompt) {
         gameState.activeBuyStructure = null;
         let nearestUnowned = null;
         let minDistance = 160;
 
-        LAND_PLOTS.filter(p => !p.owned).forEach(plot => {
+        currentPlotsForPrompt.filter(p => !p.owned).forEach(plot => {
           const distToGate = Math.hypot(player.x - plot.gate.x, player.y - plot.gate.y);
           if (distToGate < minDistance) {
             minDistance = distToGate;
@@ -3648,8 +4696,8 @@
           gameState.activeBuyPlot = nearestUnowned.id;
           buyPromptTitle.textContent = `${nearestUnowned.name} (${nearestUnowned.region})`;
           buyPromptDesc.textContent = nearestUnowned.desc;
-          buyPromptPrice.textContent = `$${nearestUnowned.price}`;
-          btnQuickBuy.textContent = `Buy Plot ($${nearestUnowned.price})`;
+          buyPromptPrice.textContent = `$${formatMoney(nearestUnowned.price)}`;
+          btnQuickBuy.textContent = `Unlock Region ($${formatMoney(nearestUnowned.price)})`;
           buyPromptBanner.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-6');
         } else {
           gameState.activeBuyPlot = null;
@@ -3703,11 +4751,17 @@
       ctx.save();
       ctx.translate(-camera.x, -camera.y);
 
-      // 1. Draw Ground & Terrain for Earth (NH) or Celestial Realm (Planets & Galaxies)
+      // 1. Draw Ground & Terrain for Earth (NH or Country) or Celestial Realm (Planets & Galaxies)
       if (gameState.currentLocation === 'nh') {
         drawWorldTerrain();
         drawCosmicAtmosphere();
         drawPlotBoundaries();
+      } else if (isCountryRealm(gameState.currentLocation)) {
+        drawCountryTerrain(gameState.currentLocation);
+        drawPlotBoundaries();
+      } else if (gameState.currentLocation.startsWith('g_')) {
+        drawEpicGalaxyTerrain(gameState.currentLocation);
+        drawRealmBuildings(gameState.currentLocation);
       } else {
         drawCelestialRealmTerrain(gameState.currentLocation);
         drawRealmBuildings(gameState.currentLocation);
@@ -3757,6 +4811,912 @@
         ctx.stroke();
         ctx.restore();
       });
+    }
+
+    // Epic Glimmering & Rotating Galaxies Terrain Renderer
+    function drawEpicGalaxyTerrain(locId) {
+      const time = performance.now();
+      const cx = WORLD_WIDTH / 2;
+      const cy = WORLD_HEIGHT / 2;
+
+      // 1. Deep Space Void with Cosmic Radial Backdrop
+      const bgGrad = ctx.createRadialGradient(cx, cy, 180, cx, cy, WORLD_WIDTH * 0.75);
+      if (locId === 'g_multiverse') {
+        bgGrad.addColorStop(0, '#2e1065');
+        bgGrad.addColorStop(0.4, '#17042e');
+        bgGrad.addColorStop(1, '#030108');
+      } else if (locId === 'g_supercluster') {
+        bgGrad.addColorStop(0, '#1e1b4b');
+        bgGrad.addColorStop(0.4, '#0f0e26');
+        bgGrad.addColorStop(1, '#02010a');
+      } else if (locId === 'g_triangulum') {
+        bgGrad.addColorStop(0, '#083344');
+        bgGrad.addColorStop(0.4, '#041c26');
+        bgGrad.addColorStop(1, '#01090d');
+      } else if (locId === 'g_andromeda') {
+        bgGrad.addColorStop(0, '#4a044e');
+        bgGrad.addColorStop(0.4, '#240226');
+        bgGrad.addColorStop(1, '#050106');
+      } else {
+        // Milky Way
+        bgGrad.addColorStop(0, '#172554');
+        bgGrad.addColorStop(0.4, '#091126');
+        bgGrad.addColorStop(1, '#02040a');
+      }
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+
+      // 2. Dynamic Breathing Cosmic Nebulae (Multi-layer color clouds)
+      const nebulae = [
+        { x: cx - 400, y: cy - 250, r: 520, col: '#8b5cf6', shift: 0 },
+        { x: cx + 450, y: cy + 200, r: 580, col: '#ec4899', shift: 1.5 },
+        { x: cx, y: cy, r: 680, col: '#38bdf8', shift: 3.0 }
+      ];
+      nebulae.forEach(n => {
+        const pulse = 0.12 + 0.08 * Math.sin(time * 0.0012 + n.shift);
+        ctx.save();
+        const nGrad = ctx.createRadialGradient(n.x, n.y, 40, n.x, n.y, n.r);
+        nGrad.addColorStop(0, n.col);
+        nGrad.addColorStop(1, 'transparent');
+        ctx.globalAlpha = pulse;
+        ctx.fillStyle = nGrad;
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+
+      // 3. 280 Glimmering Stars with 4-Point Cross Diffraction Spikes
+      GALAXY_STARS.forEach(s => {
+        const twinkle = 0.35 + 0.65 * Math.sin(time * s.speed + s.phase);
+        ctx.save();
+        ctx.globalAlpha = Math.max(0.18, twinkle);
+        ctx.fillStyle = s.color;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+        ctx.fill();
+
+        if (s.hasCrossFlare && twinkle > 0.55) {
+          const flareLen = s.size * (3.8 + twinkle * 3.5);
+          ctx.strokeStyle = s.color;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(s.x - flareLen, s.y);
+          ctx.lineTo(s.x + flareLen, s.y);
+          ctx.moveTo(s.x, s.y - flareLen);
+          ctx.lineTo(s.x, s.y + flareLen);
+          ctx.stroke();
+        }
+        ctx.restore();
+      });
+
+      // 4. Rotating Logarithmic Spiral Arms & Galactic Core
+      ctx.save();
+      ctx.translate(cx, cy);
+      const rot = time * 0.00018; // Subtle hypnotic cosmic rotation!
+      ctx.rotate(rot);
+
+      let armColors = ['#a855f7', '#ec4899', '#38bdf8', '#facc15'];
+      if (locId === 'g_andromeda') armColors = ['#d946ef', '#f43f5e', '#a855f7', '#fb7185'];
+      else if (locId === 'g_triangulum') armColors = ['#06b6d4', '#38bdf8', '#facc15', '#4ade80'];
+      else if (locId === 'g_supercluster') armColors = ['#6366f1', '#a855f7', '#c084fc', '#e0e7ff'];
+      else if (locId === 'g_multiverse') armColors = ['#f43f5e', '#facc15', '#10b981', '#38bdf8', '#c084fc'];
+
+      // Render 4 Spiral Logarithmic Arms
+      const numArms = 4;
+      for (let arm = 0; arm < numArms; arm++) {
+        const armAngleOffset = (arm * Math.PI * 2) / numArms;
+        const col = armColors[arm % armColors.length];
+
+        ctx.strokeStyle = col;
+        ctx.lineWidth = 5;
+        ctx.globalAlpha = 0.45;
+        ctx.beginPath();
+        for (let a = 0; a < Math.PI * 5; a += 0.12) {
+          const r = 50 + Math.pow(a, 1.45) * 52;
+          const sx = Math.cos(a + armAngleOffset) * r;
+          const sy = Math.sin(a + armAngleOffset) * (r * 0.58);
+          if (a === 0) ctx.moveTo(sx, sy);
+          else ctx.lineTo(sx, sy);
+        }
+        ctx.stroke();
+
+        // Star dust particles along the arm
+        ctx.fillStyle = '#ffffff';
+        for (let p = 0; p < 28; p++) {
+          const a = (p / 28) * Math.PI * 5;
+          const r = 50 + Math.pow(a, 1.45) * 52 + (Math.sin(p * 7) * 22);
+          const px = Math.cos(a + armAngleOffset) * r;
+          const py = Math.sin(a + armAngleOffset) * (r * 0.58);
+          ctx.globalAlpha = 0.4 + 0.5 * Math.sin(time * 0.003 + p);
+          ctx.beginPath();
+          ctx.arc(px, py, 1.5 + (p % 3), 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // Blinding Supermassive Core Pulsar / Quasar
+      const coreR = 65 + Math.sin(time * 0.003) * 8;
+      const coreGrad = ctx.createRadialGradient(0, 0, 10, 0, 0, coreR * 2.8);
+      coreGrad.addColorStop(0, 'rgba(255, 255, 255, 0.98)');
+      coreGrad.addColorStop(0.2, armColors[0]);
+      coreGrad.addColorStop(0.6, armColors[1]);
+      coreGrad.addColorStop(1, 'transparent');
+      ctx.globalAlpha = 0.85;
+      ctx.fillStyle = coreGrad;
+      ctx.beginPath();
+      ctx.arc(0, 0, coreR * 2.8, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Core bright center
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(0, 0, coreR * 0.45, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Relativistic Vertical Jets of Light
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(0, -coreR * 3);
+      ctx.lineTo(0, coreR * 3);
+      ctx.stroke();
+
+      ctx.restore();
+
+      // 5. High-Tech Galactic Observatory Deck / Grid Surface
+      ctx.save();
+      ctx.strokeStyle = 'rgba(168, 85, 247, 0.18)';
+      ctx.lineWidth = 1.5;
+      for (let x = 0; x < WORLD_WIDTH; x += 150) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0); ctx.lineTo(x, WORLD_HEIGHT);
+        ctx.stroke();
+      }
+      for (let y = 0; y < WORLD_HEIGHT; y += 150) {
+        ctx.beginPath();
+        ctx.moveTo(0, y); ctx.lineTo(WORLD_WIDTH, y);
+        ctx.stroke();
+      }
+
+      // Energy Ring Conduits around world center
+      ctx.strokeStyle = 'rgba(236, 72, 153, 0.25)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([12, 8]);
+      ctx.beginPath();
+      ctx.arc(cx, cy, 380, 0, Math.PI * 2);
+      ctx.arc(cx, cy, 750, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+
+      // 6. Multiverse Special Relics (Floating Golden Crowns)
+      if (locId === 'g_multiverse') {
+        ctx.save();
+        ctx.font = '32px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('👑', 420 + Math.sin(time * 0.002) * 24, 320);
+        ctx.fillText('👑', 1880 + Math.cos(time * 0.002) * 24, 380);
+        ctx.fillText('👑', 1150 + Math.sin(time * 0.0025) * 28, 1120);
+        ctx.restore();
+      }
+    }
+
+    // --- COUNTRY REALM TERRAIN & SILHOUETTE RENDERERS ---
+    function drawCountryTerrain(countryId) {
+      const time = performance.now();
+
+      // 1. Ocean Background
+      const oceanGrad = ctx.createLinearGradient(0, 0, 0, WORLD_HEIGHT);
+      if (countryId === 'c_bra') {
+        oceanGrad.addColorStop(0, '#0284c7');
+        oceanGrad.addColorStop(1, '#0f766e');
+      } else if (countryId === 'c_jpn') {
+        oceanGrad.addColorStop(0, '#0369a1');
+        oceanGrad.addColorStop(1, '#1e3a8a');
+      } else if (countryId === 'c_can') {
+        oceanGrad.addColorStop(0, '#0284c7');
+        oceanGrad.addColorStop(1, '#0c4a6e');
+      } else if (countryId === 'c_uk') {
+        oceanGrad.addColorStop(0, '#075985');
+        oceanGrad.addColorStop(1, '#1e293b');
+      } else {
+        oceanGrad.addColorStop(0, '#0284c7');
+        oceanGrad.addColorStop(0.5, '#0369a1');
+        oceanGrad.addColorStop(1, '#075985');
+      }
+      ctx.fillStyle = oceanGrad;
+      ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+
+      // Gentle animated wave ripples
+      const waveTime = time * 0.0016;
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.lineWidth = 2.5;
+      for (let i = 0; i < 32; i++) {
+        const wx = ((i * 179) + waveTime * 42) % (WORLD_WIDTH + 240) - 120;
+        const wy = 45 + (i * 67) % (WORLD_HEIGHT - 90);
+        ctx.beginPath();
+        ctx.arc(wx, wy, 22, 0.25, Math.PI - 0.25);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      // 2. Silhouette of the Country
+      drawCountrySilhouette(countryId);
+
+      // 3. Themed Regional Decor for Country Parcels
+      const regions = COUNTRY_REGIONS[countryId] || [];
+      regions.forEach(r => {
+        drawRegionDecor(r, time);
+      });
+    }
+
+    function drawCountrySilhouette(countryId) {
+      ctx.save();
+      if (countryId === 'c_usa') {
+        // USA coastline silhouette (East coast, West coast, Florida, Gulf of Mexico, Great Lakes)
+        ctx.beginPath();
+        ctx.moveTo(220, 180);
+        ctx.bezierCurveTo(140, 320, 150, 520, 240, 700);
+        ctx.bezierCurveTo(280, 800, 350, 920, 420, 1020);
+        ctx.bezierCurveTo(550, 1050, 750, 1080, 880, 1140);
+        ctx.bezierCurveTo(980, 1220, 1060, 1260, 1150, 1200);
+        ctx.bezierCurveTo(1240, 1120, 1340, 1080, 1450, 1100);
+        ctx.bezierCurveTo(1580, 1060, 1720, 1040, 1800, 1060);
+        ctx.bezierCurveTo(1880, 1140, 1920, 1240, 1950, 1280);
+        ctx.bezierCurveTo(1990, 1270, 2010, 1180, 1980, 1060);
+        ctx.bezierCurveTo(1940, 920, 1980, 800, 2040, 680);
+        ctx.bezierCurveTo(2080, 580, 2060, 480, 2120, 400);
+        ctx.bezierCurveTo(2180, 360, 2240, 330, 2220, 250);
+        ctx.bezierCurveTo(2200, 170, 2120, 130, 2040, 150);
+        ctx.bezierCurveTo(1900, 160, 1780, 220, 1650, 200);
+        ctx.bezierCurveTo(1500, 250, 1380, 180, 1250, 220);
+        ctx.bezierCurveTo(1100, 260, 950, 180, 800, 190);
+        ctx.bezierCurveTo(600, 180, 400, 180, 220, 180);
+        ctx.closePath();
+
+        ctx.strokeStyle = '#fde047';
+        ctx.lineWidth = 18;
+        ctx.stroke();
+
+        ctx.fillStyle = '#22c55e';
+        ctx.fill();
+
+      } else if (countryId === 'c_can') {
+        // Canada Silhouette
+        ctx.beginPath();
+        ctx.moveTo(120, 140);
+        ctx.bezierCurveTo(100, 340, 130, 540, 200, 680);
+        ctx.bezierCurveTo(340, 720, 600, 720, 850, 720);
+        ctx.bezierCurveTo(1050, 720, 1200, 700, 1350, 720);
+        ctx.bezierCurveTo(1550, 720, 1750, 680, 1950, 700);
+        ctx.bezierCurveTo(2120, 720, 2220, 640, 2260, 540);
+        ctx.bezierCurveTo(2280, 400, 2220, 280, 2140, 180);
+        ctx.bezierCurveTo(1980, 140, 1840, 220, 1700, 220);
+        ctx.bezierCurveTo(1600, 320, 1480, 380, 1380, 280);
+        ctx.bezierCurveTo(1250, 140, 1050, 120, 850, 140);
+        ctx.bezierCurveTo(600, 120, 350, 120, 120, 140);
+        ctx.closePath();
+
+        ctx.strokeStyle = '#fef08a';
+        ctx.lineWidth = 18;
+        ctx.stroke();
+        ctx.fillStyle = '#16a34a';
+        ctx.fill();
+
+      } else if (countryId === 'c_bra') {
+        // Brazil Diamond / Shield Silhouette
+        ctx.beginPath();
+        ctx.moveTo(650, 160);
+        ctx.bezierCurveTo(900, 150, 1200, 180, 1450, 260);
+        ctx.bezierCurveTo(1750, 380, 1950, 550, 1980, 720);
+        ctx.bezierCurveTo(1920, 920, 1750, 1100, 1550, 1260);
+        ctx.bezierCurveTo(1350, 1340, 1100, 1340, 950, 1220);
+        ctx.bezierCurveTo(750, 1140, 550, 980, 400, 820);
+        ctx.bezierCurveTo(250, 650, 200, 480, 280, 350);
+        ctx.bezierCurveTo(380, 240, 500, 180, 650, 160);
+        ctx.closePath();
+
+        ctx.strokeStyle = '#fde047';
+        ctx.lineWidth = 18;
+        ctx.stroke();
+        ctx.fillStyle = '#15803d';
+        ctx.fill();
+
+      } else if (countryId === 'c_jpn') {
+        // Japan Island Archipelago
+        // Honshu Crescent
+        ctx.beginPath();
+        ctx.moveTo(600, 880);
+        ctx.bezierCurveTo(750, 780, 950, 680, 1180, 520);
+        ctx.bezierCurveTo(1380, 380, 1520, 280, 1650, 180);
+        ctx.bezierCurveTo(1700, 220, 1660, 300, 1550, 420);
+        ctx.bezierCurveTo(1380, 580, 1180, 740, 950, 880);
+        ctx.bezierCurveTo(800, 960, 680, 960, 600, 880);
+        ctx.closePath();
+        ctx.strokeStyle = '#fef08a';
+        ctx.lineWidth = 14;
+        ctx.stroke();
+        ctx.fillStyle = '#16a34a';
+        ctx.fill();
+
+        // Hokkaido (Northern Island)
+        ctx.beginPath();
+        ctx.arc(1750, 200, 160, 0, Math.PI * 2);
+        ctx.strokeStyle = '#fef08a';
+        ctx.lineWidth = 14;
+        ctx.stroke();
+        ctx.fillStyle = '#22c55e';
+        ctx.fill();
+
+        // Kyushu & Shikoku (Southern Islands)
+        ctx.beginPath();
+        ctx.ellipse(450, 980, 150, 90, -0.4, 0, Math.PI * 2);
+        ctx.strokeStyle = '#fef08a';
+        ctx.lineWidth = 14;
+        ctx.stroke();
+        ctx.fillStyle = '#22c55e';
+        ctx.fill();
+
+      } else if (countryId === 'c_uk') {
+        // Great Britain & Northern Ireland
+        ctx.beginPath();
+        ctx.moveTo(1100, 160);
+        ctx.bezierCurveTo(1300, 140, 1450, 280, 1400, 450);
+        ctx.bezierCurveTo(1550, 620, 1650, 820, 1600, 980);
+        ctx.bezierCurveTo(1550, 1120, 1380, 1220, 1200, 1220);
+        ctx.bezierCurveTo(1050, 1220, 920, 1140, 780, 1020);
+        ctx.bezierCurveTo(650, 1120, 520, 1180, 420, 1140);
+        ctx.bezierCurveTo(460, 1020, 580, 950, 720, 880);
+        ctx.bezierCurveTo(720, 720, 820, 580, 920, 450);
+        ctx.bezierCurveTo(920, 320, 980, 220, 1100, 160);
+        ctx.closePath();
+        ctx.strokeStyle = '#fef08a';
+        ctx.lineWidth = 16;
+        ctx.stroke();
+        ctx.fillStyle = '#15803d';
+        ctx.fill();
+
+        // Northern Ireland
+        ctx.beginPath();
+        ctx.arc(480, 520, 140, 0, Math.PI * 2);
+        ctx.strokeStyle = '#fef08a';
+        ctx.lineWidth = 14;
+        ctx.stroke();
+        ctx.fillStyle = '#22c55e';
+        ctx.fill();
+
+      } else {
+        // c_earth: Planet Earth United Continent Silhouettes
+        const continents = [
+          { x: 380, y: 380, rx: 240, ry: 180, col: '#22c55e' },
+          { x: 620, y: 950, rx: 180, ry: 240, col: '#16a34a' },
+          { x: 1200, y: 350, rx: 180, ry: 140, col: '#4ade80' },
+          { x: 1250, y: 850, rx: 220, ry: 260, col: '#eab308' },
+          { x: 1850, y: 400, rx: 320, ry: 220, col: '#22c55e' },
+          { x: 1950, y: 1050, rx: 190, ry: 140, col: '#fbbf24' }
+        ];
+        continents.forEach(c => {
+          ctx.beginPath();
+          ctx.ellipse(c.x, c.y, c.rx, c.ry, 0, 0, Math.PI * 2);
+          ctx.strokeStyle = '#fef08a';
+          ctx.lineWidth = 14;
+          ctx.stroke();
+          ctx.fillStyle = c.col;
+          ctx.fill();
+        });
+      }
+      ctx.restore();
+    }
+
+    function drawRegionDecor(r, time) {
+      const b = r.bounds;
+      if (
+        b.x + b.w < camera.x - 80 || b.x > camera.x + camera.width + 80 ||
+        b.y + b.h < camera.y - 80 || b.y > camera.y + camera.height + 80
+      ) return;
+
+      ctx.save();
+      const theme = r.theme;
+
+      if (theme === 'new_england') {
+        ctx.fillStyle = 'rgba(74, 222, 128, 0.2)';
+        ctx.fillRect(b.x, b.y, b.w, b.h);
+        drawLighthouse(b.x + 140, b.y + 220, time);
+        drawBirchTree(b.x + 380, b.y + 180);
+        drawBirchTree(b.x + 580, b.y + 340);
+        drawWildBlueberryBush(b.x + 280, b.y + 380);
+        drawWildBlueberryBush(b.x + 460, b.y + 240);
+      } else if (theme === 'tri_state') {
+        ctx.fillStyle = 'rgba(148, 163, 184, 0.18)';
+        ctx.fillRect(b.x, b.y, b.w, b.h);
+        drawSkylineSilhouette(b.x + 120, b.y + 140);
+        drawAppleTree(b.x + 360, b.y + 220);
+        drawAppleTree(b.x + 560, b.y + 300);
+        drawBoardwalkPath(b.x + 80, b.y + 340, 220);
+      } else if (theme === 'south') {
+        ctx.fillStyle = 'rgba(251, 146, 60, 0.18)';
+        ctx.fillRect(b.x, b.y, b.w, b.h);
+        drawPeachTree(b.x + 160, b.y + 220);
+        drawPeachTree(b.x + 380, b.y + 300);
+        drawMagnoliaBlossom(b.x + 260, b.y + 160);
+        drawMagnoliaBlossom(b.x + 420, b.y + 440);
+      } else if (theme === 'midwest') {
+        ctx.fillStyle = 'rgba(250, 204, 21, 0.2)';
+        ctx.fillRect(b.x, b.y, b.w, b.h);
+        drawRedBarn(b.x + 180, b.y + 220);
+        drawWindmill(b.x + 420, b.y + 200, time);
+        drawCornfieldStalks(b.x + 120, b.y + 380);
+        drawCornfieldStalks(b.x + 560, b.y + 360);
+      } else if (theme === 'southwest') {
+        ctx.fillStyle = 'rgba(249, 115, 22, 0.25)';
+        ctx.fillRect(b.x, b.y, b.w, b.h);
+        drawRedRockMesa(b.x + 120, b.y + 180);
+        drawSaguaroCactus(b.x + 260, b.y + 340);
+        drawSaguaroCactus(b.x + 400, b.y + 260);
+        drawSaguaroCactus(b.x + 350, b.y + 500);
+      } else if (theme === 'pacific') {
+        ctx.fillStyle = 'rgba(16, 185, 129, 0.22)';
+        ctx.fillRect(b.x, b.y, b.w, b.h);
+        drawGiantRedwood(b.x + 180, b.y + 280);
+        drawGiantRedwood(b.x + 380, b.y + 240);
+        drawOrangeTree(b.x + 520, b.y + 320);
+        drawPacificWaves(b.x + 60, b.y + 420);
+      } else if (theme === 'maritime' || theme === 'yukon') {
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.18)';
+        ctx.fillRect(b.x, b.y, b.w, b.h);
+        drawLighthouse(b.x + 160, b.y + 240, time);
+        drawPineTree(b.x + 340, b.y + 200);
+        drawPineTree(b.x + 480, b.y + 340);
+      } else if (theme === 'sugar_maple') {
+        ctx.fillStyle = 'rgba(249, 115, 22, 0.2)';
+        ctx.fillRect(b.x, b.y, b.w, b.h);
+        drawMapleTree(b.x + 180, b.y + 240);
+        drawMapleTree(b.x + 380, b.y + 200);
+      } else if (theme === 'rio' || theme === 'bahia' || theme === 'okinawa') {
+        ctx.fillStyle = 'rgba(234, 179, 8, 0.2)';
+        ctx.fillRect(b.x, b.y, b.w, b.h);
+        drawPalmTree(b.x + 160, b.y + 240);
+        drawPalmTree(b.x + 420, b.y + 260);
+      } else if (theme === 'tokyo' || theme === 'fuji' || theme === 'kyoto') {
+        ctx.fillStyle = 'rgba(244, 114, 182, 0.2)';
+        ctx.fillRect(b.x, b.y, b.w, b.h);
+        drawSakuraTree(b.x + 160, b.y + 220);
+        drawSakuraTree(b.x + 380, b.y + 260);
+        drawStoneLantern(b.x + 280, b.y + 240);
+      } else if (theme === 'london' || theme === 'cotswolds' || theme === 'highlands') {
+        ctx.fillStyle = 'rgba(34, 197, 94, 0.2)';
+        ctx.fillRect(b.x, b.y, b.w, b.h);
+        drawRoyalRoseGarden(b.x + 180, b.y + 240);
+        drawStoneCottage(b.x + 360, b.y + 220);
+      } else {
+        ctx.fillStyle = 'rgba(34, 197, 94, 0.15)';
+        ctx.fillRect(b.x, b.y, b.w, b.h);
+        drawPineTree(b.x + 180, b.y + 240);
+        drawFruitOrchardTree(b.x + 360, b.y + 220);
+      }
+
+      ctx.restore();
+    }
+
+    function drawLighthouse(x, y, time) {
+      ctx.save();
+      const beamAngle = time * 0.0018;
+      ctx.save();
+      ctx.translate(x, y - 65);
+      ctx.fillStyle = 'rgba(254, 240, 138, 0.25)';
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.arc(0, 0, 180, beamAngle - 0.25, beamAngle + 0.25);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(x - 16, y - 10, 32, 10);
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.moveTo(x - 14, y - 10);
+      ctx.lineTo(x - 9, y - 60);
+      ctx.lineTo(x + 9, y - 60);
+      ctx.lineTo(x + 14, y - 10);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#ef4444';
+      ctx.fillRect(x - 12, y - 25, 24, 10);
+      ctx.fillRect(x - 10, y - 45, 20, 10);
+      ctx.fillStyle = '#fef08a';
+      ctx.fillRect(x - 8, y - 68, 16, 8);
+      ctx.fillStyle = '#1e293b';
+      ctx.beginPath();
+      ctx.moveTo(x - 10, y - 68);
+      ctx.lineTo(x, y - 76);
+      ctx.lineTo(x + 10, y - 68);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawWildBlueberryBush(x, y) {
+      ctx.save();
+      ctx.fillStyle = '#15803d';
+      ctx.beginPath();
+      ctx.arc(x, y, 16, 0, Math.PI * 2);
+      ctx.arc(x - 10, y + 2, 12, 0, Math.PI * 2);
+      ctx.arc(x + 10, y + 2, 12, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#1e3a8a';
+      const berries = [{ dx: -6, dy: -4 }, { dx: 4, dy: -6 }, { dx: 0, dy: 4 }, { dx: -8, dy: 6 }, { dx: 7, dy: 4 }];
+      berries.forEach(b => {
+        ctx.beginPath();
+        ctx.arc(x + b.dx, y + b.dy, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.restore();
+    }
+
+    function drawSkylineSilhouette(x, y) {
+      ctx.save();
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(x, y - 60, 26, 60);
+      ctx.fillRect(x + 32, y - 85, 30, 85);
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x + 47, y - 85);
+      ctx.lineTo(x + 47, y - 105);
+      ctx.stroke();
+      ctx.fillRect(x + 68, y - 50, 24, 50);
+
+      ctx.fillStyle = '#fef08a';
+      for (let r = 0; r < 4; r++) {
+        ctx.fillRect(x + 6, y - 50 + r * 12, 4, 5);
+        ctx.fillRect(x + 15, y - 50 + r * 12, 4, 5);
+        ctx.fillRect(x + 38, y - 75 + r * 15, 5, 6);
+        ctx.fillRect(x + 49, y - 75 + r * 15, 5, 6);
+        ctx.fillRect(x + 74, y - 40 + r * 11, 4, 5);
+      }
+      ctx.restore();
+    }
+
+    function drawAppleTree(x, y) {
+      ctx.save();
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(x - 5, y - 35, 10, 35);
+      ctx.fillStyle = '#16a34a';
+      ctx.beginPath();
+      ctx.arc(x, y - 50, 24, 0, Math.PI * 2);
+      ctx.arc(x - 14, y - 42, 18, 0, Math.PI * 2);
+      ctx.arc(x + 14, y - 42, 18, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ef4444';
+      const apples = [{ dx: -8, dy: -52 }, { dx: 6, dy: -56 }, { dx: 12, dy: -42 }, { dx: -10, dy: -38 }];
+      apples.forEach(a => {
+        ctx.beginPath();
+        ctx.arc(x + a.dx, y + a.dy, 4, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.restore();
+    }
+
+    function drawBoardwalkPath(x, y, len) {
+      ctx.save();
+      ctx.fillStyle = '#d97706';
+      for (let i = 0; i < len; i += 18) {
+        ctx.fillRect(x + i, y, 14, 28);
+      }
+      ctx.restore();
+    }
+
+    function drawPeachTree(x, y) {
+      ctx.save();
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(x - 5, y - 35, 10, 35);
+      ctx.fillStyle = '#22c55e';
+      ctx.beginPath();
+      ctx.arc(x, y - 48, 22, 0, Math.PI * 2);
+      ctx.arc(x - 12, y - 40, 16, 0, Math.PI * 2);
+      ctx.arc(x + 12, y - 40, 16, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#fb923c';
+      const peaches = [{ dx: -6, dy: -50 }, { dx: 8, dy: -44 }, { dx: -8, dy: -36 }, { dx: 5, dy: -34 }];
+      peaches.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(x + p.dx, y + p.dy, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.restore();
+    }
+
+    function drawMagnoliaBlossom(x, y) {
+      ctx.save();
+      ctx.fillStyle = '#ffffff';
+      for (let i = 0; i < 5; i++) {
+        const ang = (i * Math.PI * 2) / 5;
+        ctx.beginPath();
+        ctx.ellipse(x + Math.cos(ang) * 9, y + Math.sin(ang) * 9, 7, 4, ang, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = '#fde047';
+      ctx.beginPath();
+      ctx.arc(x, y, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawRedBarn(x, y) {
+      ctx.save();
+      ctx.fillStyle = '#b91c1c';
+      ctx.fillRect(x - 28, y - 36, 56, 36);
+      ctx.fillStyle = '#f8fafc';
+      ctx.beginPath();
+      ctx.moveTo(x - 32, y - 36);
+      ctx.lineTo(x, y - 56);
+      ctx.lineTo(x + 32, y - 36);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(x - 10, y - 22, 20, 22);
+      ctx.strokeStyle = '#b91c1c';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x - 10, y - 22); ctx.lineTo(x + 10, y);
+      ctx.moveTo(x + 10, y - 22); ctx.lineTo(x - 10, y);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawWindmill(x, y, time) {
+      ctx.save();
+      ctx.fillStyle = '#f8fafc';
+      ctx.beginPath();
+      ctx.moveTo(x - 12, y);
+      ctx.lineTo(x - 7, y - 50);
+      ctx.lineTo(x + 7, y - 50);
+      ctx.lineTo(x + 12, y);
+      ctx.closePath();
+      ctx.fill();
+      const rotorAngle = time * 0.002;
+      ctx.save();
+      ctx.translate(x, y - 50);
+      ctx.rotate(rotorAngle);
+      ctx.fillStyle = '#78350f';
+      for (let i = 0; i < 4; i++) {
+        ctx.rotate(Math.PI / 2);
+        ctx.fillRect(-2, -32, 4, 32);
+        ctx.fillRect(2, -30, 8, 22);
+      }
+      ctx.restore();
+      ctx.restore();
+    }
+
+    function drawCornfieldStalks(x, y) {
+      ctx.save();
+      ctx.strokeStyle = '#ca8a04';
+      ctx.lineWidth = 3;
+      for (let i = 0; i < 6; i++) {
+        const cx = x + i * 14;
+        ctx.beginPath();
+        ctx.moveTo(cx, y);
+        ctx.lineTo(cx, y - 32);
+        ctx.stroke();
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath();
+        ctx.ellipse(cx + 4, y - 18, 5, 2.5, 0.4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function drawRedRockMesa(x, y) {
+      ctx.save();
+      const grad = ctx.createLinearGradient(x, y - 45, x, y);
+      grad.addColorStop(0, '#f97316');
+      grad.addColorStop(1, '#9a3412');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.moveTo(x - 45, y);
+      ctx.lineTo(x - 30, y - 45);
+      ctx.lineTo(x + 30, y - 45);
+      ctx.lineTo(x + 45, y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = '#7c2d12';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawSaguaroCactus(x, y) {
+      ctx.save();
+      ctx.fillStyle = '#15803d';
+      ctx.fillRect(x - 4, y - 45, 8, 45);
+      ctx.fillRect(x - 14, y - 32, 10, 5);
+      ctx.fillRect(x - 14, y - 40, 5, 10);
+      ctx.fillRect(x + 4, y - 26, 10, 5);
+      ctx.fillRect(x + 9, y - 34, 5, 10);
+      ctx.fillStyle = '#fde047';
+      ctx.beginPath();
+      ctx.arc(x, y - 46, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawGiantRedwood(x, y) {
+      ctx.save();
+      ctx.fillStyle = '#7c2d12';
+      ctx.beginPath();
+      ctx.moveTo(x - 14, y);
+      ctx.lineTo(x - 8, y - 90);
+      ctx.lineTo(x + 8, y - 90);
+      ctx.lineTo(x + 14, y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#065f46';
+      ctx.beginPath();
+      ctx.arc(x, y - 95, 26, 0, Math.PI * 2);
+      ctx.arc(x - 14, y - 80, 20, 0, Math.PI * 2);
+      ctx.arc(x + 14, y - 80, 20, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawOrangeTree(x, y) {
+      ctx.save();
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(x - 5, y - 35, 10, 35);
+      ctx.fillStyle = '#15803d';
+      ctx.beginPath();
+      ctx.arc(x, y - 46, 22, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ea580c';
+      const oranges = [{ dx: -8, dy: -48 }, { dx: 6, dy: -52 }, { dx: 10, dy: -40 }, { dx: -7, dy: -36 }];
+      oranges.forEach(o => {
+        ctx.beginPath();
+        ctx.arc(x + o.dx, y + o.dy, 4, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.restore();
+    }
+
+    function drawPacificWaves(x, y) {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+      ctx.lineWidth = 2.5;
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.arc(x + i * 28, y, 14, 0.2, Math.PI - 0.2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawPineTree(x, y) {
+      ctx.save();
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(x - 4, y - 20, 8, 20);
+      ctx.fillStyle = '#065f46';
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.moveTo(x, y - 55 + i * 14);
+        ctx.lineTo(x - 18 + i * 4, y - 25 + i * 14);
+        ctx.lineTo(x + 18 - i * 4, y - 25 + i * 14);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function drawMapleTree(x, y) {
+      ctx.save();
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(x - 6, y - 40, 12, 40);
+      ctx.fillStyle = '#dc2626';
+      ctx.beginPath();
+      ctx.arc(x, y - 55, 28, 0, Math.PI * 2);
+      ctx.arc(x - 16, y - 45, 20, 0, Math.PI * 2);
+      ctx.arc(x + 16, y - 45, 20, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawPalmTree(x, y) {
+      ctx.save();
+      ctx.strokeStyle = '#92400e';
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.quadraticCurveTo(x + 12, y - 30, x + 8, y - 55);
+      ctx.stroke();
+      ctx.fillStyle = '#16a34a';
+      for (let i = 0; i < 5; i++) {
+        const ang = (i * Math.PI) / 3;
+        ctx.beginPath();
+        ctx.ellipse(x + 8 + Math.cos(ang) * 16, y - 55 + Math.sin(ang) * 12, 16, 5, ang, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function drawSakuraTree(x, y) {
+      ctx.save();
+      ctx.fillStyle = '#57301c';
+      ctx.fillRect(x - 5, y - 38, 10, 38);
+      ctx.fillStyle = '#f472b6';
+      ctx.beginPath();
+      ctx.arc(x, y - 50, 26, 0, Math.PI * 2);
+      ctx.arc(x - 15, y - 42, 20, 0, Math.PI * 2);
+      ctx.arc(x + 15, y - 42, 20, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#fbcfe8';
+      ctx.beginPath();
+      ctx.arc(x, y - 55, 14, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawStoneLantern(x, y) {
+      ctx.save();
+      ctx.fillStyle = '#64748b';
+      ctx.fillRect(x - 6, y - 24, 12, 24);
+      ctx.fillStyle = '#fef08a';
+      ctx.fillRect(x - 8, y - 32, 16, 8);
+      ctx.fillStyle = '#475569';
+      ctx.beginPath();
+      ctx.moveTo(x - 14, y - 32);
+      ctx.lineTo(x, y - 42);
+      ctx.lineTo(x + 14, y - 32);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawRoyalRoseGarden(x, y) {
+      ctx.save();
+      ctx.fillStyle = '#15803d';
+      ctx.fillRect(x - 20, y - 8, 40, 8);
+      ctx.fillStyle = '#f43f5e';
+      for (let i = 0; i < 4; i++) {
+        ctx.beginPath();
+        ctx.arc(x - 14 + i * 9, y - 10, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function drawStoneCottage(x, y) {
+      ctx.save();
+      ctx.fillStyle = '#d97706';
+      ctx.fillRect(x - 18, y - 24, 36, 24);
+      ctx.fillStyle = '#475569';
+      ctx.beginPath();
+      ctx.moveTo(x - 22, y - 24);
+      ctx.lineTo(x, y - 38);
+      ctx.lineTo(x + 22, y - 24);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(x - 5, y - 14, 10, 14);
+      ctx.restore();
+    }
+
+    function drawFruitOrchardTree(x, y) {
+      ctx.save();
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(x - 5, y - 35, 10, 35);
+      ctx.fillStyle = '#16a34a';
+      ctx.beginPath();
+      ctx.arc(x, y - 48, 24, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#facc15';
+      for (let i = 0; i < 4; i++) {
+        const ang = (i * Math.PI) / 2;
+        ctx.beginPath();
+        ctx.arc(x + Math.cos(ang) * 12, y - 48 + Math.sin(ang) * 10, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
     }
 
     // Celestial Realm Terrain Renderers (Planets & Galaxies)
@@ -4002,70 +5962,8 @@
         }
 
       } else {
-        // Galaxies: Deep space with huge rotating spiral nebula vortex & high-tech space station platform
-        ctx.fillStyle = '#050510';
-        ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
-
-        // Twinkling galactic stars
-        gameState.cosmicStars.forEach(s => {
-          ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha})`;
-          ctx.fillRect(s.x, s.y, s.size * 1.2, s.size * 1.2);
-        });
-
-        // Massive Rotating Spiral Galaxy Nebula
-        ctx.save();
-        const vortexX = WORLD_WIDTH / 2;
-        const vortexY = WORLD_HEIGHT / 2;
-        const rot = time * 0.00015;
-
-        let nebColors = ['#8b5cf6', '#ec4899', '#3b82f6'];
-        if (locId === 'g_andromeda') nebColors = ['#a855f7', '#d946ef', '#f43f5e'];
-        else if (locId === 'g_triangulum') nebColors = ['#06b6d4', '#38bdf8', '#facc15'];
-        else if (locId === 'g_supercluster') nebColors = ['#6366f1', '#8b5cf6', '#c084fc'];
-        else if (locId === 'g_multiverse') nebColors = ['#f43f5e', '#facc15', '#10b981', '#38bdf8', '#a855f7'];
-
-        nebColors.forEach((color, idx) => {
-          ctx.strokeStyle = color;
-          ctx.lineWidth = 4 + idx * 2;
-          ctx.globalAlpha = 0.35;
-          ctx.beginPath();
-          for (let a = 0; a < Math.PI * 6; a += 0.15) {
-            const r = 40 + a * 55;
-            const sx = vortexX + Math.cos(a + rot + idx * 1.2) * r;
-            const sy = vortexY + Math.sin(a + rot + idx * 1.2) * (r * 0.55);
-            if (a === 0) ctx.moveTo(sx, sy);
-            else ctx.lineTo(sx, sy);
-          }
-          ctx.stroke();
-        });
-        ctx.restore();
-
-        // High-tech galactic deck grid
-        ctx.save();
-        ctx.strokeStyle = 'rgba(99, 102, 241, 0.2)';
-        ctx.lineWidth = 1.5;
-        for (let x = 0; x < WORLD_WIDTH; x += 120) {
-          ctx.beginPath();
-          ctx.moveTo(x, 0); ctx.lineTo(x, WORLD_HEIGHT);
-          ctx.stroke();
-        }
-        for (let y = 0; y < WORLD_HEIGHT; y += 120) {
-          ctx.beginPath();
-          ctx.moveTo(0, y); ctx.lineTo(WORLD_WIDTH, y);
-          ctx.stroke();
-        }
-        ctx.restore();
-
-        if (locId === 'g_multiverse') {
-          // Floating golden crown relics in multiverse
-          ctx.save();
-          ctx.font = '28px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText('👑', 400 + Math.sin(time * 0.002) * 20, 300);
-          ctx.fillText('👑', 1800 + Math.cos(time * 0.002) * 20, 350);
-          ctx.fillText('👑', 1100 + Math.sin(time * 0.003) * 25, 1100);
-          ctx.restore();
-        }
+        // Galaxies: Delegate to dedicated Epic Galaxy Renderer
+        drawEpicGalaxyTerrain(locId);
       }
     }
 
@@ -4354,168 +6252,1980 @@
       });
     }
 
-    // World Terrain Renderers
+    // =========================================================================
+    // NEW HAMPSHIRE WORLD TERRAIN RENDERERS (DETAILED, PROFESSIONAL & ANIMATED)
+    // =========================================================================
     function drawWorldTerrain() {
+      const time = performance.now();
+
       LAND_PLOTS.forEach(plot => {
         const b = plot.bounds;
         if (
-          b.x + b.w < camera.x || b.x > camera.x + camera.width ||
-          b.y + b.h < camera.y || b.y > camera.y + camera.height
+          b.x + b.w < camera.x - 60 || b.x > camera.x + camera.width + 60 ||
+          b.y + b.h < camera.y - 60 || b.y > camera.y + camera.height + 60
         ) {
           return;
         }
 
         ctx.save();
         if (plot.theme === 'meadow') {
-          ctx.fillStyle = '#4ade80';
-          ctx.fillRect(b.x, b.y, b.w, b.h);
-          drawMeadowDecor(b);
+          drawMeadowBase(b, time);
+          drawMeadowDecor(b, time);
         } else if (plot.theme === 'blueberry') {
-          ctx.fillStyle = '#38bdf8';
-          ctx.fillRect(b.x, b.y, b.w, b.h);
-          drawBlueberryDecor(b);
+          drawBlueberryBase(b, time);
+          drawBlueberryDecor(b, time);
         } else if (plot.theme === 'sunflower') {
-          ctx.fillStyle = '#fde047';
-          ctx.fillRect(b.x, b.y, b.w, b.h);
-          drawSunflowerDecor(b);
+          drawSunflowerBase(b, time);
+          drawSunflowerDecor(b, time);
         } else if (plot.theme === 'lake') {
-          ctx.fillStyle = '#0ea5e9';
-          ctx.fillRect(b.x, b.y, b.w, b.h);
-          drawLakeDecor(b);
+          drawLakeBase(b, time);
+          drawLakeDecor(b, time);
         } else if (plot.theme === 'maple') {
-          ctx.fillStyle = '#f97316';
-          ctx.fillRect(b.x, b.y, b.w, b.h);
-          drawMapleDecor(b);
+          drawMapleBase(b, time);
+          drawMapleDecor(b, time);
         } else if (plot.theme === 'mountain') {
-          ctx.fillStyle = '#94a3b8';
-          ctx.fillRect(b.x, b.y, b.w, b.h);
-          drawMountainDecor(b);
+          drawMountainBase(b, time);
+          drawMountainDecor(b, time);
         }
         ctx.restore();
       });
     }
 
-    function drawMeadowDecor(b) {
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-      for (let i = 0; i < 20; i++) {
-        const fx = b.x + 50 + (i * 37) % (b.w - 100);
-        const fy = b.y + 40 + (i * 53) % (b.h - 80);
-        ctx.beginPath();
-        ctx.arc(fx, fy, 3, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      drawBirchTree(b.x + 120, b.y + 160);
-      drawBirchTree(b.x + 680, b.y + 200);
-      drawBirchTree(b.x + 350, b.y + 550);
-    }
+    // --- REGION 0: SUNNY PASTURE (DOVER VALLEY) ---
+    function drawMeadowBase(b, time) {
+      // Rolling lush pasture with subtle hills
+      const grad = ctx.createLinearGradient(b.x, b.y, b.x, b.y + b.h);
+      grad.addColorStop(0, '#5eead4');
+      grad.addColorStop(0.15, '#4ade80');
+      grad.addColorStop(0.85, '#22c55e');
+      grad.addColorStop(1, '#16a34a');
+      ctx.fillStyle = grad;
+      ctx.fillRect(b.x, b.y, b.w, b.h);
 
-    function drawBirchTree(x, y) {
-      ctx.fillStyle = '#f8fafc';
-      ctx.fillRect(x - 6, y - 50, 12, 50);
-      ctx.fillStyle = '#1e293b';
-      ctx.fillRect(x - 6, y - 35, 4, 3);
-      ctx.fillRect(x + 2, y - 20, 4, 3);
-      ctx.fillStyle = '#22c55e';
+      // Subtle rolling grassy knolls
+      ctx.fillStyle = 'rgba(134, 239, 172, 0.25)';
       ctx.beginPath();
-      ctx.arc(x, y - 65, 30, 0, Math.PI * 2);
-      ctx.arc(x - 15, y - 55, 22, 0, Math.PI * 2);
-      ctx.arc(x + 15, y - 55, 22, 0, Math.PI * 2);
+      ctx.ellipse(b.x + 240, b.y + 180, 220, 110, -0.15, 0, Math.PI * 2);
       ctx.fill();
-    }
-
-    function drawBlueberryDecor(b) {
-      ctx.fillStyle = '#64748b';
       ctx.beginPath();
-      ctx.ellipse(b.x + 200, b.y + 250, 40, 25, 0.2, 0, Math.PI * 2);
-      ctx.ellipse(b.x + 550, b.y + 450, 50, 30, -0.3, 0, Math.PI * 2);
+      ctx.ellipse(b.x + 620, b.y + 520, 260, 130, 0.1, 0, Math.PI * 2);
       ctx.fill();
-      for (let i = 0; i < 15; i++) {
-        const bx = b.x + 60 + (i * 47) % (b.w - 120);
-        const by = b.y + 60 + (i * 41) % (b.h - 120);
-        ctx.fillStyle = '#1e3a8a';
-        ctx.beginPath();
-        ctx.arc(bx, by, 12, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#3b82f6';
-        ctx.beginPath();
-        ctx.arc(bx - 3, by - 2, 4, 0, Math.PI * 2);
-        ctx.arc(bx + 4, by + 2, 3, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
 
-    function drawSunflowerDecor(b) {
-      for (let i = 0; i < 12; i++) {
-        const sx = b.x + 80 + (i * 61) % (b.w - 160);
-        const sy = b.y + 80 + (i * 53) % (b.h - 160);
-        ctx.strokeStyle = '#15803d';
-        ctx.lineWidth = 4;
-        ctx.beginPath();
-        ctx.moveTo(sx, sy);
-        ctx.lineTo(sx, sy - 35);
-        ctx.stroke();
-        ctx.fillStyle = '#eab308';
-        for (let p = 0; p < 8; p++) {
-          const ang = p * (Math.PI / 4);
-          ctx.beginPath();
-          ctx.arc(sx + Math.cos(ang) * 14, sy - 35 + Math.sin(ang) * 14, 5, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        ctx.fillStyle = '#78350f';
-        ctx.beginPath();
-        ctx.arc(sx, sy - 35, 9, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
+      // Winding Babbling Brook (Cochecho River tributary)
+      // Pebble riverbed underlay
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 42;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(b.x + 490, b.y - 10);
+      ctx.bezierCurveTo(b.x + 460, b.y + 180, b.x + 430, b.y + 260, b.x + 440, b.y + 360);
+      ctx.bezierCurveTo(b.x + 450, b.y + 460, b.x + 510, b.y + 580, b.x + 530, b.y + b.h + 10);
+      ctx.stroke();
 
-    function drawLakeDecor(b) {
-      ctx.fillStyle = '#fef08a';
-      ctx.fillRect(b.x, b.y, 70, b.h);
-      ctx.fillStyle = '#78350f';
-      ctx.fillRect(b.x + 70, b.y + 250, 110, 24);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-      for (let i = 0; i < 12; i++) {
-        const wx = b.x + 120 + (i * 59) % (b.w - 150);
-        const wy = b.y + 40 + (i * 53) % (b.h - 80);
-        ctx.beginPath();
-        ctx.arc(wx, wy, 18, 0.2, Math.PI - 0.2);
-        ctx.stroke();
-      }
-    }
+      // Clear flowing water
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 32;
+      ctx.beginPath();
+      ctx.moveTo(b.x + 490, b.y - 10);
+      ctx.bezierCurveTo(b.x + 460, b.y + 180, b.x + 430, b.y + 260, b.x + 440, b.y + 360);
+      ctx.bezierCurveTo(b.x + 450, b.y + 460, b.x + 510, b.y + 580, b.x + 530, b.y + b.h + 10);
+      ctx.stroke();
 
-    function drawMapleDecor(b) {
-      const trees = [
-        { x: b.x + 150, y: b.y + 200 },
-        { x: b.x + 650, y: b.y + 300 },
-        { x: b.x + 400, y: b.y + 500 }
+      // Deep channel center
+      ctx.strokeStyle = '#0284c7';
+      ctx.lineWidth = 18;
+      ctx.beginPath();
+      ctx.moveTo(b.x + 490, b.y - 10);
+      ctx.bezierCurveTo(b.x + 460, b.y + 180, b.x + 430, b.y + 260, b.x + 440, b.y + 360);
+      ctx.bezierCurveTo(b.x + 450, b.y + 460, b.x + 510, b.y + 580, b.x + 530, b.y + b.h + 10);
+      ctx.stroke();
+
+      // River stones along banks
+      const stones = [
+        { x: b.x + 465, y: b.y + 140, r: 6 },
+        { x: b.x + 508, y: b.y + 220, r: 8 },
+        { x: b.x + 422, y: b.y + 440, r: 7 },
+        { x: b.x + 520, y: b.y + 520, r: 9 },
+        { x: b.x + 545, y: b.y + 640, r: 7 }
       ];
-      trees.forEach(t => {
-        ctx.fillStyle = '#78350f';
-        ctx.fillRect(t.x - 7, t.y - 45, 14, 45);
-        ctx.fillStyle = '#dc2626';
+      stones.forEach(s => {
+        ctx.fillStyle = '#64748b';
         ctx.beginPath();
-        ctx.arc(t.x, t.y - 65, 34, 0, Math.PI * 2);
-        ctx.arc(t.x - 20, t.y - 55, 26, 0, Math.PI * 2);
-        ctx.arc(t.x + 20, t.y - 55, 26, 0, Math.PI * 2);
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = '#94a3b8';
-        ctx.fillRect(t.x + 8, t.y - 25, 8, 10);
+        ctx.beginPath();
+        ctx.arc(s.x - 2, s.y - 2, s.r * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Animated water ripples moving downstream
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
+      ctx.lineWidth = 2.5;
+      for (let i = 0; i < 6; i++) {
+        const tPos = ((time * 0.0008 + i * 0.16) % 1);
+        const ry = b.y + 20 + tPos * (b.h - 40);
+        const t = (ry - b.y) / b.h;
+        const rx = (b.x + 490) * (1 - t) * (1 - t) + (b.x + 440) * 2 * (1 - t) * t + (b.x + 530) * t * t;
+        const waveW = 12 + Math.sin(time * 0.005 + i) * 3;
+        ctx.beginPath();
+        ctx.arc(rx, ry, waveW, 0.2, Math.PI - 0.2);
+        ctx.stroke();
+      }
+    }
+
+    function drawMeadowDecor(b, time = 0) {
+      // 1. Cobblestone Footpath from spawn (200, 350) -> bridge (440, 360) -> east gate (780, 350)
+      // and fork south to lake gate (400, 700)
+      drawCobblestoneSegment(b.x + 180, b.y + 350, b.x + 410, b.y + 360, 18);
+      drawCobblestoneSegment(b.x + 470, b.y + 360, b.x + 780, b.y + 350, 22);
+      drawCobblestoneSegment(b.x + 360, b.y + 360, b.x + 400, b.y + 700, 24);
+
+      // 2. Arched Wooden Footbridge spanning the brook at (b.x + 440, b.y + 360)
+      drawWoodenBridge(b.x + 440, b.y + 360);
+
+      // 3. New Hampshire Paper Birch Trees (detailed white bark with lenticels & swaying green canopy)
+      drawBirchTree(b.x + 130, b.y + 170, time);
+      drawBirchTree(b.x + 290, b.y + 140, time);
+      drawBirchTree(b.x + 690, b.y + 190, time);
+      drawBirchTree(b.x + 720, b.y + 510, time);
+      drawBirchTree(b.x + 220, b.y + 580, time);
+      drawBirchTree(b.x + 330, b.y + 480, time);
+
+      // 4. Wild Daisies and Clovers with animated gentle nodding
+      for (let i = 0; i < 32; i++) {
+        const fx = b.x + 40 + (i * 47) % (b.w - 80);
+        const fy = b.y + 40 + (i * 61) % (b.h - 80);
+        if (Math.abs(fx - (b.x + 470)) < 45) continue;
+        const sway = Math.sin(time * 0.0025 + i * 1.3) * 2;
+        if (i % 2 === 0) {
+          // White Oxeye Daisy with golden center
+          ctx.strokeStyle = '#15803d';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(fx, fy);
+          ctx.lineTo(fx + sway, fy - 12);
+          ctx.stroke();
+          ctx.fillStyle = '#ffffff';
+          for (let p = 0; p < 6; p++) {
+            const pa = (p * Math.PI) / 3;
+            ctx.beginPath();
+            ctx.arc(fx + sway + Math.cos(pa) * 4.5, fy - 12 + Math.sin(pa) * 4.5, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.fillStyle = '#facc15';
+          ctx.beginPath();
+          ctx.arc(fx + sway, fy - 12, 3, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          // Red Clover puff
+          ctx.fillStyle = '#ec4899';
+          ctx.beginPath();
+          ctx.arc(fx + sway, fy - 8, 4.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#db2777';
+          ctx.beginPath();
+          ctx.arc(fx + sway, fy - 11, 3.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // 5. Animated Fluttering Butterflies (Eastern Tiger Swallowtail & Cabbage White)
+      drawButterfly(b.x + 280 + Math.sin(time * 0.0018) * 80, b.y + 260 + Math.cos(time * 0.0022) * 50, '#facc15', '#0f172a', time);
+      drawButterfly(b.x + 610 + Math.cos(time * 0.0015) * 70, b.y + 320 + Math.sin(time * 0.002) * 45, '#ffffff', '#64748b', time + 1000);
+
+      // 6. Floating Dandelion Seed Fluff
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+      for (let i = 0; i < 8; i++) {
+        const dx = b.x + ((i * 110 + time * 0.02) % b.w);
+        const dy = b.y + ((i * 85 + Math.sin(time * 0.0015 + i) * 30) % b.h);
+        ctx.beginPath();
+        ctx.arc(dx, dy, 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(dx, dy);
+        ctx.lineTo(dx - 3, dy - 3);
+        ctx.stroke();
+      }
+    }
+
+    function drawWoodenBridge(cx, cy) {
+      ctx.save();
+      // Drop Shadow
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.35)';
+      ctx.fillRect(cx - 32, cy - 22, 64, 44);
+
+      // Bridge Deck
+      ctx.fillStyle = '#854d0e';
+      ctx.fillRect(cx - 30, cy - 20, 60, 40);
+
+      // Individual wood planks
+      ctx.strokeStyle = '#713f12';
+      ctx.lineWidth = 2;
+      for (let px = cx - 28; px <= cx + 28; px += 8) {
+        ctx.beginPath();
+        ctx.moveTo(px, cy - 20);
+        ctx.lineTo(px, cy + 20);
+        ctx.stroke();
+      }
+
+      // Wooden Side Railings
+      ctx.fillStyle = '#a16207';
+      ctx.fillRect(cx - 32, cy - 24, 64, 5);
+      ctx.fillRect(cx - 32, cy + 19, 64, 5);
+
+      // Rail posts
+      ctx.fillStyle = '#451a03';
+      for (let px = cx - 30; px <= cx + 30; px += 15) {
+        ctx.fillRect(px - 2, cy - 26, 4, 8);
+        ctx.fillRect(px - 2, cy + 18, 4, 8);
+      }
+      ctx.restore();
+    }
+
+    function drawCobblestoneSegment(x1, y1, x2, y2, count = 15) {
+      ctx.save();
+      for (let i = 0; i <= count; i++) {
+        const t = i / count;
+        const px = x1 + (x2 - x1) * t + Math.sin(t * 8) * 4;
+        const py = y1 + (y2 - y1) * t;
+        const seed = (i * 37) % 3;
+        ctx.fillStyle = seed === 0 ? '#94a3b8' : seed === 1 ? '#cbd5e1' : '#64748b';
+        ctx.beginPath();
+        ctx.ellipse(px, py, 14, 10, seed * 0.4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(51, 65, 85, 0.25)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawButterfly(x, y, wingColor, edgeColor, time) {
+      ctx.save();
+      ctx.translate(x, y);
+      const flap = Math.abs(Math.sin(time * 0.015));
+
+      // Wings
+      ctx.fillStyle = wingColor;
+      ctx.strokeStyle = edgeColor;
+      ctx.lineWidth = 1;
+
+      // Left wing
+      ctx.beginPath();
+      ctx.ellipse(-6 * flap, -2, 7 * flap, 10, -0.3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Right wing
+      ctx.beginPath();
+      ctx.ellipse(6 * flap, -2, 7 * flap, 10, 0.3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Body
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.ellipse(0, -2, 1.5, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    function drawBirchTree(x, y, time = 0) {
+      ctx.save();
+      const sway = Math.sin(time * 0.002 + x * 0.05) * 3;
+
+      // Soft tree shadow
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
+      ctx.beginPath();
+      ctx.ellipse(x, y + 2, 26, 9, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // White birch trunk with slight taper
+      ctx.fillStyle = '#f8fafc';
+      ctx.beginPath();
+      ctx.moveTo(x - 7, y);
+      ctx.lineTo(x + 7, y);
+      ctx.lineTo(x + 4 + sway * 0.3, y - 62);
+      ctx.lineTo(x - 4 + sway * 0.3, y - 62);
+      ctx.closePath();
+      ctx.fill();
+
+      // Black horizontal lenticels / bark markings
+      ctx.fillStyle = '#0f172a';
+      const barkOffsets = [-10, -22, -35, -48];
+      barkOffsets.forEach((bo, idx) => {
+        const bw = 5 + (idx % 2) * 3;
+        const side = (idx % 2 === 0) ? -5 : 0;
+        ctx.fillRect(x + side + sway * 0.2, y + bo, bw, 2.5);
+      });
+
+      // Layered vibrant green birch foliage
+      const cx = x + sway;
+      const cy = y - 75;
+
+      // Canopy shadows
+      ctx.fillStyle = '#15803d';
+      ctx.beginPath();
+      ctx.arc(cx - 16, cy + 6, 24, 0, Math.PI * 2);
+      ctx.arc(cx + 16, cy + 6, 24, 0, Math.PI * 2);
+      ctx.arc(cx, cy - 14, 28, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Canopy highlights
+      ctx.fillStyle = '#22c55e';
+      ctx.beginPath();
+      ctx.arc(cx - 14, cy + 2, 22, 0, Math.PI * 2);
+      ctx.arc(cx + 14, cy + 2, 22, 0, Math.PI * 2);
+      ctx.arc(cx, cy - 16, 26, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Light leaves tip
+      ctx.fillStyle = '#4ade80';
+      ctx.beginPath();
+      ctx.arc(cx - 5, cy - 24, 16, 0, Math.PI * 2);
+      ctx.arc(cx + 10, cy - 18, 14, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    // --- REGION 1: BLUEBERRY HILL (BELKNAP RANGE) ---
+    function drawBlueberryBase(b, time) {
+      // Granite mountain turf
+      const grad = ctx.createLinearGradient(b.x, b.y, b.x + b.w, b.y + b.h);
+      grad.addColorStop(0, '#15803d');
+      grad.addColorStop(0.5, '#166534');
+      grad.addColorStop(1, '#065f46');
+      ctx.fillStyle = grad;
+      ctx.fillRect(b.x, b.y, b.w, b.h);
+
+      // Large sculpted Granite rock ledges (The famous NH Granite State rock formations)
+      drawGraniteLedge(b.x + 120, b.y + 160, 160, 90);
+      drawGraniteLedge(b.x + 580, b.y + 220, 200, 110);
+      drawGraniteLedge(b.x + 280, b.y + 480, 220, 120);
+      drawGraniteLedge(b.x + 640, b.y + 540, 170, 95);
+    }
+
+    function drawGraniteLedge(x, y, w, h) {
+      ctx.save();
+      // Shadow
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.4)';
+      ctx.beginPath();
+      ctx.ellipse(x + w / 2, y + h + 8, w * 0.55, h * 0.25, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Granite base
+      ctx.fillStyle = '#475569';
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(x, y, w, h, 24);
+      else ctx.rect(x, y, w, h);
+      ctx.fill();
+
+      // Granite illuminated top facet
+      ctx.fillStyle = '#94a3b8';
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(x + 6, y + 4, w - 12, h * 0.45, 18);
+      else ctx.rect(x + 6, y + 4, w - 12, h * 0.45);
+      ctx.fill();
+
+      // Surface rock fissure cracks & moss
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x + w * 0.25, y + 10);
+      ctx.lineTo(x + w * 0.35, y + h * 0.6);
+      ctx.lineTo(x + w * 0.45, y + h * 0.85);
+      ctx.stroke();
+
+      // Mountain moss patch on rock
+      ctx.fillStyle = '#16a34a';
+      ctx.beginPath();
+      ctx.ellipse(x + w * 0.65, y + h * 0.3, 16, 8, 0.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawBlueberryDecor(b, time = 0) {
+      // 1. Granite Stepping Stone Trail connecting gates:
+      // West gate (b.x + 20, b.y + 350) -> East gate (b.x + 780, b.y + 350)
+      // and South gate (b.x + 400, b.y + 700)
+      drawGraniteTrailSegment(b.x + 20, b.y + 350, b.x + 780, b.y + 350, 24);
+      drawGraniteTrailSegment(b.x + 400, b.y + 350, b.x + 400, b.y + 700, 16);
+
+      // 2. Wild Lowbush Blueberry Patches (dense indigo berries with sparkling glints)
+      const patches = [
+        { x: b.x + 90, y: b.y + 280 },
+        { x: b.x + 190, y: b.y + 260 },
+        { x: b.x + 260, y: b.y + 190 },
+        { x: b.x + 360, y: b.y + 230 },
+        { x: b.x + 460, y: b.y + 180 },
+        { x: b.x + 520, y: b.y + 290 },
+        { x: b.x + 700, y: b.y + 300 },
+        { x: b.x + 110, y: b.y + 440 },
+        { x: b.x + 180, y: b.y + 510 },
+        { x: b.x + 480, y: b.y + 460 },
+        { x: b.x + 560, y: b.y + 430 },
+        { x: b.x + 620, y: b.y + 510 },
+        { x: b.x + 710, y: b.y + 450 },
+        { x: b.x + 380, y: b.y + 580 }
+      ];
+
+      patches.forEach((p, idx) => {
+        drawWildBlueberryPatch(p.x, p.y, time, idx);
+      });
+
+      // 3. Wooden Harvest Crates stacked by the trail
+      drawHarvestCrates(b.x + 330, b.y + 320);
+
+      // 4. Wild Lupines (tall purple flower spikes swaying)
+      const lupines = [
+        { x: b.x + 80, y: b.y + 120 },
+        { x: b.x + 240, y: b.y + 100 },
+        { x: b.x + 480, y: b.y + 110 },
+        { x: b.x + 660, y: b.y + 140 },
+        { x: b.x + 140, y: b.y + 610 },
+        { x: b.x + 530, y: b.y + 620 }
+      ];
+      lupines.forEach((lp, idx) => {
+        drawWildLupine(lp.x, lp.y, time, idx);
+      });
+
+      // 5. Animated Bumblebees buzzing in small hover loops
+      drawBumblebee(b.x + 230 + Math.cos(time * 0.003) * 25, b.y + 250 + Math.sin(time * 0.005) * 15, time);
+      drawBumblebee(b.x + 530 + Math.sin(time * 0.0035) * 30, b.y + 310 + Math.cos(time * 0.004) * 18, time + 500);
+    }
+
+    function drawGraniteTrailSegment(x1, y1, x2, y2, count = 20) {
+      ctx.save();
+      for (let i = 0; i <= count; i++) {
+        const t = i / count;
+        const px = x1 + (x2 - x1) * t + Math.sin(t * 12) * 5;
+        const py = y1 + (y2 - y1) * t;
+        ctx.fillStyle = '#64748b';
+        ctx.beginPath();
+        ctx.ellipse(px, py, 16, 11, (i % 3) * 0.3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#94a3b8';
+        ctx.beginPath();
+        ctx.ellipse(px - 1, py - 2, 13, 8, (i % 3) * 0.3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function drawWildBlueberryPatch(x, y, time, seed) {
+      ctx.save();
+      // Bush foliage mound
+      ctx.fillStyle = '#15803d';
+      ctx.beginPath();
+      ctx.arc(x - 14, y, 16, 0, Math.PI * 2);
+      ctx.arc(x + 14, y, 16, 0, Math.PI * 2);
+      ctx.arc(x, y - 8, 20, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#16a34a';
+      ctx.beginPath();
+      ctx.arc(x, y - 10, 16, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Plump wild blueberries
+      const berryOffsets = [
+        { dx: -14, dy: -6 }, { dx: -7, dy: -14 }, { dx: 6, dy: -16 },
+        { dx: 15, dy: -8 }, { dx: -10, dy: 4 }, { dx: 2, dy: 0 },
+        { dx: 11, dy: 5 }, { dx: -2, dy: -8 }
+      ];
+
+      berryOffsets.forEach((bOff, bi) => {
+        const bx = x + bOff.dx;
+        const by = y + bOff.dy;
+        // Deep blue berry
+        ctx.fillStyle = '#1e3a8a';
+        ctx.beginPath();
+        ctx.arc(bx, by, 5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Bright indigo highlight
+        ctx.fillStyle = '#3b82f6';
+        ctx.beginPath();
+        ctx.arc(bx - 1.5, by - 1.5, 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Calyx star crown
+        ctx.fillStyle = '#93c5fd';
+        ctx.beginPath();
+        ctx.arc(bx + 1, by + 1, 1, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Specular sparkle on ripe berries
+        const glint = Math.sin(time * 0.004 + seed * 2 + bi);
+        if (glint > 0.82) {
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(bx - 2, by - 2, 1.8, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
+      ctx.restore();
+    }
+
+    function drawHarvestCrates(x, y) {
+      ctx.save();
+      // Bottom crate
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(x - 16, y - 12, 32, 18);
+      ctx.fillStyle = '#92400e';
+      ctx.fillRect(x - 15, y - 11, 30, 7);
+      ctx.fillRect(x - 15, y - 2, 30, 7);
+      // Fresh blueberries inside crate
+      ctx.fillStyle = '#1e3a8a';
+      for (let i = 0; i < 7; i++) {
+        ctx.beginPath();
+        ctx.arc(x - 12 + i * 4, y - 11, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      // Top stacked crate
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(x - 8, y - 24, 26, 14);
+      ctx.fillStyle = '#92400e';
+      ctx.fillRect(x - 7, y - 23, 24, 11);
+      ctx.fillStyle = '#1e3a8a';
+      for (let i = 0; i < 5; i++) {
+        ctx.beginPath();
+        ctx.arc(x - 5 + i * 4, y - 23, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function drawWildLupine(x, y, time, seed) {
+      ctx.save();
+      const sway = Math.sin(time * 0.0025 + seed) * 3;
+      // Stem
+      ctx.strokeStyle = '#15803d';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.quadraticCurveTo(x + sway * 0.5, y - 25, x + sway, y - 50);
+      ctx.stroke();
+
+      // Spires of purple/violet florets
+      const colors = ['#7c3aed', '#a855f7', '#c084fc', '#e9d5ff'];
+      for (let f = 0; f < 10; f++) {
+        const fy = y - 15 - f * 3.5;
+        const fx = x + sway * (f / 10);
+        ctx.fillStyle = colors[f % colors.length];
+        ctx.beginPath();
+        ctx.arc(fx - 4, fy, 3.5, 0, Math.PI * 2);
+        ctx.arc(fx + 4, fy, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function drawBumblebee(x, y, time) {
+      ctx.save();
+      ctx.translate(x, y);
+
+      // Translucent vibrating wings
+      const wingW = 7;
+      const wingH = 4 + Math.sin(time * 0.04) * 2;
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+      ctx.beginPath();
+      ctx.ellipse(-3, -7, wingW, wingH, -0.4, 0, Math.PI * 2);
+      ctx.ellipse(3, -7, wingW, wingH, 0.4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Fuzzy striped abdomen
+      ctx.fillStyle = '#facc15';
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 8, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(-2, -5, 4, 10);
+      ctx.fillRect(3, -4, 3, 8);
+      ctx.beginPath();
+      ctx.arc(-6, 0, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    // --- REGION 2: FLOWER MAN'S SANCTUARY (SUNAPEE GARDENS) ---
+    function drawSunflowerBase(b, time) {
+      // Warm, manicured botanical garden grounds
+      const grad = ctx.createLinearGradient(b.x, b.y, b.x, b.y + b.h);
+      grad.addColorStop(0, '#16a34a');
+      grad.addColorStop(0.5, '#22c55e');
+      grad.addColorStop(1, '#15803d');
+      ctx.fillStyle = grad;
+      ctx.fillRect(b.x, b.y, b.w, b.h);
+
+      // Warm ornamental garden terrace border
+      ctx.strokeStyle = '#ca8a04';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(b.x + 16, b.y + 16, b.w - 32, b.h - 32);
+    }
+
+    function drawSunflowerDecor(b, time = 0) {
+      // 1. Promenade Path leading directly from Gate (b.x + 20, b.y + 350) to the Conservatory Structure (b.x + 460, b.y + 350)
+      drawSanctuaryPromenade(b.x + 20, b.y + 350, b.x + 450, b.y + 350);
+
+      // 2. The Botanical Conservatory / Pavilion Structure
+      // Placed prominently at (b.x + 580, b.y + 350)
+      drawBotanicalConservatory(b.x + 580, b.y + 350, time);
+
+      // 3. FULL FIELD OF SUNFLOWERS (surrounding the entire structure and promenade)
+      // Dense field of 64 sunflowers in front, behind, above, and below
+      for (let i = 0; i < 64; i++) {
+        const sx = b.x + 60 + (i * 37) % (b.w - 120);
+        const sy = b.y + 40 + (i * 53) % (b.h - 80);
+
+        // Don't place sunflowers on the central promenade path or inside the conservatory structure
+        const onPath = (sy >= b.y + 315 && sy <= b.y + 385 && sx <= b.x + 460);
+        const inBuilding = (sx >= b.x + 430 && sx <= b.x + 730 && sy >= b.y + 220 && sy <= b.y + 480);
+        if (onPath || inBuilding) continue;
+
+        drawFieldSunflower(sx, sy, time, i);
+      }
+
+      // 4. Subtle Pollen & Sparkles drifting in the sun
+      ctx.fillStyle = 'rgba(254, 240, 138, 0.7)';
+      for (let i = 0; i < 14; i++) {
+        const px = b.x + ((i * 67 + time * 0.015) % b.w);
+        const py = b.y + ((i * 49 + Math.sin(time * 0.0018 + i) * 35) % b.h);
+        ctx.beginPath();
+        ctx.arc(px, py, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 5. Monarch Butterflies dancing above the sunflower field
+      drawMonarchButterfly(b.x + 180 + Math.sin(time * 0.002) * 60, b.y + 200 + Math.cos(time * 0.0024) * 40, time);
+      drawMonarchButterfly(b.x + 360 + Math.cos(time * 0.0017) * 70, b.y + 500 + Math.sin(time * 0.0021) * 45, time + 800);
+      drawMonarchButterfly(b.x + 680 + Math.sin(time * 0.0022) * 50, b.y + 150 + Math.cos(time * 0.0019) * 35, time + 1500);
+    }
+
+    function drawSanctuaryPromenade(x1, y1, x2, y2) {
+      ctx.save();
+      const w = Math.hypot(x2 - x1, y2 - y1);
+      ctx.translate(x1, y1);
+
+      // Paved flagstone avenue
+      ctx.fillStyle = '#e2e8f0';
+      ctx.fillRect(0, -22, w, 44);
+
+      // Golden brick borders
+      ctx.fillStyle = '#ca8a04';
+      ctx.fillRect(0, -24, w, 4);
+      ctx.fillRect(0, 20, w, 4);
+
+      // Patterned paving stones
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 1.5;
+      for (let px = 10; px < w; px += 24) {
+        ctx.beginPath();
+        ctx.moveTo(px, -20);
+        ctx.lineTo(px, 20);
+        ctx.stroke();
+      }
+
+      // Stone Garden Lanterns lining the path
+      for (let lx = 30; lx < w - 20; lx += 90) {
+        drawGardenLantern(lx, -28);
+        drawGardenLantern(lx, 28);
+      }
+
+      ctx.restore();
+    }
+
+    function drawGardenLantern(x, y) {
+      ctx.fillStyle = '#64748b';
+      ctx.fillRect(x - 4, y - 6, 8, 12);
+      ctx.fillStyle = '#fef08a';
+      ctx.fillRect(x - 3, y - 4, 6, 8);
+      ctx.fillStyle = '#475569';
+      ctx.beginPath();
+      ctx.moveTo(x - 6, y - 6);
+      ctx.lineTo(x + 6, y - 6);
+      ctx.lineTo(x, y - 12);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function drawBotanicalConservatory(cx, cy, time) {
+      ctx.save();
+      // Drop Shadow
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.4)';
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + 90, 140, 36, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 1. White Granite Foundation & Steps
+      ctx.fillStyle = '#cbd5e1';
+      ctx.fillRect(cx - 130, cy + 50, 260, 38);
+      ctx.fillStyle = '#e2e8f0';
+      ctx.fillRect(cx - 120, cy + 40, 240, 14);
+      ctx.fillRect(cx - 100, cy + 30, 200, 14);
+
+      // 2. Main Conservatory Hall
+      ctx.fillStyle = '#f8fafc';
+      ctx.fillRect(cx - 110, cy - 40, 220, 80);
+
+      // Classical Fluted Columns
+      const colX = [-95, -45, 45, 95];
+      colX.forEach(ox => {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(cx + ox - 8, cy - 40, 16, 75);
+        ctx.fillStyle = '#e2e8f0';
+        ctx.fillRect(cx + ox - 10, cy + 32, 20, 6);
+        ctx.fillRect(cx + ox - 10, cy - 43, 20, 6);
+      });
+
+      // 3. Grand Arched Glass Conservatory Dome
+      const domePulse = 0.25 + Math.sin(time * 0.002) * 0.08;
+      ctx.fillStyle = `rgba(56, 189, 248, ${domePulse})`;
+      ctx.beginPath();
+      ctx.arc(cx, cy - 40, 85, Math.PI, 0);
+      ctx.fill();
+
+      // Golden Iron Dome Ribs
+      ctx.strokeStyle = '#eab308';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(cx, cy - 40, 85, Math.PI, 0);
+      ctx.stroke();
+
+      for (let a = 1; a < 6; a++) {
+        const ang = Math.PI + (a * Math.PI) / 6;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 40);
+        ctx.lineTo(cx + Math.cos(ang) * 85, cy - 40 + Math.sin(ang) * 85);
+        ctx.stroke();
+      }
+
+      // 4. Central Arched Portico Entrance
+      ctx.fillStyle = '#1e293b';
+      ctx.beginPath();
+      ctx.arc(cx, cy - 2, 28, Math.PI, 0);
+      ctx.lineTo(cx + 28, cy + 35);
+      ctx.lineTo(cx - 28, cy + 35);
+      ctx.closePath();
+      ctx.fill();
+
+      // Interior Fountain Visible Inside Portico
+      ctx.fillStyle = '#38bdf8';
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + 22, 16, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Fountain water spray particles
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+      for (let f = 0; f < 5; f++) {
+        const fProg = ((time * 0.003 + f * 0.2) % 1);
+        const fpx = cx + Math.sin(fProg * 6) * 5;
+        const fpy = cy + 18 - Math.sin(fProg * Math.PI) * 16;
+        ctx.beginPath();
+        ctx.arc(fpx, fpy, 1.8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 5. Ornate Pediment Plaque over Entrance
+      ctx.fillStyle = '#78350f';
+      ctx.strokeStyle = '#facc15';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(cx - 85, cy - 65, 170, 22, 6);
+      else ctx.rect(cx - 85, cy - 65, 170, 22);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#fef08a';
+      ctx.font = 'bold 9px Fredoka, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText("FLOWER MAN'S BOTANICAL SANCTUARY", cx, cy - 50);
+
+      // 6. Magnificent Golden Sunflower Finial atop Dome Spire
+      const finialY = cy - 132;
+      ctx.strokeStyle = '#ca8a04';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - 125);
+      ctx.lineTo(cx, finialY);
+      ctx.stroke();
+
+      // Sunflower finial head with animated sun glint
+      ctx.fillStyle = '#facc15';
+      ctx.beginPath();
+      ctx.arc(cx, finialY, 12, 0, Math.PI * 2);
+      ctx.fill();
+      for (let p = 0; p < 8; p++) {
+        const pa = p * (Math.PI / 4) + (time * 0.001);
+        ctx.fillStyle = '#eab308';
+        ctx.beginPath();
+        ctx.arc(cx + Math.cos(pa) * 12, finialY + Math.sin(pa) * 12, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = '#78350f';
+      ctx.beginPath();
+      ctx.arc(cx, finialY, 6, 0, Math.PI * 2);
+      ctx.fill();
+      // Finial shine
+      const glintA = (Math.sin(time * 0.003) + 1) * 0.5;
+      ctx.fillStyle = `rgba(255, 255, 255, ${glintA * 0.9})`;
+      ctx.beginPath();
+      ctx.arc(cx - 3, finialY - 3, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 7. Flanking Stone Flower Urns
+      drawStoneUrn(cx - 120, cy + 24);
+      drawStoneUrn(cx + 120, cy + 24);
+
+      ctx.restore();
+    }
+
+    function drawStoneUrn(x, y) {
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillRect(x - 8, y + 6, 16, 6);
+      ctx.beginPath();
+      ctx.moveTo(x - 10, y - 6);
+      ctx.lineTo(x + 10, y - 6);
+      ctx.lineTo(x + 6, y + 6);
+      ctx.lineTo(x - 6, y + 6);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = '#ec4899';
+      ctx.beginPath();
+      ctx.arc(x - 4, y - 10, 4, 0, Math.PI * 2);
+      ctx.arc(x + 4, y - 10, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#facc15';
+      ctx.beginPath();
+      ctx.arc(x, y - 12, 4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function drawFieldSunflower(x, y, time, seed) {
+      ctx.save();
+      const sway = Math.sin(time * 0.002 + seed * 0.4) * 0.08;
+      ctx.translate(x, y);
+      ctx.rotate(sway);
+
+      // Thick sturdy stalk
+      ctx.strokeStyle = '#15803d';
+      ctx.lineWidth = 4.5;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.quadraticCurveTo(2, -20, 0, -42);
+      ctx.stroke();
+
+      // Stalk leaves
+      ctx.fillStyle = '#16a34a';
+      ctx.beginPath();
+      ctx.ellipse(-10, -22, 9, 5, -0.5, 0, Math.PI * 2);
+      ctx.ellipse(10, -18, 9, 5, 0.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Radiant golden flower petals
+      const flowerY = -42;
+      const petalCount = 12;
+      for (let p = 0; p < petalCount; p++) {
+        const ang = p * ((Math.PI * 2) / petalCount);
+        ctx.fillStyle = (p % 2 === 0) ? '#facc15' : '#eab308';
+        ctx.beginPath();
+        ctx.arc(Math.cos(ang) * 15, flowerY + Math.sin(ang) * 15, 6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Rich chocolate brown seed center with texture
+      ctx.fillStyle = '#78350f';
+      ctx.beginPath();
+      ctx.arc(0, flowerY, 10, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#451a03';
+      ctx.beginPath();
+      ctx.arc(0, flowerY, 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    function drawMonarchButterfly(x, y, time) {
+      ctx.save();
+      ctx.translate(x, y);
+      const flap = Math.abs(Math.sin(time * 0.014));
+
+      // Wings (Vibrant orange with black border)
+      ctx.fillStyle = '#ea580c';
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 1.5;
+
+      // Left wing
+      ctx.beginPath();
+      ctx.ellipse(-7 * flap, -3, 8 * flap, 11, -0.35, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Right wing
+      ctx.beginPath();
+      ctx.ellipse(7 * flap, -3, 8 * flap, 11, 0.35, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // White dots on wing tips
+      ctx.fillStyle = '#ffffff';
+      if (flap > 0.4) {
+        ctx.fillRect(-10 * flap, -8, 2, 2);
+        ctx.fillRect(8 * flap, -8, 2, 2);
+      }
+
+      // Body
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.ellipse(0, -3, 1.8, 7, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    // --- REGION 3: LAKE WINNIPESAUKEE SHORE (LAKES REGION) ---
+    function drawLakeBase(b, time) {
+      // 1. Lush western lawn
+      ctx.fillStyle = '#22c55e';
+      ctx.fillRect(b.x, b.y, b.w, b.h);
+
+      // 2. Curved Sand Beach
+      ctx.fillStyle = '#fde047';
+      ctx.beginPath();
+      ctx.moveTo(b.x + 130, b.y);
+      ctx.bezierCurveTo(b.x + 190, b.y + 200, b.x + 220, b.y + 400, b.x + 160, b.y + b.h);
+      ctx.lineTo(b.x + b.w, b.y + b.h);
+      ctx.lineTo(b.x + b.w, b.y);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = '#fef08a';
+      ctx.beginPath();
+      ctx.moveTo(b.x + 160, b.y);
+      ctx.bezierCurveTo(b.x + 220, b.y + 200, b.x + 250, b.y + 400, b.x + 190, b.y + b.h);
+      ctx.lineTo(b.x + b.w, b.y + b.h);
+      ctx.lineTo(b.x + b.w, b.y);
+      ctx.closePath();
+      ctx.fill();
+
+      // 3. Deep Crystal Lake Water (Lake Winnipesaukee)
+      const waterGrad = ctx.createLinearGradient(b.x + 200, b.y, b.x + b.w, b.y + b.h);
+      waterGrad.addColorStop(0, '#06b6d4');
+      waterGrad.addColorStop(0.3, '#0284c7');
+      waterGrad.addColorStop(0.7, '#0369a1');
+      waterGrad.addColorStop(1, '#1e3a8a');
+
+      ctx.fillStyle = waterGrad;
+      ctx.beginPath();
+      ctx.moveTo(b.x + 190, b.y);
+      ctx.bezierCurveTo(b.x + 250, b.y + 200, b.x + 280, b.y + 400, b.x + 220, b.y + b.h);
+      ctx.lineTo(b.x + b.w, b.y + b.h);
+      ctx.lineTo(b.x + b.w, b.y);
+      ctx.closePath();
+      ctx.fill();
+
+      // Animated Shoreline Waves (Washing gently on the beach)
+      for (let w = 0; w < 3; w++) {
+        const waveShift = Math.sin(time * 0.0025 + w * 1.8) * 12;
+        const waveAlpha = 0.35 + Math.sin(time * 0.0025 + w * 1.8) * 0.2;
+        ctx.strokeStyle = `rgba(255, 255, 255, ${waveAlpha})`;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(b.x + 190 + waveShift, b.y);
+        ctx.bezierCurveTo(b.x + 250 + waveShift, b.y + 200, b.x + 280 + waveShift, b.y + 400, b.x + 220 + waveShift, b.y + b.h);
+        ctx.stroke();
+      }
+
+      // Glistening Sunlight Sparkles on the water
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+      for (let s = 0; s < 18; s++) {
+        const sx = b.x + 320 + (s * 39) % (b.w - 340);
+        const sy = b.y + 40 + (s * 43) % (b.h - 80);
+        const sparkle = Math.sin(time * 0.004 + s * 2);
+        if (sparkle > 0.6) {
+          ctx.beginPath();
+          ctx.arc(sx, sy, 2 + sparkle * 1.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+
+    function drawLakeDecor(b, time = 0) {
+      // 1. Marina Wooden Boat Dock extending into the lake at (b.x + 190, b.y + 320)
+      drawMarinaDock(b.x + 190, b.y + 320, 200);
+
+      // 2. Bobbing Classic Wooden Rowboat moored to the dock
+      drawBobbingRowboat(b.x + 330, b.y + 370, time);
+
+      // 3. Lakeside Beach Amenities (Adirondack Chairs & Campfire)
+      drawAdirondackChairs(b.x + 130, b.y + 240);
+      drawBeachCampfire(b.x + 140, b.y + 460);
+
+      // 4. Shoreline Cattails & Floating Water Lilies
+      const cattails = [
+        { x: b.x + 180, y: b.y + 90 },
+        { x: b.x + 210, y: b.y + 130 },
+        { x: b.x + 230, y: b.y + 530 },
+        { x: b.x + 200, y: b.y + 580 },
+        { x: b.x + 190, y: b.y + 640 }
+      ];
+      cattails.forEach((c, idx) => {
+        drawCattailCluster(c.x, c.y, time, idx);
+      });
+
+      // Floating lily pads with blooming white water lilies
+      drawWaterLilyPad(b.x + 300, b.y + 160, time, 0);
+      drawWaterLilyPad(b.x + 360, b.y + 200, time, 1);
+      drawWaterLilyPad(b.x + 310, b.y + 490, time, 2);
+
+      // 5. Iridescent Dragonfly skimming the shallows
+      drawDragonfly(b.x + 260 + Math.sin(time * 0.004) * 45, b.y + 380 + Math.cos(time * 0.003) * 35, time);
+    }
+
+    function drawMarinaDock(x, y, len) {
+      ctx.save();
+      // Wooden Pilings into the water
+      for (let px = x + 30; px <= x + len; px += 45) {
+        ctx.fillStyle = '#451a03';
+        ctx.fillRect(px - 5, y + 10, 10, 26);
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.4)';
+        ctx.fillRect(px - 5, y + 36, 10, 12);
+      }
+
+      // Dock Deck Plank
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(x, y - 12, len, 24);
+
+      // Individual deck planks
+      ctx.strokeStyle = '#522504';
+      ctx.lineWidth = 2;
+      for (let px = x + 8; px < x + len; px += 8) {
+        ctx.beginPath();
+        ctx.moveTo(px, y - 12);
+        ctx.lineTo(px, y + 12);
+        ctx.stroke();
+      }
+
+      // Mooring Bollards / Cleats
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(x + len - 16, y - 16, 6, 6);
+      ctx.fillRect(x + len - 16, y + 10, 6, 6);
+
+      ctx.restore();
+    }
+
+    function drawBobbingRowboat(x, y, time) {
+      ctx.save();
+      const bobY = Math.sin(time * 0.0025) * 4;
+      const rollAng = Math.sin(time * 0.002) * 0.04;
+      ctx.translate(x, y + bobY);
+      ctx.rotate(rollAng);
+
+      // Water shadow under boat
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.35)';
+      ctx.beginPath();
+      ctx.ellipse(0, 10, 36, 12, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Boat Hull (Classic wooden lapstrake)
+      ctx.fillStyle = '#9a3412';
+      ctx.beginPath();
+      ctx.moveTo(-35, 0);
+      ctx.quadraticCurveTo(0, -18, 35, 0);
+      ctx.lineTo(38, 4);
+      ctx.quadraticCurveTo(0, 18, -35, 4);
+      ctx.closePath();
+      ctx.fill();
+
+      // Inner hull
+      ctx.fillStyle = '#78350f';
+      ctx.beginPath();
+      ctx.ellipse(0, 1, 30, 10, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Wooden seats / thwarts
+      ctx.fillStyle = '#d97706';
+      ctx.fillRect(-18, -9, 6, 18);
+      ctx.fillRect(12, -9, 6, 18);
+
+      // Wooden oars resting inside
+      ctx.strokeStyle = '#fef08a';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-16, -14);
+      ctx.lineTo(16, 14);
+      ctx.stroke();
+
+      // Mooring line to dock
+      ctx.strokeStyle = '#fef08a';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(-35, 0);
+      ctx.lineTo(-45, -35);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function drawAdirondackChairs(x, y) {
+      ctx.save();
+      // Pair of Adirondack chairs facing water
+      [-15, 15].forEach(ox => {
+        ctx.fillStyle = '#0284c7';
+        // Seat
+        ctx.fillRect(x + ox - 8, y - 6, 16, 14);
+        // Slanted back
+        ctx.fillRect(x + ox - 7, y - 20, 14, 15);
+        // Wide armrests
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillRect(x + ox - 11, y - 6, 4, 14);
+        ctx.fillRect(x + ox + 7, y - 6, 4, 14);
+      });
+      // Small drinks table in between
+      ctx.fillStyle = '#f8fafc';
+      ctx.beginPath();
+      ctx.arc(x, y, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawBeachCampfire(x, y) {
+      ctx.save();
+      // Stone ring
+      ctx.fillStyle = '#64748b';
+      for (let i = 0; i < 8; i++) {
+        const ang = (i * Math.PI * 2) / 8;
+        ctx.beginPath();
+        ctx.arc(x + Math.cos(ang) * 12, y + Math.sin(ang) * 12, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      // Charcoal pit
+      ctx.fillStyle = '#1e293b';
+      ctx.beginPath();
+      ctx.arc(x, y, 9, 0, Math.PI * 2);
+      ctx.fill();
+      // Logs
+      ctx.strokeStyle = '#78350f';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(x - 7, y - 6);
+      ctx.lineTo(x + 7, y + 6);
+      ctx.moveTo(x + 7, y - 6);
+      ctx.lineTo(x - 7, y + 6);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawCattailCluster(x, y, time, seed) {
+      ctx.save();
+      const sway = Math.sin(time * 0.0025 + seed) * 3;
+      // Stems
+      ctx.strokeStyle = '#15803d';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + sway, y - 28);
+      ctx.moveTo(x - 6, y);
+      ctx.lineTo(x - 6 + sway, y - 24);
+      ctx.moveTo(x + 6, y);
+      ctx.lineTo(x + 6 + sway, y - 26);
+      ctx.stroke();
+
+      // Brown cigar heads
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(x + sway - 2, y - 28, 4, 12);
+      ctx.fillRect(x - 6 + sway - 2, y - 24, 4, 10);
+      ctx.fillRect(x + 6 + sway - 2, y - 26, 4, 11);
+      ctx.restore();
+    }
+
+    function drawWaterLilyPad(x, y, time, seed) {
+      ctx.save();
+      const drift = Math.sin(time * 0.002 + seed) * 3;
+      // Green lily pad
+      ctx.fillStyle = '#15803d';
+      ctx.beginPath();
+      ctx.arc(x + drift, y, 10, 0.4, Math.PI * 2 - 0.4);
+      ctx.lineTo(x + drift, y);
+      ctx.closePath();
+      ctx.fill();
+
+      // Blooming white lotus/water lily flower
+      ctx.fillStyle = '#ffffff';
+      for (let p = 0; p < 5; p++) {
+        const pa = (p * Math.PI * 2) / 5;
+        ctx.beginPath();
+        ctx.arc(x + drift + Math.cos(pa) * 4, y + Math.sin(pa) * 4, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = '#facc15';
+      ctx.beginPath();
+      ctx.arc(x + drift, y, 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawDragonfly(x, y, time) {
+      ctx.save();
+      ctx.translate(x, y);
+
+      // Translucent shimmering wings
+      ctx.fillStyle = 'rgba(165, 243, 252, 0.75)';
+      ctx.beginPath();
+      ctx.ellipse(-8, -4, 10, 2.5, -0.3, 0, Math.PI * 2);
+      ctx.ellipse(8, -4, 10, 2.5, 0.3, 0, Math.PI * 2);
+      ctx.ellipse(-7, 2, 8, 2, -0.1, 0, Math.PI * 2);
+      ctx.ellipse(7, 2, 8, 2, 0.1, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Slender turquoise body
+      ctx.fillStyle = '#06b6d4';
+      ctx.fillRect(-1.5, -6, 3, 16);
+      ctx.fillStyle = '#0e7490';
+      ctx.beginPath();
+      ctx.arc(0, -7, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    // --- REGION 4: KANCAMAGUS MAPLE GROVE (WHITE MOUNTAIN FOREST) ---
+    function drawMapleBase(b, time) {
+      // Autumn mountain forest floor with fallen leaf carpet
+      const grad = ctx.createLinearGradient(b.x, b.y, b.x + b.w, b.y + b.h);
+      grad.addColorStop(0, '#78350f');
+      grad.addColorStop(0.3, '#9a3412');
+      grad.addColorStop(0.7, '#b45309');
+      grad.addColorStop(1, '#451a03');
+      ctx.fillStyle = grad;
+      ctx.fillRect(b.x, b.y, b.w, b.h);
+
+      // Rich patches of fallen leaf mulch
+      ctx.fillStyle = 'rgba(234, 88, 12, 0.25)';
+      ctx.beginPath();
+      ctx.ellipse(b.x + 320, b.y + 240, 240, 140, 0.2, 0, Math.PI * 2);
+      ctx.ellipse(b.x + 620, b.y + 540, 200, 110, -0.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function drawMapleDecor(b, time = 0) {
+      // 1. THE WINDING KANCAMAGUS HIGHWAY (NH Route 112)
+      // A smooth 2-lane dark asphalt scenic highway curving gracefully through the forest
+      drawKancamagusHighway(b);
+
+      // 2. Scenic Highway Overlook & Turnout Deck
+      drawScenicOverlook(b.x + 220, b.y + 190);
+
+      // 3. BEAUTIFUL FALL FLOWERS BORDERING BOTH SIDES OF THE HIGHWAY
+      // (Purple New England Asters, Feathery Goldenrods, Orange Autumn Coneflowers & Mums)
+      drawFallFlowersAlongHighway(b, time);
+
+      // 4. Spectacular Sugar Maple Trees in Peak Fall Foliage
+      // (Blazing red, orange, and gold canopies with traditional metal sap buckets)
+      drawSugarMaple(b.x + 130, b.y + 140, '#dc2626', time, 0);
+      drawSugarMaple(b.x + 360, b.y + 110, '#ea580c', time, 1);
+      drawSugarMaple(b.x + 640, b.y + 150, '#f59e0b', time, 2);
+      drawSugarMaple(b.x + 720, b.y + 360, '#dc2626', time, 3);
+      drawSugarMaple(b.x + 680, b.y + 580, '#ea580c', time, 4);
+      drawSugarMaple(b.x + 390, b.y + 610, '#dc2626', time, 5);
+      drawSugarMaple(b.x + 140, b.y + 550, '#f59e0b', time, 6);
+      drawSugarMaple(b.x + 180, b.y + 360, '#ea580c', time, 7);
+
+      // 5. ANIMATED DRIFTING & FALLING AUTUMN LEAVES
+      // Real-time colorful maple leaves dancing, swirling, and drifting in the wind across the highway!
+      drawDriftingAutumnLeaves(b, time);
+    }
+
+    function drawKancamagusHighway(b) {
+      ctx.save();
+
+      // Connector spur from west gate (b.x, b.y + 350)
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 56;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(b.x - 10, b.y + 350);
+      ctx.quadraticCurveTo(b.x + 160, b.y + 350, b.x + 280, b.y + 320);
+      ctx.stroke();
+
+      // Main Winding Highway Route (Route 112):
+      // Enters from north at (b.x + 400, b.y), sweeps southwest, loops southeast to east mountain pass (b.x + b.w, b.y + 460)
+      // Gravel highway shoulder underlay
+      ctx.strokeStyle = '#64748b';
+      ctx.lineWidth = 66;
+      ctx.beginPath();
+      ctx.moveTo(b.x + 400, b.y - 10);
+      ctx.bezierCurveTo(b.x + 320, b.y + 180, b.x + 200, b.y + 280, b.x + 320, b.y + 400);
+      ctx.bezierCurveTo(b.x + 440, b.y + 520, b.x + 650, b.y + 440, b.x + b.w + 10, b.y + 460);
+      ctx.stroke();
+
+      // Dark asphalt pavement
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 58;
+      ctx.beginPath();
+      ctx.moveTo(b.x + 400, b.y - 10);
+      ctx.bezierCurveTo(b.x + 320, b.y + 180, b.x + 200, b.y + 280, b.x + 320, b.y + 400);
+      ctx.bezierCurveTo(b.x + 440, b.y + 520, b.x + 650, b.y + 440, b.x + b.w + 10, b.y + 460);
+      ctx.stroke();
+
+      // Painted Outer White Shoulder Lines
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+      ctx.lineWidth = 2.5;
+
+      // Left shoulder
+      ctx.beginPath();
+      ctx.moveTo(b.x + 400 - 24, b.y - 10);
+      ctx.bezierCurveTo(b.x + 320 - 24, b.y + 180, b.x + 200 - 24, b.y + 280, b.x + 320 - 24, b.y + 400);
+      ctx.bezierCurveTo(b.x + 440 - 24, b.y + 520, b.x + 650 - 24, b.y + 440, b.x + b.w + 10, b.y + 460 - 24);
+      ctx.stroke();
+
+      // Right shoulder
+      ctx.beginPath();
+      ctx.moveTo(b.x + 400 + 24, b.y - 10);
+      ctx.bezierCurveTo(b.x + 320 + 24, b.y + 180, b.x + 200 + 24, b.y + 280, b.x + 320 + 24, b.y + 400);
+      ctx.bezierCurveTo(b.x + 440 + 24, b.y + 520, b.x + 650 + 24, b.y + 440, b.x + b.w + 10, b.y + 460 + 24);
+      ctx.stroke();
+
+      // Painted Double Yellow Center Divider Lines (Route 112)
+      ctx.strokeStyle = '#facc15';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(b.x + 400 - 2, b.y - 10);
+      ctx.bezierCurveTo(b.x + 320 - 2, b.y + 180, b.x + 200 - 2, b.y + 280, b.x + 320 - 2, b.y + 400);
+      ctx.bezierCurveTo(b.x + 440 - 2, b.y + 520, b.x + 650 - 2, b.y + 440, b.x + b.w + 10, b.y + 460 - 2);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(b.x + 400 + 2, b.y - 10);
+      ctx.bezierCurveTo(b.x + 320 + 2, b.y + 180, b.x + 200 + 2, b.y + 280, b.x + 320 + 2, b.y + 400);
+      ctx.bezierCurveTo(b.x + 440 + 2, b.y + 520, b.x + 650 + 2, b.y + 440, b.x + b.w + 10, b.y + 460 + 2);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function drawScenicOverlook(x, y) {
+      ctx.save();
+      // Paved turnout parking
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(x - 45, y - 25, 90, 45);
+
+      // Timber Guardrails
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(x - 48, y - 28, 96, 5);
+      for (let px = x - 44; px <= x + 44; px += 22) {
+        ctx.fillRect(px, y - 28, 4, 12);
+      }
+
+      // Wooden Observation Deck
+      ctx.fillStyle = '#92400e';
+      ctx.fillRect(x - 25, y - 48, 50, 22);
+
+      // Scenic Viewfinder / Binoculars on pedestal
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillRect(x - 2, y - 44, 4, 14);
+      ctx.fillStyle = '#0284c7';
+      ctx.fillRect(x - 6, y - 48, 12, 5);
+
+      // Carved Wooden Highway Sign
+      ctx.fillStyle = '#451a03';
+      ctx.fillRect(x + 20, y + 22, 4, 18);
+      ctx.fillStyle = '#78350f';
+      ctx.strokeStyle = '#ca8a04';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(x - 30, y + 22, 100, 20, 4);
+      else ctx.rect(x - 30, y + 22, 100, 20);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#fef08a';
+      ctx.font = 'bold 8px Fredoka, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText("KANCAMAGUS SCENIC BYWAY", x + 20, y + 35);
+
+      ctx.restore();
+    }
+
+    function drawFallFlowersAlongHighway(b, time) {
+      // Beautiful autumn wildflowers positioned along both road shoulders
+      const flowerPositions = [
+        // Upper stretch along north entrance
+        { x: b.x + 360, y: b.y + 40, type: 'aster' },
+        { x: b.x + 440, y: b.y + 40, type: 'goldenrod' },
+        { x: b.x + 340, y: b.y + 110, type: 'coneflower' },
+        { x: b.x + 450, y: b.y + 120, type: 'aster' },
+        { x: b.x + 290, y: b.y + 190, type: 'goldenrod' },
+        { x: b.x + 410, y: b.y + 200, type: 'mum' },
+        // Middle winding curve
+        { x: b.x + 190, y: b.y + 250, type: 'aster' },
+        { x: b.x + 270, y: b.y + 250, type: 'goldenrod' },
+        { x: b.x + 170, y: b.y + 320, type: 'coneflower' },
+        { x: b.x + 270, y: b.y + 360, type: 'mum' },
+        { x: b.x + 240, y: b.y + 420, type: 'aster' },
+        { x: b.x + 360, y: b.y + 370, type: 'goldenrod' },
+        // Eastern stretch towards mountain pass
+        { x: b.x + 390, y: b.y + 460, type: 'coneflower' },
+        { x: b.x + 480, y: b.y + 420, type: 'aster' },
+        { x: b.x + 470, y: b.y + 510, type: 'goldenrod' },
+        { x: b.x + 560, y: b.y + 430, type: 'mum' },
+        { x: b.x + 570, y: b.y + 520, type: 'aster' },
+        { x: b.x + 660, y: b.y + 420, type: 'goldenrod' },
+        { x: b.x + 670, y: b.y + 510, type: 'coneflower' },
+        { x: b.x + 740, y: b.y + 420, type: 'mum' },
+        { x: b.x + 750, y: b.y + 500, type: 'aster' },
+        // Lower clusters
+        { x: b.x + 280, y: b.y + 520, type: 'goldenrod' },
+        { x: b.x + 330, y: b.y + 570, type: 'coneflower' },
+        { x: b.x + 460, y: b.y + 620, type: 'mum' }
+      ];
+
+      flowerPositions.forEach((fl, idx) => {
+        drawFallFlower(fl.x, fl.y, fl.type, time, idx);
       });
     }
 
-    function drawMountainDecor(b) {
+    function drawFallFlower(x, y, type, time, seed) {
+      ctx.save();
+      const sway = Math.sin(time * 0.0025 + seed * 0.7) * 2.5;
+
+      if (type === 'aster') {
+        // Purple New England Aster (vibrant violet petals, golden center)
+        ctx.strokeStyle = '#15803d';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + sway, y - 16);
+        ctx.stroke();
+
+        const fx = x + sway;
+        const fy = y - 16;
+        ctx.fillStyle = '#a855f7';
+        for (let p = 0; p < 8; p++) {
+          const pa = p * (Math.PI / 4);
+          ctx.beginPath();
+          ctx.arc(fx + Math.cos(pa) * 6, fy + Math.sin(pa) * 6, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath();
+        ctx.arc(fx, fy, 3, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (type === 'goldenrod') {
+        // Goldenrod (Solidago) - feathery arching golden plumes
+        ctx.strokeStyle = '#15803d';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.quadraticCurveTo(x + sway * 0.5, y - 12, x + sway + 4, y - 24);
+        ctx.stroke();
+
+        ctx.fillStyle = '#facc15';
+        for (let g = 0; g < 6; g++) {
+          const gy = y - 12 - g * 2.5;
+          const gx = x + sway * (g / 6) + g * 1.5;
+          ctx.beginPath();
+          ctx.arc(gx, gy, 3.5 - g * 0.3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (type === 'coneflower') {
+        // Autumn Coneflower (warm orange petals with dark brown cone)
+        ctx.strokeStyle = '#15803d';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + sway, y - 18);
+        ctx.stroke();
+
+        const fx = x + sway;
+        const fy = y - 18;
+        ctx.fillStyle = '#ea580c';
+        for (let p = 0; p < 6; p++) {
+          const pa = (p * Math.PI) / 3;
+          ctx.beginPath();
+          ctx.arc(fx + Math.cos(pa) * 5.5, fy + Math.sin(pa) * 5.5, 2.8, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = '#451a03';
+        ctx.beginPath();
+        ctx.arc(fx, fy, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        // Autumn Mum (dense mound of burgundy/amber flowers)
+        ctx.fillStyle = '#be123c';
+        ctx.beginPath();
+        ctx.arc(x + sway, y - 8, 7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#e11d48';
+        ctx.beginPath();
+        ctx.arc(x + sway - 3, y - 9, 4, 0, Math.PI * 2);
+        ctx.arc(x + sway + 3, y - 9, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#f59e0b';
+        ctx.beginPath();
+        ctx.arc(x + sway, y - 8, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+
+    function drawSugarMaple(x, y, leafColor, time, seed) {
+      ctx.save();
+      const sway = Math.sin(time * 0.002 + seed) * 3;
+
+      // Tree shadow
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+      ctx.beginPath();
+      ctx.ellipse(x, y + 4, 32, 12, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Sturdy brown bark trunk
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(x - 9, y - 48, 18, 52);
+      ctx.fillStyle = '#451a03';
+      ctx.fillRect(x + 2, y - 48, 5, 52);
+
+      // Traditional Galvanized Maple Sap Bucket with lid hung on trunk tap!
+      ctx.fillStyle = '#94a3b8';
+      ctx.beginPath();
+      ctx.moveTo(x + 9, y - 24);
+      ctx.lineTo(x + 19, y - 24);
+      ctx.lineTo(x + 17, y - 10);
+      ctx.lineTo(x + 11, y - 10);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#64748b';
+      ctx.fillRect(x + 8, y - 26, 12, 3);
+
+      // Spectacular Multi-Tiered Sugar Maple Canopy
+      const cx = x + sway;
+      const cy = y - 72;
+
+      // Darker under-canopy
+      ctx.fillStyle = leafColor === '#dc2626' ? '#991b1b' : leafColor === '#ea580c' ? '#c2410c' : '#b45309';
+      ctx.beginPath();
+      ctx.arc(cx - 22, cy + 8, 26, 0, Math.PI * 2);
+      ctx.arc(cx + 22, cy + 8, 26, 0, Math.PI * 2);
+      ctx.arc(cx, cy - 16, 32, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Main vibrant canopy
+      ctx.fillStyle = leafColor;
+      ctx.beginPath();
+      ctx.arc(cx - 18, cy + 4, 24, 0, Math.PI * 2);
+      ctx.arc(cx + 18, cy + 4, 24, 0, Math.PI * 2);
+      ctx.arc(cx, cy - 18, 28, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Highlight leaves top
+      ctx.fillStyle = leafColor === '#dc2626' ? '#ef4444' : leafColor === '#ea580c' ? '#fb923c' : '#fde047';
+      ctx.beginPath();
+      ctx.arc(cx - 6, cy - 26, 18, 0, Math.PI * 2);
+      ctx.arc(cx + 10, cy - 20, 16, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    function drawDriftingAutumnLeaves(b, time) {
+      ctx.save();
+      const colors = ['#dc2626', '#ea580c', '#f59e0b', '#b91c1c'];
+      for (let i = 0; i < 28; i++) {
+        const lx = b.x + ((i * 73 + time * 0.045) % b.w);
+        const ly = b.y + ((i * 59 + time * 0.025 + Math.sin(time * 0.003 + i) * 35) % b.h);
+        const rot = time * 0.004 + i * 1.2;
+
+        ctx.save();
+        ctx.translate(lx, ly);
+        ctx.rotate(rot);
+        ctx.fillStyle = colors[i % colors.length];
+
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 5, 3, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(-6, -1);
+        ctx.lineTo(0, -6);
+        ctx.lineTo(6, -1);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+      ctx.restore();
+    }
+
+    // --- REGION 5: MOUNT WASHINGTON VISTA (PRESIDENTIAL RANGE) ---
+    function drawMountainBase(b, time) {
+      // High alpine bedrock and subalpine forest
+      const grad = ctx.createLinearGradient(b.x, b.y, b.x, b.y + b.h);
+      grad.addColorStop(0, '#1e293b');
+      grad.addColorStop(0.35, '#334155');
+      grad.addColorStop(0.7, '#475569');
+      grad.addColorStop(1, '#064e3b');
+      ctx.fillStyle = grad;
+      ctx.fillRect(b.x, b.y, b.w, b.h);
+    }
+
+    function drawMountainDecor(b, time = 0) {
+      // 1. THE PRESIDENTIAL MOUNTAIN RANGE (Magnificent Multi-Layered Panorama)
+      // Layer A: Distant Misty Northern Range Peaks (Mount Adams & Mount Madison)
+      drawDistantPresidentialPeaks(b);
+
+      // Layer B: Midground Rugged Granite Ridges (Mount Jefferson & Mount Monroe)
+      drawMidgroundPresidentialRidges(b);
+
+      // Layer C: Mount Washington Summit (The Colossus - 6,288 ft with Tuckerman Ravine)
+      drawMountWashingtonSummit(b, time);
+
+      // 2. THE MOUNT WASHINGTON COG RAILWAY (Ascending the western mountain slope)
+      drawCogRailwayAndTrain(b, time);
+
+      // 3. SUMMIT EXTREME WEATHER OBSERVATORY (With spinning anemometer & pulsing radio beacon)
+      drawMountWashingtonObservatory(b, time);
+
+      // 4. Alpine Hiking Trail (Appalachian Trail / Crawford Path) with Rock Cairns
+      drawAlpineTrailAndCairns(b);
+
+      // 5. Drifting Translucent Alpine Fog and Mountain Mist Wisps
+      drawAlpineMountainMist(b, time);
+    }
+
+    function drawDistantPresidentialPeaks(b) {
+      ctx.save();
+      // Distant peaks silhouette fading into atmospheric cool indigo haze
+      ctx.fillStyle = '#4338ca';
+      ctx.globalAlpha = 0.35;
+
+      // Far Peak 1: Mount Adams (5,774 ft)
+      ctx.beginPath();
+      ctx.moveTo(b.x + 20, b.y + 480);
+      ctx.lineTo(b.x + 220, b.y + 110);
+      ctx.lineTo(b.x + 440, b.y + 500);
+      ctx.fill();
+
+      // Far Peak 2: Mount Madison (5,367 ft)
+      ctx.beginPath();
+      ctx.moveTo(b.x + 480, b.y + 490);
+      ctx.lineTo(b.x + 680, b.y + 130);
+      ctx.lineTo(b.x + b.w, b.y + 460);
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    function drawMidgroundPresidentialRidges(b) {
+      ctx.save();
+      // Midground granite ridges in slate blue
+      ctx.fillStyle = '#334155';
+      ctx.beginPath();
+      ctx.moveTo(b.x, b.y + 560);
+      ctx.lineTo(b.x + 140, b.y + 280);
+      ctx.lineTo(b.x + 360, b.y + 420);
+      ctx.lineTo(b.x + 580, b.y + 240);
+      ctx.lineTo(b.x + 780, b.y + 440);
+      ctx.lineTo(b.x + b.w, b.y + 560);
+      ctx.lineTo(b.x + b.w, b.y + b.h);
+      ctx.lineTo(b.x, b.y + b.h);
+      ctx.closePath();
+      ctx.fill();
+
+      // Ridge highlight facets
       ctx.fillStyle = '#475569';
       ctx.beginPath();
-      ctx.moveTo(b.x + 200, b.y + b.h);
-      ctx.lineTo(b.x + 450, b.y + 150);
-      ctx.lineTo(b.x + 700, b.y + b.h);
+      ctx.moveTo(b.x + 140, b.y + 280);
+      ctx.lineTo(b.x + 260, b.y + 410);
+      ctx.lineTo(b.x + 140, b.y + 450);
+      ctx.closePath();
       ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(b.x + 580, b.y + 240);
+      ctx.lineTo(b.x + 690, b.y + 390);
+      ctx.lineTo(b.x + 580, b.y + 420);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    function drawMountWashingtonSummit(b, time) {
+      ctx.save();
+      const peakX = b.x + 460;
+      const peakY = b.y + 160;
+
+      // Massive Granite Summit Pyramid & Tuckerman Ravine Bowl
+      // Shadowed western face
+      ctx.fillStyle = '#1e293b';
+      ctx.beginPath();
+      ctx.moveTo(b.x + 100, b.y + b.h);
+      ctx.lineTo(peakX, peakY);
+      ctx.lineTo(peakX + 40, b.y + b.h);
+      ctx.closePath();
+      ctx.fill();
+
+      // Sunlit eastern face & Tuckerman Ravine Headwall
+      ctx.fillStyle = '#64748b';
+      ctx.beginPath();
+      ctx.moveTo(peakX, peakY);
+      ctx.lineTo(b.x + 760, b.y + b.h);
+      ctx.lineTo(peakX + 40, b.y + b.h);
+      ctx.closePath();
+      ctx.fill();
+
+      // Rugged granite cliff crags & rock ledges
+      ctx.fillStyle = '#94a3b8';
+      ctx.beginPath();
+      ctx.moveTo(peakX, peakY);
+      ctx.lineTo(peakX + 80, peakY + 120);
+      ctx.lineTo(peakX + 30, peakY + 130);
+      ctx.closePath();
+      ctx.fill();
+
+      // Alpine Perennial Snowfields in Tuckerman Ravine Crevices
       ctx.fillStyle = '#f8fafc';
       ctx.beginPath();
-      ctx.moveTo(b.x + 450, b.y + 150);
-      ctx.lineTo(b.x + 410, b.y + 230);
-      ctx.lineTo(b.x + 490, b.y + 230);
+      ctx.moveTo(peakX + 60, peakY + 140);
+      ctx.lineTo(peakX + 110, peakY + 190);
+      ctx.lineTo(peakX + 45, peakY + 195);
+      ctx.closePath();
       ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(peakX - 40, peakY + 110);
+      ctx.lineTo(peakX - 10, peakY + 130);
+      ctx.lineTo(peakX - 35, peakY + 140);
+      ctx.closePath();
+      ctx.fill();
+
+      // Crystalline sparkles on the snow
+      ctx.fillStyle = '#ffffff';
+      const snowSparkle = Math.sin(time * 0.004);
+      if (snowSparkle > 0.7) {
+        ctx.beginPath();
+        ctx.arc(peakX + 75, peakY + 160, 2.5, 0, Math.PI * 2);
+        ctx.arc(peakX - 25, peakY + 125, 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+
+    function drawCogRailwayAndTrain(b, time) {
+      ctx.save();
+      const trackStartX = b.x + 130;
+      const trackStartY = b.y + 640;
+      const trackEndX = b.x + 410;
+      const trackEndY = b.y + 240;
+
+      // Wooden Trestle Support Posts
+      ctx.strokeStyle = '#451a03';
+      ctx.lineWidth = 3;
+      for (let t = 0.1; t <= 0.9; t += 0.15) {
+        const tx = trackStartX + (trackEndX - trackStartX) * t;
+        const ty = trackStartY + (trackEndY - trackStartY) * t;
+        ctx.beginPath();
+        ctx.moveTo(tx, ty);
+        ctx.lineTo(tx, ty + 25);
+        ctx.stroke();
+      }
+
+      // Steel Rails & Cog Rack
+      ctx.strokeStyle = '#64748b';
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.moveTo(trackStartX, trackStartY);
+      ctx.lineTo(trackEndX, trackEndY);
+      ctx.stroke();
+
+      // Cog Railway Ties
+      ctx.strokeStyle = '#78350f';
+      ctx.lineWidth = 2;
+      for (let t = 0; t <= 1; t += 0.05) {
+        const tx = trackStartX + (trackEndX - trackStartX) * t;
+        const ty = trackStartY + (trackEndY - trackStartY) * t;
+        ctx.beginPath();
+        ctx.moveTo(tx - 6, ty + 4);
+        ctx.lineTo(tx + 6, ty - 4);
+        ctx.stroke();
+      }
+
+      // Authentic Cog Steam Locomotive on the Slope
+      const trainT = 0.55;
+      const trainX = trackStartX + (trackEndX - trackStartX) * trainT;
+      const trainY = trackStartY + (trackEndY - trackStartY) * trainT;
+      const trainAngle = Math.atan2(trackEndY - trackStartY, trackEndX - trackStartX);
+
+      ctx.save();
+      ctx.translate(trainX, trainY);
+      ctx.rotate(trainAngle);
+
+      // Angled Steam Boiler & Cab
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(-22, -18, 44, 16);
+      ctx.fillStyle = '#dc2626'; // Red historic passenger coach
+      ctx.fillRect(-48, -18, 24, 16);
+
+      // Coach Windows
+      ctx.fillStyle = '#fef08a';
+      ctx.fillRect(-44, -14, 6, 6);
+      ctx.fillRect(-34, -14, 6, 6);
+
+      // Locomotive Smokestack
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(12, -26, 6, 10);
+
+      // Billowing Steam Puffs from Smokestack
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+      for (let p = 0; p < 4; p++) {
+        const puffProg = ((time * 0.0018 + p * 0.25) % 1);
+        const puffX = 15 - puffProg * 25;
+        const puffY = -28 - puffProg * 22;
+        const puffR = 3 + puffProg * 7;
+        ctx.beginPath();
+        ctx.arc(puffX, puffY, puffR, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+      ctx.restore();
+    }
+
+    function drawMountWashingtonObservatory(b, time) {
+      ctx.save();
+      const obsX = b.x + 460;
+      const obsY = b.y + 160;
+
+      // Stone Sherman Adams Observatory Building
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(obsX - 25, obsY - 18, 50, 20);
+      ctx.fillStyle = '#64748b';
+      ctx.fillRect(obsX - 22, obsY - 16, 44, 8); // Window viewing deck
+
+      // Steel Communications Mast / Tower
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(obsX, obsY - 18);
+      ctx.lineTo(obsX, obsY - 48);
+      ctx.stroke();
+
+      // Blinking Red Aviation Beacon atop tower
+      const beaconAlpha = 0.35 + Math.sin(time * 0.006) * 0.65;
+      ctx.fillStyle = `rgba(239, 68, 68, ${Math.max(0.1, beaconAlpha)})`;
+      ctx.beginPath();
+      ctx.arc(obsX, obsY - 48, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // RAPIDLY SPINNING 3-CUP ANEMOMETER (Measuring hurricane-force winds!)
+      const anemY = obsY - 40;
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(obsX - 10, anemY);
+      ctx.lineTo(obsX + 10, anemY);
+      ctx.stroke();
+
+      // 3 Spinning Cups
+      const spinAngle = time * 0.025;
+      ctx.fillStyle = '#ffffff';
+      for (let c = 0; c < 3; c++) {
+        const ca = spinAngle + (c * Math.PI * 2) / 3;
+        const cupX = obsX + Math.cos(ca) * 10;
+        const cupY = anemY + Math.sin(ca) * 3;
+        ctx.beginPath();
+        ctx.arc(cupX, cupY, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+
+    function drawAlpineTrailAndCairns(b) {
+      ctx.save();
+      // Trail segment from Kancamagus entrance up toward Cog Railway & Summit
+      const trailPoints = [
+        { x: b.x + 30, y: b.y + 460 },
+        { x: b.x + 130, y: b.y + 480 },
+        { x: b.x + 230, y: b.y + 430 },
+        { x: b.x + 340, y: b.y + 360 },
+        { x: b.x + 440, y: b.y + 280 },
+        { x: b.x + 460, y: b.y + 200 }
+      ];
+
+      // Trail footsteps
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 4;
+      ctx.setLineDash([6, 6]);
+      ctx.beginPath();
+      ctx.moveTo(trailPoints[0].x, trailPoints[0].y);
+      for (let i = 1; i < trailPoints.length; i++) {
+        ctx.lineTo(trailPoints[i].x, trailPoints[i].y);
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Traditional Granite Rock Cairns along the trail
+      const cairnPositions = [
+        { x: b.x + 150, y: b.y + 475 },
+        { x: b.x + 320, y: b.y + 375 },
+        { x: b.x + 430, y: b.y + 270 }
+      ];
+      cairnPositions.forEach(c => {
+        drawRockCairn(c.x, c.y);
+      });
+
+      ctx.restore();
+    }
+
+    function drawRockCairn(x, y) {
+      ctx.fillStyle = '#64748b';
+      // Base rock
+      ctx.beginPath();
+      ctx.ellipse(x, y, 9, 5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Middle rock
+      ctx.fillStyle = '#94a3b8';
+      ctx.beginPath();
+      ctx.ellipse(x, y - 5, 7, 4, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Top rock
+      ctx.fillStyle = '#cbd5e1';
+      ctx.beginPath();
+      ctx.ellipse(x, y - 10, 5, 3, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function drawAlpineMountainMist(b, time) {
+      ctx.save();
+      // Soft translucent drifting clouds/mist across the mountain ravines
+      for (let m = 0; m < 4; m++) {
+        const mx = b.x + ((m * 210 + time * 0.015) % b.w);
+        const my = b.y + 180 + m * 70 + Math.sin(time * 0.001 + m) * 20;
+        const mw = 130 + m * 25;
+        const mh = 35 + m * 8;
+
+        const mistGrad = ctx.createRadialGradient(mx, my, 10, mx, my, mw * 0.6);
+        mistGrad.addColorStop(0, 'rgba(255, 255, 255, 0.22)');
+        mistGrad.addColorStop(0.6, 'rgba(241, 245, 249, 0.12)');
+        mistGrad.addColorStop(1, 'rgba(241, 245, 249, 0)');
+
+        ctx.fillStyle = mistGrad;
+        ctx.beginPath();
+        ctx.ellipse(mx, my, mw, mh, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
     }
 
     // Draw Cosmic Atmosphere when in Countries, Worlds, or Galaxies Eras
@@ -4587,33 +8297,55 @@
 
     // Draw Plot Boundaries & Gates
     function drawPlotBoundaries() {
-      LAND_PLOTS.forEach(plot => {
+      const plots = getCurrentPlots();
+      if (!plots) return;
+
+      plots.forEach(plot => {
         const b = plot.bounds;
-        ctx.strokeStyle = plot.owned ? 'rgba(34, 197, 94, 0.45)' : 'rgba(239, 68, 68, 0.65)';
+        if (
+          b.x + b.w < camera.x - 50 || b.x > camera.x + camera.width + 50 ||
+          b.y + b.h < camera.y - 50 || b.y > camera.y + camera.height + 50
+        ) return;
+
+        ctx.save();
+        ctx.strokeStyle = plot.owned ? 'rgba(34, 197, 94, 0.55)' : 'rgba(239, 68, 68, 0.75)';
         ctx.lineWidth = 3;
-        ctx.setLineDash(plot.owned ? [6, 4] : [10, 6]);
+        ctx.setLineDash(plot.owned ? [8, 5] : [12, 6]);
         ctx.strokeRect(b.x + 2, b.y + 2, b.w - 4, b.h - 4);
         ctx.setLineDash([]);
+
+        // Region Name Sign Tag on top-left of each region
+        ctx.fillStyle = plot.owned ? 'rgba(22, 101, 52, 0.85)' : 'rgba(15, 23, 42, 0.85)';
+        ctx.strokeStyle = plot.owned ? '#4ade80' : '#f59e0b';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.roundRect(b.x + 14, b.y + 14, 190, 26, 6);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 11px Fredoka, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(`${plot.owned ? '✓' : '🔒'} ${plot.name}`, b.x + 24, b.y + 31);
 
         if (!plot.owned) {
           const gx = plot.gate.x;
           const gy = plot.gate.y;
-          ctx.save();
           ctx.fillStyle = '#78350f';
           ctx.fillRect(gx - 4, gy - 15, 8, 30);
           ctx.fillStyle = '#fef08a';
           ctx.strokeStyle = '#ca8a04';
           ctx.lineWidth = 2;
           ctx.beginPath();
-          ctx.roundRect(gx - 45, gy - 40, 90, 26, 6);
+          ctx.roundRect(gx - 55, gy - 42, 110, 28, 6);
           ctx.fill();
           ctx.stroke();
           ctx.fillStyle = '#713f12';
           ctx.font = 'bold 11px Fredoka, sans-serif';
           ctx.textAlign = 'center';
-          ctx.fillText(`FOR SALE: $${plot.price}`, gx, gy - 23);
-          ctx.restore();
+          ctx.fillText(`FOR SALE: $${formatMoney(plot.price)}`, gx, gy - 24);
         }
+        ctx.restore();
       });
     }
 
@@ -5191,9 +8923,10 @@
       const scaleX = minimapCanvas.width / WORLD_WIDTH;
       const scaleY = minimapCanvas.height / WORLD_HEIGHT;
 
-      if (gameState.currentLocation === 'nh') {
-        // Draw NH plots
-        LAND_PLOTS.forEach(plot => {
+      const activePlots = getCurrentPlots();
+      if (activePlots) {
+        // Draw NH or Country plots
+        activePlots.forEach(plot => {
           const mx = plot.bounds.x * scaleX;
           const my = plot.bounds.y * scaleY;
           const mw = plot.bounds.w * scaleX;
