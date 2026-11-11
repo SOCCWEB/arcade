@@ -651,7 +651,7 @@
           <span class="text-3xl animate-bounce">🍍</span>
           <div class="text-left">
             <h3 class="font-game font-bold text-lg text-amber-300">Piney's Math Superpower! ✏️</h3>
-            <p id="math-modal-subtitle" class="text-xs text-slate-300">Solve the 3rd grade math problem to unlock this!</p>
+            <p id="math-modal-subtitle" class="text-xs text-slate-300">Solve the fun math problem to unlock this!</p>
           </div>
         </div>
         <button id="btn-close-math" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-sm font-bold cursor-pointer transition">✕</button>
@@ -660,9 +660,9 @@
       <!-- Problem Prompt Box -->
       <div id="math-box-container" class="my-3 p-5 rounded-2xl bg-slate-950/80 border border-amber-500/40 shadow-inner flex flex-col items-center">
         <div id="math-target-name" class="text-xs font-semibold uppercase tracking-wider text-emerald-400 mb-1">Unlocking: New England</div>
-        <div id="math-grade-badge" class="text-[11px] px-2 py-0.5 rounded-full bg-amber-950/70 border border-amber-500/50 text-amber-300 font-bold mb-3">Grade 3 Math Challenge</div>
+        <div id="math-grade-badge" class="text-[11px] px-2 py-0.5 rounded-full bg-amber-950/70 border border-amber-500/50 text-amber-300 font-bold mb-3">Math Challenge</div>
         <div id="math-problem-display" class="font-game font-bold text-4xl sm:text-5xl text-amber-300 tracking-wider my-2 filter drop-shadow">
-          24 + 18 = ?
+          7 + 2 = ?
         </div>
         <div id="math-feedback-text" class="text-xs font-medium text-slate-300 min-h-[22px] transition-all">
           Tap or type the correct answer:
@@ -750,7 +750,6 @@
             <li><strong class="text-amber-300">⚡ Super Speed</strong>: Hold <strong class="text-white">Shift</strong> to boost with rainbow thruster fire!</li>
             <li><strong class="text-purple-300">👻 Invisibility</strong>: Press <strong class="text-white">Q</strong> to phase through boundaries, gain 3x fruit cash!</li>
             <li><strong class="text-cyan-300">🧲 Cosmic Vacuum</strong>: Magnetically vacuums fruits across the whole screen!</li>
-            <li><strong class="text-red-300">🔫 Fruit Blaster</strong>: Press <strong class="text-white">F</strong> or click on screen to shoot and auto-harvest fruits!</li>
           </ul>
           </p>
         </div>
@@ -1232,6 +1231,19 @@
           theme: "yukon",
           desc: "Mystical green and purple aurora borealis dancing over ancient mossy cedar forests.",
           gate: { x: 200, y: 200 }
+        },
+        {
+          id: 6,
+          countryId: 'c_can',
+          name: "Central Shield & Hudson Bay",
+          region: "Hudson Bay & Subarctic Forests",
+          subname: "Boreal Spruce & Crystal Waters",
+          price: 18000,
+          owned: false,
+          bounds: { x: 740, y: 100, w: 580, h: 580 },
+          theme: "hudson_bay",
+          desc: "Vast pristine boreal wilderness, crystal lakes, dancing loons, and wild cranberries.",
+          gate: { x: 800, y: 350 }
         }
       ],
       c_bra: [
@@ -1887,17 +1899,6 @@
         desc: 'Unleashes gravitational black-hole suction pulling all fruits on screen directly to Pineapple Head!',
         statLabel: (lvl) => lvl === 0 ? 'Standard Reach' : `Cosmic Gravity Radius: ${200 + lvl * 150}px`,
         nextLabel: (lvl) => `Next: ${200 + (lvl + 1) * 150}px Radius`
-      },
-      {
-        id: 'pow_laser',
-        name: 'Cosmic Fruit Blaster',
-        icon: '🔫',
-        basePrice: 25000000,
-        costMult: 1.75,
-        level: 0,
-        desc: 'Fire laser energy rays with [F], Space, or Click/Tap to zap and harvest fruits instantly from afar with bonus cash!',
-        statLabel: (lvl) => lvl === 0 ? 'Locked' : `Blaster Range: ${300 + lvl * 120}px (+${lvl * 25}% Cash)`,
-        nextLabel: (lvl) => `Next: +${(lvl + 1) * 25}% Cash & Range`
       },
       {
         id: 'pow_flight',
@@ -2786,30 +2787,30 @@
       return null;
     }
 
-    // --- 3RD GRADE EDUCATIONAL MATH SYSTEM ---
+    // --- EDUCATIONAL MATH CHALLENGE SYSTEM ---
     function generateMathProblem(type) {
       if (type === 'region') {
-        // Easy 3rd grade level: multiplication, addition, or subtraction problem.
-        // Max 2 numbers, and max 2 digits each.
+        // Easy math challenge: multiplication, addition, or subtraction.
+        // Strictly single-digit numbers only (1 to 9).
         const ops = ['+', '-', '×'];
         const op = ops[Math.floor(Math.random() * ops.length)];
         let num1, num2, answer, promptText;
 
         if (op === '+') {
-          // 2 digits + 1 or 2 digits, sum <= 99
-          num1 = Math.floor(Math.random() * 45) + 12; // 12..56
-          num2 = Math.floor(Math.random() * 35) + 6;  // 6..40
+          // Single digit + single digit (1..9 + 1..9)
+          num1 = Math.floor(Math.random() * 9) + 1; // 1..9
+          num2 = Math.floor(Math.random() * 9) + 1; // 1..9
           answer = num1 + num2;
           promptText = `${num1} + ${num2}`;
         } else if (op === '-') {
-          // 2 digits - 1 or 2 digits, answer positive
-          num1 = Math.floor(Math.random() * 50) + 25; // 25..74
-          num2 = Math.floor(Math.random() * (num1 - 8)) + 5; // 5..(num1-4)
+          // Single digit - single digit (2..9 - 1..(num1-1), positive result)
+          num1 = Math.floor(Math.random() * 8) + 2; // 2..9
+          num2 = Math.floor(Math.random() * (num1 - 1)) + 1; // 1..(num1 - 1)
           answer = num1 - num2;
           promptText = `${num1} - ${num2}`;
         } else { // '×'
-          // 3rd grade times tables (2-12 x 2-10, max 2 digits each)
-          num1 = Math.floor(Math.random() * 9) + 3; // 3..11
+          // Easy single digit multiplication (1..9 × 1..9)
+          num1 = Math.floor(Math.random() * 8) + 2; // 2..9
           num2 = Math.floor(Math.random() * 8) + 2; // 2..9
           answer = num1 * num2;
           promptText = `${num1} × ${num2}`;
@@ -2825,29 +2826,38 @@
         };
       } else {
         // Machine upgrade on planets and galaxies:
-        // 3rd grade multiplication or division,
-        // max 2 digits for top number and 1 digit for bottom number.
+        // Multiplication or division, strictly single-digit numbers only (1 to 9).
         const ops = ['×', '÷'];
         const op = ops[Math.floor(Math.random() * ops.length)];
         let num1, num2, answer, promptText;
 
         if (op === '×') {
-          // Top number: max 2 digits (10..35)
-          // Bottom number: 1 digit (2..9)
-          num1 = Math.floor(Math.random() * 26) + 10;
-          num2 = Math.floor(Math.random() * 8) + 2;
+          // Single digit × single digit (2..9 × 2..9)
+          num1 = Math.floor(Math.random() * 8) + 2; // 2..9
+          num2 = Math.floor(Math.random() * 8) + 2; // 2..9
           answer = num1 * num2;
           promptText = `${num1} × ${num2}`;
         } else { // '÷'
-          // Clean integer division (no remainder)
-          // Divisor (bottom): 1 digit (2..8)
-          // Quotient: 2..11
-          // Dividend (top): quotient * divisor <= 99 (max 2 digits)
-          num2 = Math.floor(Math.random() * 7) + 2;
-          const maxQuotient = Math.min(11, Math.floor(99 / num2));
-          const quotient = Math.floor(Math.random() * (maxQuotient - 2)) + 2;
-          num1 = quotient * num2;
-          answer = quotient;
+          // Clean single digit integer division: num1 and num2 are both single digits (1..9)
+          const singleDigitPairs = [
+            { num1: 4, num2: 2, answer: 2 },
+            { num1: 6, num2: 2, answer: 3 },
+            { num1: 6, num2: 3, answer: 2 },
+            { num1: 8, num2: 2, answer: 4 },
+            { num1: 8, num2: 4, answer: 2 },
+            { num1: 9, num2: 3, answer: 3 },
+            { num1: 2, num2: 1, answer: 2 },
+            { num1: 3, num2: 1, answer: 3 },
+            { num1: 5, num2: 1, answer: 5 },
+            { num1: 6, num2: 1, answer: 6 },
+            { num1: 7, num2: 1, answer: 7 },
+            { num1: 8, num2: 1, answer: 8 },
+            { num1: 9, num2: 1, answer: 9 }
+          ];
+          const pair = singleDigitPairs[Math.floor(Math.random() * singleDigitPairs.length)];
+          num1 = pair.num1;
+          num2 = pair.num2;
+          answer = pair.answer;
           promptText = `${num1} ÷ ${num2}`;
         }
 
@@ -2864,7 +2874,7 @@
 
     function generateMathOptions(answer) {
       const options = new Set([answer]);
-      const offsets = [-2, -1, 1, 2, -10, 10, -5, 5, 3, -3, 4, -4];
+      const offsets = [-2, -1, 1, 2, 3, -3, 4, -4, 5, -5];
       for (let i = offsets.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [offsets[i], offsets[j]] = [offsets[j], offsets[i]];
@@ -2876,9 +2886,12 @@
           if (options.size === 4) break;
         }
       }
+      let fallback = 1;
       while (options.size < 4) {
-        const r = Math.max(1, answer + Math.floor(Math.random() * 15) - 7);
-        options.add(r);
+        if (!options.has(fallback)) {
+          options.add(fallback);
+        }
+        fallback++;
       }
       const arr = Array.from(options);
       for (let i = arr.length - 1; i > 0; i--) {
@@ -2905,8 +2918,8 @@
       if (targetNameEl) targetNameEl.textContent = targetTitle || 'Unlock Challenge';
       if (gradeBadgeEl) {
         gradeBadgeEl.textContent = type === 'region'
-          ? 'Grade 3 Math Challenge: Regional Parcel'
-          : 'Grade 3 Math Challenge: Planetary Machine';
+          ? 'Math Challenge: Regional Parcel'
+          : 'Math Challenge: Planetary Machine';
       }
       if (problemDisplayEl) {
         problemDisplayEl.textContent = `${problem.promptText} = ?`;
@@ -3240,47 +3253,8 @@
       return Math.hypot(px - (x1 + t * (x2 - x1)), py - (y1 + t * (y2 - y1)));
     }
 
-    function fireBlaster(targetX, targetY) {
-      const laserPower = COSMIC_POWERS.find(p => p.id === 'pow_laser');
-      if (!laserPower || laserPower.level === 0) return;
-
-      const maxRange = 320 + laserPower.level * 140;
-      const dx = targetX - player.x;
-      const dy = targetY - player.y;
-      const dist = Math.hypot(dx, dy);
-      if (dist === 0) return;
-
-      const beamLength = Math.min(dist, maxRange);
-      const nx = dx / dist;
-      const ny = dy / dist;
-      const endX = player.x + nx * beamLength;
-      const endY = player.y + ny * beamLength;
-
-      sfx.laser();
-      gameState.lasers.push({
-        x1: player.x,
-        y1: player.y - 12,
-        x2: endX,
-        y2: endY,
-        time: performance.now(),
-        color: '#f43f5e'
-      });
-
-      // Zap fruits along laser beam
-      for (let i = gameState.fruits.length - 1; i >= 0; i--) {
-        const f = gameState.fruits[i];
-        const fDist = distToSegment(f.x, f.y, player.x, player.y - 12, endX, endY);
-        if (fDist < 42) {
-          const bonus = 1.25 + (laserPower.level * 0.25);
-          const earned = Math.round(f.value * bonus);
-          gameState.money += earned;
-          gameState.totalFruitsCollected += 1;
-          createFloatingText(f.x, f.y, `+$${formatMoney(earned)} ZAP! ⚡`, '#f43f5e');
-          createConfetti(f.x, f.y, 16);
-          gameState.fruits.splice(i, 1);
-        }
-      }
-      updateHUD();
+    function fireBlaster() {
+      // Cosmic Fruit Blaster removed
     }
 
     function checkEraMilestones() {
@@ -3955,14 +3929,6 @@
           sfx.boost();
         }
       }
-
-      // Cosmic Fruit Blaster Laser [F]
-      if (key === 'f') {
-        const laserPow = COSMIC_POWERS.find(p => p.id === 'pow_laser');
-        if (laserPow && laserPow.level > 0) {
-          fireBlaster(player.x + (player.dir || 1) * 360, player.y);
-        }
-      }
     });
 
     window.addEventListener('keyup', (e) => {
@@ -3985,17 +3951,6 @@
     canvas.addEventListener('pointerdown', (e) => {
       sfx.init();
       setPointerTarget(e);
-
-      // Fire Cosmic Laser Blaster towards click target if unlocked
-      const laserPow = COSMIC_POWERS.find(p => p.id === 'pow_laser');
-      if (laserPow && laserPow.level > 0 && e.pointerType === 'mouse') {
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = camera.width / rect.width;
-        const scaleY = camera.height / rect.height;
-        const worldX = (e.clientX - rect.left) * scaleX + camera.x;
-        const worldY = (e.clientY - rect.top) * scaleY + camera.y;
-        fireBlaster(worldX, worldY);
-      }
 
       if (e.pointerType === 'touch') {
         e.preventDefault();
@@ -4573,12 +4528,7 @@
         }
       }
 
-      // Laser beams decay
-      for (let i = gameState.lasers.length - 1; i >= 0; i--) {
-        if (now - gameState.lasers[i].time > 180) {
-          gameState.lasers.splice(i, 1);
-        }
-      }
+
 
       // 5. Fruit collection check
       for (let i = gameState.fruits.length - 1; i >= 0; i--) {
@@ -4767,57 +4717,34 @@
         drawRealmBuildings(gameState.currentLocation);
       }
 
-      // 2. Draw Active Cosmic Laser Blaster Beams
-      drawLasers();
-
-      // 3. Draw Fruits (including Golden, Diamond & Emerald and Celestial Fruits!)
+      // 2. Draw Fruits (including Golden, Diamond & Emerald and Celestial Fruits!)
       drawFruits();
 
-      // 4. Draw Characters
+      // 3. Draw Characters
       drawFlowerMan();
       drawPlayer();
 
-      // 5. Draw Particles & Confetti
+      // 4. Draw Particles & Confetti
       drawParticles();
 
       ctx.restore();
 
-      // 6. Update Minimap
+      // 5. Update Minimap
       drawMinimap();
     }
 
-    // Draw active laser beams
-    function drawLasers() {
-      const now = performance.now();
-      gameState.lasers.forEach(laser => {
-        const age = now - laser.time;
-        const alpha = Math.max(0, 1 - age / 180);
-        ctx.save();
-        ctx.globalAlpha = alpha;
-        // Outer glow
-        ctx.strokeStyle = laser.color || '#f43f5e';
-        ctx.lineWidth = 6;
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-        ctx.moveTo(laser.x1, laser.y1);
-        ctx.lineTo(laser.x2, laser.y2);
-        ctx.stroke();
-        // Inner core
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(laser.x1, laser.y1);
-        ctx.lineTo(laser.x2, laser.y2);
-        ctx.stroke();
-        ctx.restore();
-      });
-    }
+    function drawLasers() {}
 
-    // Epic Glimmering & Rotating Galaxies Terrain Renderer
+    // Epic Glimmering & Rotating Galaxies Terrain Renderer (High-Performance 60FPS)
     function drawEpicGalaxyTerrain(locId) {
       const time = performance.now();
       const cx = WORLD_WIDTH / 2;
       const cy = WORLD_HEIGHT / 2;
+
+      const camL = camera.x - 60;
+      const camR = camera.x + camera.width + 60;
+      const camT = camera.y - 60;
+      const camB = camera.y + camera.height + 60;
 
       // 1. Deep Space Void with Cosmic Radial Backdrop
       const bgGrad = ctx.createRadialGradient(cx, cy, 180, cx, cy, WORLD_WIDTH * 0.75);
@@ -4846,13 +4773,14 @@
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
 
-      // 2. Dynamic Breathing Cosmic Nebulae (Multi-layer color clouds)
+      // 2. Dynamic Breathing Cosmic Nebulae (Viewport Culled)
       const nebulae = [
         { x: cx - 400, y: cy - 250, r: 520, col: '#8b5cf6', shift: 0 },
         { x: cx + 450, y: cy + 200, r: 580, col: '#ec4899', shift: 1.5 },
         { x: cx, y: cy, r: 680, col: '#38bdf8', shift: 3.0 }
       ];
       nebulae.forEach(n => {
+        if (n.x + n.r < camL || n.x - n.r > camR || n.y + n.r < camT || n.y - n.r > camB) return;
         const pulse = 0.12 + 0.08 * Math.sin(time * 0.0012 + n.shift);
         ctx.save();
         const nGrad = ctx.createRadialGradient(n.x, n.y, 40, n.x, n.y, n.r);
@@ -4866,10 +4794,11 @@
         ctx.restore();
       });
 
-      // 3. 280 Glimmering Stars with 4-Point Cross Diffraction Spikes
+      // 3. 280 Glimmering Stars with 4-Point Cross Spikes (Viewport Culled, Zero State Thrashing)
+      ctx.save();
       GALAXY_STARS.forEach(s => {
+        if (s.x < camL || s.x > camR || s.y < camT || s.y > camB) return;
         const twinkle = 0.35 + 0.65 * Math.sin(time * s.speed + s.phase);
-        ctx.save();
         ctx.globalAlpha = Math.max(0.18, twinkle);
         ctx.fillStyle = s.color;
         ctx.beginPath();
@@ -4887,8 +4816,8 @@
           ctx.lineTo(s.x, s.y + flareLen);
           ctx.stroke();
         }
-        ctx.restore();
       });
+      ctx.restore();
 
       // 4. Rotating Logarithmic Spiral Arms & Galactic Core
       ctx.save();
@@ -4912,7 +4841,7 @@
         ctx.lineWidth = 5;
         ctx.globalAlpha = 0.45;
         ctx.beginPath();
-        for (let a = 0; a < Math.PI * 5; a += 0.12) {
+        for (let a = 0; a < Math.PI * 5; a += 0.22) {
           const r = 50 + Math.pow(a, 1.45) * 52;
           const sx = Math.cos(a + armAngleOffset) * r;
           const sy = Math.sin(a + armAngleOffset) * (r * 0.58);
@@ -4921,18 +4850,20 @@
         }
         ctx.stroke();
 
-        // Star dust particles along the arm
+        // Star dust particles along the arm (batched in 1 beginPath/fill call)
         ctx.fillStyle = '#ffffff';
+        ctx.globalAlpha = 0.55 + 0.3 * Math.sin(time * 0.003 + arm);
+        ctx.beginPath();
         for (let p = 0; p < 28; p++) {
           const a = (p / 28) * Math.PI * 5;
           const r = 50 + Math.pow(a, 1.45) * 52 + (Math.sin(p * 7) * 22);
           const px = Math.cos(a + armAngleOffset) * r;
           const py = Math.sin(a + armAngleOffset) * (r * 0.58);
-          ctx.globalAlpha = 0.4 + 0.5 * Math.sin(time * 0.003 + p);
-          ctx.beginPath();
-          ctx.arc(px, py, 1.5 + (p % 3), 0, Math.PI * 2);
-          ctx.fill();
+          const sz = 1.5 + (p % 3);
+          ctx.moveTo(px + sz, py);
+          ctx.arc(px, py, sz, 0, Math.PI * 2);
         }
+        ctx.fill();
       }
 
       // Blinding Supermassive Core Pulsar / Quasar
@@ -4964,30 +4895,33 @@
 
       ctx.restore();
 
-      // 5. High-Tech Galactic Observatory Deck / Grid Surface
+      // 5. High-Tech Galactic Observatory Deck / Grid Surface (Viewport Culled & Batched)
+      const startX = Math.max(0, Math.floor(camL / 150) * 150);
+      const endX = Math.min(WORLD_WIDTH, Math.ceil(camR / 150) * 150);
+      const startY = Math.max(0, Math.floor(camT / 150) * 150);
+      const endY = Math.min(WORLD_HEIGHT, Math.ceil(camB / 150) * 150);
+
       ctx.save();
       ctx.strokeStyle = 'rgba(168, 85, 247, 0.18)';
       ctx.lineWidth = 1.5;
-      for (let x = 0; x < WORLD_WIDTH; x += 150) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0); ctx.lineTo(x, WORLD_HEIGHT);
-        ctx.stroke();
-      }
-      for (let y = 0; y < WORLD_HEIGHT; y += 150) {
-        ctx.beginPath();
-        ctx.moveTo(0, y); ctx.lineTo(WORLD_WIDTH, y);
-        ctx.stroke();
-      }
-
-      // Energy Ring Conduits around world center
-      ctx.strokeStyle = 'rgba(236, 72, 153, 0.25)';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([12, 8]);
       ctx.beginPath();
-      ctx.arc(cx, cy, 380, 0, Math.PI * 2);
-      ctx.arc(cx, cy, 750, 0, Math.PI * 2);
+      for (let x = startX; x <= endX; x += 150) {
+        ctx.moveTo(x, startY); ctx.lineTo(x, endY);
+      }
+      for (let y = startY; y <= endY; y += 150) {
+        ctx.moveTo(startX, y); ctx.lineTo(endX, y);
+      }
       ctx.stroke();
-      ctx.setLineDash([]);
+
+      // Sleek solid Energy Conduit Rings around world center (No expensive setLineDash!)
+      if (cx + 760 >= camL && cx - 760 <= camR && cy + 760 >= camT && cy - 760 <= camB) {
+        ctx.strokeStyle = 'rgba(236, 72, 153, 0.22)';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 380, 0, Math.PI * 2);
+        ctx.arc(cx, cy, 750, 0, Math.PI * 2);
+        ctx.stroke();
+      }
       ctx.restore();
 
       // 6. Multiverse Special Relics (Floating Golden Crowns)
@@ -5084,19 +5018,20 @@
         ctx.fill();
 
       } else if (countryId === 'c_can') {
-        // Canada Silhouette
+        // Canada Full Detailed Silhouette (Yukon, BC, 49th Parallel, Great Lakes, Maritimes, Arctic)
         ctx.beginPath();
-        ctx.moveTo(120, 140);
-        ctx.bezierCurveTo(100, 340, 130, 540, 200, 680);
-        ctx.bezierCurveTo(340, 720, 600, 720, 850, 720);
-        ctx.bezierCurveTo(1050, 720, 1200, 700, 1350, 720);
-        ctx.bezierCurveTo(1550, 720, 1750, 680, 1950, 700);
-        ctx.bezierCurveTo(2120, 720, 2220, 640, 2260, 540);
-        ctx.bezierCurveTo(2280, 400, 2220, 280, 2140, 180);
-        ctx.bezierCurveTo(1980, 140, 1840, 220, 1700, 220);
-        ctx.bezierCurveTo(1600, 320, 1480, 380, 1380, 280);
-        ctx.bezierCurveTo(1250, 140, 1050, 120, 850, 140);
-        ctx.bezierCurveTo(600, 120, 350, 120, 120, 140);
+        ctx.moveTo(90, 130);
+        ctx.bezierCurveTo(80, 320, 120, 520, 180, 680); // Yukon & British Columbia
+        ctx.bezierCurveTo(190, 820, 170, 960, 210, 1120); // Pacific Coast down to 49th parallel
+        ctx.bezierCurveTo(450, 1120, 700, 1120, 950, 1120); // 49th Parallel (Prairies & Midwest border)
+        ctx.bezierCurveTo(1060, 1120, 1150, 1230, 1260, 1260); // Great Lakes & Ontario southern peninsula
+        ctx.bezierCurveTo(1380, 1220, 1460, 1140, 1550, 1080); // St. Lawrence River
+        ctx.bezierCurveTo(1680, 1020, 1820, 1140, 2020, 1120); // New Brunswick & Nova Scotia
+        ctx.bezierCurveTo(2180, 1080, 2260, 980, 2270, 850); // Newfoundland & Atlantic cape
+        ctx.bezierCurveTo(2280, 650, 2220, 480, 2140, 340); // Labrador Atlantic coast
+        ctx.bezierCurveTo(2050, 240, 1880, 180, 1700, 160); // Northern coast
+        ctx.bezierCurveTo(1450, 130, 1200, 120, 950, 120); // Nunavut & Northwest Territories
+        ctx.bezierCurveTo(650, 120, 350, 120, 90, 130); // Arctic coast to Yukon
         ctx.closePath();
 
         ctx.strokeStyle = '#fef08a';
@@ -5104,6 +5039,23 @@
         ctx.stroke();
         ctx.fillStyle = '#16a34a';
         ctx.fill();
+
+        // Hudson Bay & James Bay Water Body (carved into Canada's center)
+        ctx.save();
+        ctx.fillStyle = '#0284c7';
+        ctx.strokeStyle = '#fef08a';
+        ctx.lineWidth = 10;
+        ctx.beginPath();
+        // Hudson Bay main basin
+        ctx.ellipse(1040, 340, 175, 145, -0.15, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        // James Bay southern inlet dipping down into Ontario/Quebec
+        ctx.beginPath();
+        ctx.ellipse(1140, 470, 65, 85, 0.15, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
 
       } else if (countryId === 'c_bra') {
         // Brazil Diamond / Shield Silhouette
@@ -5188,26 +5140,310 @@
         ctx.fill();
 
       } else {
-        // c_earth: Planet Earth United Continent Silhouettes
-        const continents = [
-          { x: 380, y: 380, rx: 240, ry: 180, col: '#22c55e' },
-          { x: 620, y: 950, rx: 180, ry: 240, col: '#16a34a' },
-          { x: 1200, y: 350, rx: 180, ry: 140, col: '#4ade80' },
-          { x: 1250, y: 850, rx: 220, ry: 260, col: '#eab308' },
-          { x: 1850, y: 400, rx: 320, ry: 220, col: '#22c55e' },
-          { x: 1950, y: 1050, rx: 190, ry: 140, col: '#fbbf24' }
-        ];
-        continents.forEach(c => {
-          ctx.beginPath();
-          ctx.ellipse(c.x, c.y, c.rx, c.ry, 0, 0, Math.PI * 2);
-          ctx.strokeStyle = '#fef08a';
-          ctx.lineWidth = 14;
-          ctx.stroke();
-          ctx.fillStyle = c.col;
-          ctx.fill();
-        });
+        // c_earth: Planet Earth Full Accurate Globe Map
+        drawGlobeWorldMap(performance.now());
       }
       ctx.restore();
+    }
+
+    // Full Accurate Globe Map of Planet Earth
+    function drawGlobeWorldMap(time) {
+      // 1. Globe Graticule Lines (Equator, Tropics, Polar Circles, Meridians)
+      ctx.save();
+
+      // Meridians (Vertical longitude curves)
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+      ctx.lineWidth = 1.5;
+      for (let mx = 150; mx < WORLD_WIDTH; mx += 250) {
+        ctx.beginPath();
+        ctx.moveTo(mx, 0);
+        ctx.lineTo(mx, WORLD_HEIGHT);
+        ctx.stroke();
+      }
+
+      // Prime Meridian (Greenwich at x = 1150)
+      ctx.strokeStyle = 'rgba(254, 240, 138, 0.3)';
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([8, 6]);
+      ctx.beginPath();
+      ctx.moveTo(1150, 0);
+      ctx.lineTo(1150, WORLD_HEIGHT);
+      ctx.stroke();
+
+      // Arctic Circle (66.5° N -> y = 220)
+      ctx.strokeStyle = 'rgba(186, 230, 253, 0.28)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 6]);
+      ctx.beginPath();
+      ctx.moveTo(0, 220);
+      ctx.lineTo(WORLD_WIDTH, 220);
+      ctx.stroke();
+
+      // Tropic of Cancer (23.5° N -> y = 470)
+      ctx.strokeStyle = 'rgba(254, 240, 138, 0.22)';
+      ctx.beginPath();
+      ctx.moveTo(0, 470);
+      ctx.lineTo(WORLD_WIDTH, 470);
+      ctx.stroke();
+
+      // Equator (0° -> y = 700)
+      ctx.strokeStyle = 'rgba(254, 240, 138, 0.45)';
+      ctx.lineWidth = 3;
+      ctx.setLineDash([12, 8]);
+      ctx.beginPath();
+      ctx.moveTo(0, 700);
+      ctx.lineTo(WORLD_WIDTH, 700);
+      ctx.stroke();
+
+      // Tropic of Capricorn (23.5° S -> y = 930)
+      ctx.strokeStyle = 'rgba(254, 240, 138, 0.22)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 6]);
+      ctx.beginPath();
+      ctx.moveTo(0, 930);
+      ctx.lineTo(WORLD_WIDTH, 930);
+      ctx.stroke();
+
+      // Antarctic Circle (66.5° S -> y = 1180)
+      ctx.strokeStyle = 'rgba(186, 230, 253, 0.28)';
+      ctx.beginPath();
+      ctx.moveTo(0, 1180);
+      ctx.lineTo(WORLD_WIDTH, 1180);
+      ctx.stroke();
+
+      ctx.setLineDash([]);
+
+      // Latitude Labels
+      ctx.fillStyle = 'rgba(254, 240, 138, 0.5)';
+      ctx.font = 'bold 12px sans-serif';
+      ctx.fillText('EQUATOR  0°', 40, 694);
+      ctx.fillText('EQUATOR  0°', WORLD_WIDTH - 150, 694);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+      ctx.fillText('TROPIC OF CANCER  23.5° N', 40, 464);
+      ctx.fillText('TROPIC OF CAPRICORN  23.5° S', 40, 924);
+      ctx.fillStyle = 'rgba(186, 230, 253, 0.45)';
+      ctx.fillText('ARCTIC CIRCLE  66.5° N', 40, 214);
+      ctx.fillText('ANTARCTIC CIRCLE  66.5° S', 40, 1174);
+      ctx.restore();
+
+      // Helper function to draw landmass with shallow coastal shelf glow & golden border
+      function renderContinent(pathFn, fillStyle, shelfGlow = true) {
+        ctx.save();
+        if (shelfGlow) {
+          ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
+          ctx.lineWidth = 26;
+          pathFn();
+          ctx.stroke();
+        }
+        ctx.strokeStyle = '#fef08a';
+        ctx.lineWidth = 8;
+        pathFn();
+        ctx.stroke();
+        ctx.fillStyle = fillStyle;
+        pathFn();
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // --- 1. NORTH AMERICA ---
+      renderContinent(() => {
+        ctx.beginPath();
+        // Alaska & Seward Peninsula
+        ctx.moveTo(110, 220);
+        ctx.bezierCurveTo(90, 180, 140, 150, 220, 150); // North slope
+        ctx.bezierCurveTo(320, 150, 420, 140, 520, 150); // Canadian Northwest / Nunavut
+        ctx.bezierCurveTo(620, 160, 680, 190, 720, 240); // Baffin & Labrador
+        ctx.bezierCurveTo(760, 290, 740, 360, 710, 400); // Newfoundland & Maritimes
+        ctx.bezierCurveTo(680, 430, 650, 450, 630, 490); // New England & Mid-Atlantic
+        ctx.bezierCurveTo(610, 530, 620, 590, 600, 650); // Florida peninsula tip
+        ctx.bezierCurveTo(580, 660, 560, 620, 530, 590); // Gulf of Mexico
+        ctx.bezierCurveTo(490, 580, 460, 620, 460, 650); // Yucatan
+        ctx.bezierCurveTo(450, 680, 480, 720, 470, 750); // Panama isthmus
+        ctx.bezierCurveTo(430, 750, 400, 710, 370, 670); // Central America Pacific
+        ctx.bezierCurveTo(340, 640, 310, 600, 300, 560); // Mexico & Baja
+        ctx.bezierCurveTo(280, 500, 260, 440, 240, 380); // California coast
+        ctx.bezierCurveTo(220, 320, 190, 260, 110, 220); // Pacific Northwest & Alaska
+        ctx.closePath();
+      }, '#16a34a');
+
+      // Hudson Bay Cutout in North America
+      ctx.save();
+      ctx.fillStyle = '#0284c7';
+      ctx.strokeStyle = '#fef08a';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.ellipse(490, 270, 65, 45, -0.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+
+      // --- 2. GREENLAND ---
+      renderContinent(() => {
+        ctx.beginPath();
+        ctx.moveTo(760, 130);
+        ctx.bezierCurveTo(830, 120, 890, 130, 880, 190);
+        ctx.bezierCurveTo(870, 240, 820, 255, 780, 250);
+        ctx.bezierCurveTo(740, 230, 730, 170, 760, 130);
+        ctx.closePath();
+      }, '#e0f2fe');
+
+      // --- 3. SOUTH AMERICA ---
+      renderContinent(() => {
+        ctx.beginPath();
+        // Starts at Panama connection
+        ctx.moveTo(470, 750);
+        ctx.bezierCurveTo(530, 735, 620, 750, 690, 775); // Caribbean coast of Colombia/Venezuela
+        ctx.bezierCurveTo(750, 810, 810, 850, 840, 920); // Guianas & Brazil Atlantic Bulge
+        ctx.bezierCurveTo(860, 980, 820, 1050, 780, 1110); // East Brazil / Bahia
+        ctx.bezierCurveTo(740, 1160, 690, 1200, 640, 1260); // Rio / Santos / Pampas
+        ctx.bezierCurveTo(600, 1295, 560, 1320, 530, 1315); // Patagonia & Tierra del Fuego
+        ctx.bezierCurveTo(510, 1310, 520, 1260, 500, 1200); // Strait of Magellan & Chile coast
+        ctx.bezierCurveTo(480, 1120, 460, 1020, 450, 930); // Andes & Peru coast
+        ctx.bezierCurveTo(440, 850, 450, 790, 470, 750); // Ecuador & Colombia
+        ctx.closePath();
+      }, '#15803d');
+
+      // --- 4. EUROPE ---
+      // British Isles (Great Britain & Ireland)
+      renderContinent(() => {
+        ctx.beginPath();
+        ctx.moveTo(1050, 260);
+        ctx.bezierCurveTo(1090, 250, 1100, 310, 1080, 370);
+        ctx.bezierCurveTo(1060, 380, 1040, 350, 1035, 300);
+        ctx.closePath();
+      }, '#22c55e', false);
+
+      renderContinent(() => {
+        ctx.beginPath();
+        ctx.arc(1005, 330, 24, 0, Math.PI * 2);
+      }, '#22c55e', false);
+
+      // Scandinavia
+      renderContinent(() => {
+        ctx.beginPath();
+        ctx.moveTo(1190, 140);
+        ctx.bezierCurveTo(1260, 135, 1290, 180, 1280, 250);
+        ctx.bezierCurveTo(1260, 290, 1230, 300, 1200, 260);
+        ctx.bezierCurveTo(1180, 220, 1170, 170, 1190, 140);
+        ctx.closePath();
+      }, '#16a34a');
+
+      // Continental Europe
+      renderContinent(() => {
+        ctx.beginPath();
+        ctx.moveTo(1030, 440); // Iberian peninsula (Spain/Portugal)
+        ctx.lineTo(1120, 440);
+        ctx.bezierCurveTo(1150, 410, 1180, 380, 1230, 370); // France & Germany
+        ctx.bezierCurveTo(1280, 360, 1350, 360, 1380, 390); // Poland & Eastern Europe
+        ctx.bezierCurveTo(1380, 470, 1340, 520, 1310, 550); // Balkans & Greece
+        ctx.bezierCurveTo(1270, 560, 1260, 520, 1240, 490); // Italy boot
+        ctx.bezierCurveTo(1210, 490, 1160, 510, 1120, 520);
+        ctx.bezierCurveTo(1040, 520, 1020, 480, 1030, 440);
+        ctx.closePath();
+      }, '#22c55e');
+
+      // --- 5. AFRICA ---
+      renderContinent(() => {
+        ctx.beginPath();
+        ctx.moveTo(1040, 540); // Strait of Gibraltar
+        ctx.bezierCurveTo(1160, 530, 1260, 545, 1360, 560); // Mediterranean coast
+        ctx.bezierCurveTo(1400, 590, 1430, 660, 1500, 720); // Red Sea & Horn of Africa
+        ctx.bezierCurveTo(1530, 780, 1480, 860, 1450, 960); // East Africa / Swahili Coast
+        ctx.bezierCurveTo(1420, 1060, 1380, 1160, 1310, 1240); // South Africa / Cape tip
+        ctx.bezierCurveTo(1250, 1260, 1210, 1210, 1200, 1120); // Cape of Good Hope & Namibia
+        ctx.bezierCurveTo(1190, 1000, 1160, 910, 1120, 870); // Angola & Gulf of Guinea
+        ctx.bezierCurveTo(1060, 860, 990, 820, 960, 760); // West African coast
+        ctx.bezierCurveTo(940, 680, 980, 600, 1040, 540); // Senegal & Morocco
+        ctx.closePath();
+      }, '#eab308');
+
+      // Madagascar Island
+      renderContinent(() => {
+        ctx.beginPath();
+        ctx.ellipse(1480, 1060, 24, 65, 0.35, 0, Math.PI * 2);
+      }, '#16a34a', false);
+
+      // --- 6. ASIA ---
+      renderContinent(() => {
+        ctx.beginPath();
+        ctx.moveTo(1380, 220); // Ural connection / West Siberia
+        ctx.bezierCurveTo(1550, 160, 1850, 160, 2120, 180); // Siberian Arctic coast
+        ctx.bezierCurveTo(2180, 210, 2220, 270, 2180, 350); // Kamchatka peninsula
+        ctx.bezierCurveTo(2120, 390, 2040, 390, 1980, 420); // Russian Far East / Manchuria
+        ctx.bezierCurveTo(1960, 450, 1980, 510, 1950, 520); // Korean peninsula
+        ctx.bezierCurveTo(1910, 560, 1860, 620, 1820, 670); // China & Southeast Asia
+        ctx.bezierCurveTo(1810, 750, 1780, 820, 1750, 750); // Indochina & Vietnam
+        ctx.bezierCurveTo(1730, 680, 1680, 760, 1650, 850); // Bay of Bengal & Cape Comorin
+        ctx.bezierCurveTo(1620, 840, 1580, 740, 1540, 660); // Indian subcontinent western coast
+        ctx.bezierCurveTo(1500, 660, 1460, 680, 1420, 640); // Arabian Peninsula
+        ctx.bezierCurveTo(1390, 590, 1370, 400, 1380, 220); // Central Asia & Urals
+        ctx.closePath();
+      }, '#16a34a');
+
+      // Japanese Archipelago
+      renderContinent(() => {
+        ctx.beginPath();
+        ctx.moveTo(2040, 400);
+        ctx.bezierCurveTo(2080, 430, 2090, 480, 2050, 510);
+        ctx.bezierCurveTo(2030, 480, 2030, 430, 2040, 400);
+        ctx.closePath();
+      }, '#22c55e', false);
+
+      // Sri Lanka
+      renderContinent(() => {
+        ctx.beginPath();
+        ctx.arc(1665, 885, 12, 0, Math.PI * 2);
+      }, '#22c55e', false);
+
+      // Indonesian Archipelago (Sumatra, Java, Borneo)
+      renderContinent(() => {
+        ctx.beginPath();
+        ctx.ellipse(1830, 900, 40, 14, 0.4, 0, Math.PI * 2); // Sumatra
+        ctx.ellipse(1910, 940, 45, 12, 0.1, 0, Math.PI * 2); // Java
+        ctx.ellipse(1930, 870, 32, 28, 0, 0, Math.PI * 2); // Borneo
+      }, '#22c55e', false);
+
+      // --- 7. AUSTRALIA & OCEANIA ---
+      renderContinent(() => {
+        ctx.beginPath();
+        ctx.moveTo(1860, 950); // Kimberly / Northwest
+        ctx.bezierCurveTo(1940, 915, 1990, 955, 2060, 925); // Gulf of Carpentaria scoop
+        ctx.bezierCurveTo(2120, 950, 2150, 1020, 2140, 1120); // Great Barrier Reef & East Coast
+        ctx.bezierCurveTo(2110, 1180, 2040, 1200, 1960, 1190); // Great Australian Bight
+        ctx.bezierCurveTo(1880, 1150, 1850, 1070, 1860, 950); // Western Australian Outback coast
+        ctx.closePath();
+      }, '#f59e0b');
+
+      // Tasmania
+      renderContinent(() => {
+        ctx.beginPath();
+        ctx.arc(2090, 1240, 18, 0, Math.PI * 2);
+      }, '#22c55e', false);
+
+      // New Zealand (North & South Islands)
+      renderContinent(() => {
+        ctx.beginPath();
+        ctx.ellipse(2270, 1140, 14, 30, 0.5, 0, Math.PI * 2);
+        ctx.ellipse(2230, 1220, 14, 38, 0.5, 0, Math.PI * 2);
+      }, '#22c55e', false);
+
+      // Papua New Guinea
+      renderContinent(() => {
+        ctx.beginPath();
+        ctx.ellipse(2040, 875, 55, 18, 0.2, 0, Math.PI * 2);
+      }, '#16a34a', false);
+
+      // --- 8. ANTARCTICA POLAR CONTINENT ---
+      renderContinent(() => {
+        ctx.beginPath();
+        ctx.moveTo(120, 1370);
+        ctx.bezierCurveTo(400, 1330, 540, 1290, 590, 1270); // Antarctic Peninsula reaching north
+        ctx.bezierCurveTo(630, 1295, 780, 1340, 1100, 1330);
+        ctx.bezierCurveTo(1450, 1320, 1850, 1340, 2280, 1365);
+        ctx.lineTo(WORLD_WIDTH, WORLD_HEIGHT);
+        ctx.lineTo(0, WORLD_HEIGHT);
+        ctx.closePath();
+      }, '#f8fafc');
     }
 
     function drawRegionDecor(r, time) {
@@ -5269,6 +5505,56 @@
         drawLighthouse(b.x + 160, b.y + 240, time);
         drawPineTree(b.x + 340, b.y + 200);
         drawPineTree(b.x + 480, b.y + 340);
+      } else if (theme === 'hudson_bay') {
+        ctx.fillStyle = 'rgba(14, 165, 233, 0.18)';
+        ctx.fillRect(b.x, b.y, b.w, b.h);
+        drawHudsonBayInlet(b.x + 280, b.y + 240, time);
+        drawPineTree(b.x + 120, b.y + 180);
+        drawPineTree(b.x + 460, b.y + 220);
+        drawWildCranberryBush(b.x + 160, b.y + 360);
+        drawWildCranberryBush(b.x + 420, b.y + 420);
+      } else if (theme === 'earth_na') {
+        ctx.fillStyle = 'rgba(34, 197, 94, 0.16)';
+        ctx.fillRect(b.x, b.y, b.w, b.h);
+        drawGiantRedwood(b.x + 180, b.y + 240);
+        drawPineTree(b.x + 360, b.y + 180);
+        drawAppleTree(b.x + 520, b.y + 300);
+        drawGreatLakesGlimmer(b.x + 320, b.y + 380, time);
+      } else if (theme === 'earth_sa') {
+        ctx.fillStyle = 'rgba(16, 185, 129, 0.18)';
+        ctx.fillRect(b.x, b.y, b.w, b.h);
+        drawPalmTree(b.x + 160, b.y + 220);
+        drawPalmTree(b.x + 420, b.y + 260);
+        drawGiantPineappleBush(b.x + 280, b.y + 360, time);
+        drawTropicalOrchid(b.x + 460, b.y + 400);
+      } else if (theme === 'earth_eu') {
+        ctx.fillStyle = 'rgba(74, 222, 128, 0.16)';
+        ctx.fillRect(b.x, b.y, b.w, b.h);
+        drawWindmill(b.x + 180, b.y + 200, time);
+        drawStoneCottage(b.x + 400, b.y + 240);
+        drawRoyalRoseGarden(b.x + 180, b.y + 360);
+        drawLavenderField(b.x + 380, b.y + 380);
+      } else if (theme === 'earth_af') {
+        ctx.fillStyle = 'rgba(234, 179, 8, 0.18)';
+        ctx.fillRect(b.x, b.y, b.w, b.h);
+        drawBaobabTree(b.x + 200, b.y + 240);
+        drawAcaciaTree(b.x + 420, b.y + 200);
+        drawSavannaGrass(b.x + 140, b.y + 420, time);
+        drawSavannaGrass(b.x + 380, b.y + 460, time);
+      } else if (theme === 'earth_as') {
+        ctx.fillStyle = 'rgba(244, 114, 182, 0.16)';
+        ctx.fillRect(b.x, b.y, b.w, b.h);
+        drawSakuraTree(b.x + 160, b.y + 220);
+        drawBambooGrove(b.x + 400, b.y + 200, time);
+        drawStoneLantern(b.x + 280, b.y + 340);
+        drawLotusPond(b.x + 460, b.y + 380, time);
+      } else if (theme === 'earth_oc') {
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.18)';
+        ctx.fillRect(b.x, b.y, b.w, b.h);
+        drawPalmTree(b.x + 180, b.y + 240);
+        drawPalmTree(b.x + 440, b.y + 220);
+        drawCoralReefSparkle(b.x + 300, b.y + 360, time);
+        drawPacificWaves(b.x + 140, b.y + 460);
       } else if (theme === 'sugar_maple') {
         ctx.fillStyle = 'rgba(249, 115, 22, 0.2)';
         ctx.fillRect(b.x, b.y, b.w, b.h);
@@ -5716,6 +6002,260 @@
         ctx.arc(x + Math.cos(ang) * 12, y - 48 + Math.sin(ang) * 10, 4, 0, Math.PI * 2);
         ctx.fill();
       }
+      ctx.restore();
+    }
+
+    function drawHudsonBayInlet(x, y, time) {
+      ctx.save();
+      ctx.fillStyle = '#0284c7';
+      ctx.beginPath();
+      ctx.ellipse(x, y, 110, 75, -0.15, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#fef08a';
+      ctx.lineWidth = 6;
+      ctx.stroke();
+
+      ctx.fillStyle = '#0369a1';
+      ctx.beginPath();
+      ctx.ellipse(x, y, 80, 50, -0.15, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+      ctx.lineWidth = 2;
+      for (let i = 0; i < 3; i++) {
+        const off = Math.sin(time * 0.002 + i * 1.5) * 6;
+        ctx.beginPath();
+        ctx.arc(x - 30 + i * 30, y + off, 14, 0.3, Math.PI - 0.3);
+        ctx.stroke();
+      }
+
+      const lx = x + Math.sin(time * 0.0012) * 25;
+      const ly = y - 10 + Math.cos(time * 0.0012) * 8;
+      ctx.fillStyle = '#1e293b';
+      ctx.beginPath();
+      ctx.ellipse(lx, ly, 10, 5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(lx + 7, ly - 4, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(lx - 2, ly - 2, 4, 3);
+      ctx.restore();
+    }
+
+    function drawWildCranberryBush(x, y) {
+      ctx.save();
+      ctx.fillStyle = '#15803d';
+      ctx.beginPath();
+      ctx.arc(x, y, 14, 0, Math.PI * 2);
+      ctx.arc(x - 8, y + 2, 10, 0, Math.PI * 2);
+      ctx.arc(x + 8, y + 2, 10, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#dc2626';
+      const berries = [{ dx: -5, dy: -3 }, { dx: 4, dy: -5 }, { dx: 0, dy: 3 }, { dx: -6, dy: 4 }, { dx: 5, dy: 3 }];
+      berries.forEach(b => {
+        ctx.beginPath();
+        ctx.arc(x + b.dx, y + b.dy, 3, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.restore();
+    }
+
+    function drawGreatLakesGlimmer(x, y, time) {
+      ctx.save();
+      ctx.fillStyle = '#38bdf8';
+      ctx.beginPath();
+      ctx.ellipse(x, y, 80, 45, 0.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#bae6fd';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+      ctx.lineWidth = 1.5;
+      for (let i = 0; i < 3; i++) {
+        const off = Math.sin(time * 0.0025 + i * 2) * 5;
+        ctx.beginPath();
+        ctx.arc(x - 25 + i * 25, y + off, 12, 0.4, Math.PI - 0.4);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawGiantPineappleBush(x, y, time) {
+      ctx.save();
+      ctx.fillStyle = '#15803d';
+      for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
+        ctx.beginPath();
+        ctx.ellipse(x + Math.cos(a) * 14, y + Math.sin(a) * 14, 12, 5, a, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = '#f59e0b';
+      ctx.beginPath();
+      ctx.ellipse(x, y - 8, 14, 18, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#b45309';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(x - 8, y - 16); ctx.lineTo(x + 8, y);
+      ctx.moveTo(x + 8, y - 16); ctx.lineTo(x - 8, y);
+      ctx.stroke();
+      ctx.fillStyle = '#22c55e';
+      ctx.beginPath();
+      ctx.moveTo(x, y - 30);
+      ctx.lineTo(x - 7, y - 22);
+      ctx.lineTo(x, y - 20);
+      ctx.lineTo(x + 7, y - 22);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawTropicalOrchid(x, y) {
+      ctx.save();
+      ctx.fillStyle = '#ec4899';
+      for (let i = 0; i < 5; i++) {
+        const a = (i * Math.PI * 2) / 5;
+        ctx.beginPath();
+        ctx.ellipse(x + Math.cos(a) * 8, y + Math.sin(a) * 8, 8, 4, a, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = '#fde047';
+      ctx.beginPath();
+      ctx.arc(x, y, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawLavenderField(x, y) {
+      ctx.save();
+      ctx.fillStyle = '#a855f7';
+      for (let i = 0; i < 7; i++) {
+        const ox = x - 18 + i * 6;
+        const oy = y + (i % 2) * 4;
+        ctx.fillRect(ox, oy - 14, 3, 14);
+        ctx.beginPath();
+        ctx.arc(ox + 1.5, oy - 14, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function drawBaobabTree(x, y) {
+      ctx.save();
+      ctx.fillStyle = '#78350f';
+      ctx.beginPath();
+      ctx.moveTo(x - 22, y);
+      ctx.quadraticCurveTo(x - 16, y - 35, x - 12, y - 55);
+      ctx.lineTo(x + 12, y - 55);
+      ctx.quadraticCurveTo(x + 16, y - 35, x + 22, y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#15803d';
+      ctx.beginPath();
+      ctx.ellipse(x, y - 62, 38, 16, 0, 0, Math.PI * 2);
+      ctx.ellipse(x - 24, y - 58, 22, 12, 0, 0, Math.PI * 2);
+      ctx.ellipse(x + 24, y - 58, 22, 12, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawAcaciaTree(x, y) {
+      ctx.save();
+      ctx.strokeStyle = '#57300a';
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x, y - 25);
+      ctx.lineTo(x - 18, y - 48);
+      ctx.moveTo(x, y - 25);
+      ctx.lineTo(x + 18, y - 48);
+      ctx.stroke();
+      ctx.fillStyle = '#16a34a';
+      ctx.beginPath();
+      ctx.ellipse(x - 18, y - 50, 24, 7, 0, 0, Math.PI * 2);
+      ctx.ellipse(x + 18, y - 50, 24, 7, 0, 0, Math.PI * 2);
+      ctx.ellipse(x, y - 54, 30, 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawSavannaGrass(x, y, time) {
+      ctx.save();
+      ctx.strokeStyle = '#eab308';
+      ctx.lineWidth = 2.5;
+      const sway = Math.sin(time * 0.002 + x) * 4;
+      for (let i = -2; i <= 2; i++) {
+        ctx.beginPath();
+        ctx.moveTo(x + i * 5, y);
+        ctx.quadraticCurveTo(x + i * 5 + sway * 0.5, y - 12, x + i * 8 + sway, y - 24);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawBambooGrove(x, y, time) {
+      ctx.save();
+      const sway = Math.sin(time * 0.0022 + x) * 3;
+      for (let i = 0; i < 3; i++) {
+        const bx = x - 12 + i * 12;
+        ctx.strokeStyle = '#15803d';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(bx, y);
+        ctx.quadraticCurveTo(bx + sway * 0.5, y - 25, bx + sway, y - 50);
+        ctx.stroke();
+        ctx.fillStyle = '#22c55e';
+        ctx.beginPath();
+        ctx.ellipse(bx + sway + 8, y - 42, 8, 3, 0.4, 0, Math.PI * 2);
+        ctx.ellipse(bx + sway - 8, y - 34, 8, 3, -0.4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function drawLotusPond(x, y, time) {
+      ctx.save();
+      ctx.fillStyle = '#0284c7';
+      ctx.beginPath();
+      ctx.ellipse(x, y, 42, 22, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = '#16a34a';
+      ctx.beginPath();
+      ctx.arc(x - 12, y - 2, 8, 0.3, Math.PI * 2 - 0.3);
+      ctx.lineTo(x - 12, y - 2);
+      ctx.fill();
+      ctx.fillStyle = '#f472b6';
+      ctx.beginPath();
+      ctx.arc(x + 10, y, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(x + 10, y, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawCoralReefSparkle(x, y, time) {
+      ctx.save();
+      ctx.fillStyle = '#f43f5e';
+      ctx.beginPath();
+      ctx.arc(x, y, 14, 0, Math.PI * 2);
+      ctx.arc(x - 8, y - 6, 9, 0, Math.PI * 2);
+      ctx.arc(x + 8, y - 6, 9, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.8)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(x, y, 22, 0, Math.PI * 2);
+      ctx.stroke();
+      const sparkle = 0.4 + 0.6 * Math.sin(time * 0.003 + x);
+      ctx.fillStyle = 'rgba(255, 255, 255, ' + sparkle + ')';
+      ctx.beginPath();
+      ctx.arc(x + 6, y - 12, 3, 0, Math.PI * 2);
+      ctx.fill();
       ctx.restore();
     }
 
