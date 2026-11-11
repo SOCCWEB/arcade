@@ -252,7 +252,7 @@ body.is-leaving-for-game:after{content:"";position:fixed;z-index:10000;inset:0;b
 .game-actions-menu a:hover{background:#ffd45a;color:#382705}
 .featured-section .game-actions-menu{border-color:#ffd45a}
 .new-card .new-art{background:linear-gradient(145deg,color-mix(in srgb,var(--game-art-color,#7564f5) 78%,white),var(--game-art-color,#7564f5))!important}
-.recent-update-badge{position:absolute;left:0;right:0;top:57%;z-index:4;display:flex;align-items:center;justify-content:center;height:24px;padding:0 5px;transform:translateY(-50%);background:#d92f3a;color:#fff;font:900 7px/1 'DM Sans',sans-serif;letter-spacing:.75px;text-align:center;white-space:nowrap;box-shadow:0 3px 10px #16102c66}
+.recent-update-badge{position:absolute;left:0;right:0;top:80%;z-index:4;display:flex;align-items:center;justify-content:center;height:24px;padding:0 5px;transform:translateY(-50%);background:#d92f3a;color:#fff;font:900 7px/1 'DM Sans',sans-serif;letter-spacing:.75px;text-align:center;white-space:nowrap;box-shadow:0 3px 10px #16102c66}
 .game-thumb .recent-update-badge{height:22px;font-size:clamp(5px, .72vw, 8px);letter-spacing:.45px}
 .new-art .recent-update-badge{height:25px;font-size:8px;letter-spacing:.9px}
 .just-dropped-tag{background:#fff;color:#4b254b;border:1px solid #f6d3ff}
