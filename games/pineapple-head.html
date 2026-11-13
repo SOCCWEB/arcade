@@ -50,19 +50,11 @@
       0%, 100% { opacity: 0.35; transform: scale(0.85); filter: drop-shadow(0 0 4px #e0e7ff); }
       50% { opacity: 1; transform: scale(1.25); filter: drop-shadow(0 0 12px #f472b6); }
     }
-    @keyframes math-shake {
-      0%, 100% { transform: translateX(0); }
-      20%, 60% { transform: translateX(-6px); }
-      40%, 80% { transform: translateX(6px); }
-    }
     .animate-galaxy-spin {
       animation: galaxy-slow-spin 36s linear infinite;
     }
     .animate-star-glimmer {
       animation: star-glimmer 2.2s ease-in-out infinite;
-    }
-    .animate-math-shake {
-      animation: math-shake 0.4s ease-in-out;
     }
     .galaxy-epic-card {
       position: relative;
@@ -638,51 +630,6 @@
     </div>
   </div>
 
-  <!-- MODAL: Educational Math Superpower Challenge -->
-  <div id="modal-math" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-6 hidden">
-    <div class="bg-gradient-to-b from-slate-900 via-slate-800 to-indigo-950 border-2 border-amber-400/80 rounded-3xl max-w-lg w-full shadow-2xl p-5 sm:p-7 relative overflow-hidden text-center">
-      <!-- Glow background -->
-      <div class="absolute -top-24 -left-24 w-52 h-52 bg-amber-500/20 rounded-full blur-3xl pointer-events-none"></div>
-      <div class="absolute -bottom-24 -right-24 w-52 h-52 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
-
-      <!-- Header -->
-      <div class="flex items-center justify-between border-b border-slate-700/60 pb-3 mb-4">
-        <div class="flex items-center gap-2">
-          <span class="text-3xl animate-bounce">🍍</span>
-          <div class="text-left">
-            <h3 class="font-game font-bold text-lg text-amber-300">Piney's Math Superpower! ✏️</h3>
-            <p id="math-modal-subtitle" class="text-xs text-slate-300">Solve the fun math problem to unlock this!</p>
-          </div>
-        </div>
-        <button id="btn-close-math" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-sm font-bold cursor-pointer transition">✕</button>
-      </div>
-
-      <!-- Problem Prompt Box -->
-      <div id="math-box-container" class="my-3 p-5 rounded-2xl bg-slate-950/80 border border-amber-500/40 shadow-inner flex flex-col items-center">
-        <div id="math-target-name" class="text-xs font-semibold uppercase tracking-wider text-emerald-400 mb-1">Unlocking: New England</div>
-        <div id="math-grade-badge" class="text-[11px] px-2 py-0.5 rounded-full bg-amber-950/70 border border-amber-500/50 text-amber-300 font-bold mb-3">Math Challenge</div>
-        <div id="math-problem-display" class="font-game font-bold text-4xl sm:text-5xl text-amber-300 tracking-wider my-2 filter drop-shadow">
-          7 + 2 = ?
-        </div>
-        <div id="math-feedback-text" class="text-xs font-medium text-slate-300 min-h-[22px] transition-all">
-          Tap or type the correct answer:
-        </div>
-      </div>
-
-      <!-- Multiple-Choice Quick Option Buttons -->
-      <div id="math-options-grid" class="grid grid-cols-2 gap-3 mb-4">
-        <!-- Injected via JavaScript -->
-      </div>
-
-      <!-- Manual Number Input & Submit for Keyboard users -->
-      <form id="math-input-form" class="flex gap-2">
-        <input type="number" id="math-typed-answer" placeholder="Or type answer here..." class="flex-1 px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 focus:border-amber-400 text-white font-game text-lg text-center outline-none">
-        <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-game font-bold text-sm rounded-xl shadow cursor-pointer active:scale-95 transition">
-          Submit
-        </button>
-      </form>
-    </div>
-  </div>
 
   <!-- MODAL: How to Play / Help -->
   <div id="modal-help" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-6 hidden">
@@ -966,23 +913,6 @@
       }
       pop() {
         this.playTone(320, 'sine', 0.08, 0.1);
-      }
-      mathCorrect() {
-        if (!this.enabled) return;
-        this.init();
-        if (!this.ctx) return;
-        const notes = [523.25, 659.25, 783.99, 1046.50];
-        notes.forEach((freq, idx) => {
-          setTimeout(() => {
-            this.playTone(freq, 'triangle', 0.22, 0.16);
-          }, idx * 60);
-        });
-      }
-      mathWrong() {
-        if (!this.enabled) return;
-        this.init();
-        if (!this.ctx) return;
-        this.playTone(220, 'sine', 0.18, 0.25);
       }
     }
 
@@ -2787,217 +2717,6 @@
       return null;
     }
 
-    // --- EDUCATIONAL MATH CHALLENGE SYSTEM ---
-    function generateMathProblem(type) {
-      if (type === 'region') {
-        // Easy math challenge: multiplication, addition, or subtraction.
-        // Strictly single-digit numbers only (1 to 9).
-        const ops = ['+', '-', '×'];
-        const op = ops[Math.floor(Math.random() * ops.length)];
-        let num1, num2, answer, promptText;
-
-        if (op === '+') {
-          // Single digit + single digit (1..9 + 1..9)
-          num1 = Math.floor(Math.random() * 9) + 1; // 1..9
-          num2 = Math.floor(Math.random() * 9) + 1; // 1..9
-          answer = num1 + num2;
-          promptText = `${num1} + ${num2}`;
-        } else if (op === '-') {
-          // Single digit - single digit (2..9 - 1..(num1-1), positive result)
-          num1 = Math.floor(Math.random() * 8) + 2; // 2..9
-          num2 = Math.floor(Math.random() * (num1 - 1)) + 1; // 1..(num1 - 1)
-          answer = num1 - num2;
-          promptText = `${num1} - ${num2}`;
-        } else { // '×'
-          // Easy single digit multiplication (1..9 × 1..9)
-          num1 = Math.floor(Math.random() * 8) + 2; // 2..9
-          num2 = Math.floor(Math.random() * 8) + 2; // 2..9
-          answer = num1 * num2;
-          promptText = `${num1} × ${num2}`;
-        }
-
-        return {
-          type: 'region',
-          num1,
-          num2,
-          op,
-          promptText,
-          answer
-        };
-      } else {
-        // Machine upgrade on planets and galaxies:
-        // Multiplication or division, strictly single-digit numbers only (1 to 9).
-        const ops = ['×', '÷'];
-        const op = ops[Math.floor(Math.random() * ops.length)];
-        let num1, num2, answer, promptText;
-
-        if (op === '×') {
-          // Single digit × single digit (2..9 × 2..9)
-          num1 = Math.floor(Math.random() * 8) + 2; // 2..9
-          num2 = Math.floor(Math.random() * 8) + 2; // 2..9
-          answer = num1 * num2;
-          promptText = `${num1} × ${num2}`;
-        } else { // '÷'
-          // Clean single digit integer division: num1 and num2 are both single digits (1..9)
-          const singleDigitPairs = [
-            { num1: 4, num2: 2, answer: 2 },
-            { num1: 6, num2: 2, answer: 3 },
-            { num1: 6, num2: 3, answer: 2 },
-            { num1: 8, num2: 2, answer: 4 },
-            { num1: 8, num2: 4, answer: 2 },
-            { num1: 9, num2: 3, answer: 3 },
-            { num1: 2, num2: 1, answer: 2 },
-            { num1: 3, num2: 1, answer: 3 },
-            { num1: 5, num2: 1, answer: 5 },
-            { num1: 6, num2: 1, answer: 6 },
-            { num1: 7, num2: 1, answer: 7 },
-            { num1: 8, num2: 1, answer: 8 },
-            { num1: 9, num2: 1, answer: 9 }
-          ];
-          const pair = singleDigitPairs[Math.floor(Math.random() * singleDigitPairs.length)];
-          num1 = pair.num1;
-          num2 = pair.num2;
-          answer = pair.answer;
-          promptText = `${num1} ÷ ${num2}`;
-        }
-
-        return {
-          type: 'machine',
-          num1,
-          num2,
-          op,
-          promptText,
-          answer
-        };
-      }
-    }
-
-    function generateMathOptions(answer) {
-      const options = new Set([answer]);
-      const offsets = [-2, -1, 1, 2, 3, -3, 4, -4, 5, -5];
-      for (let i = offsets.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [offsets[i], offsets[j]] = [offsets[j], offsets[i]];
-      }
-      for (const off of offsets) {
-        const candidate = answer + off;
-        if (candidate > 0 && candidate !== answer) {
-          options.add(candidate);
-          if (options.size === 4) break;
-        }
-      }
-      let fallback = 1;
-      while (options.size < 4) {
-        if (!options.has(fallback)) {
-          options.add(fallback);
-        }
-        fallback++;
-      }
-      const arr = Array.from(options);
-      for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-      }
-      return arr;
-    }
-
-    let currentMathChallenge = null;
-
-    function openMathChallenge({ type, targetTitle, onCorrect }) {
-      const problem = generateMathProblem(type);
-      currentMathChallenge = { problem, onCorrect };
-
-      const modal = document.getElementById('modal-math');
-      const targetNameEl = document.getElementById('math-target-name');
-      const gradeBadgeEl = document.getElementById('math-grade-badge');
-      const problemDisplayEl = document.getElementById('math-problem-display');
-      const feedbackEl = document.getElementById('math-feedback-text');
-      const optionsGridEl = document.getElementById('math-options-grid');
-      const typedInputEl = document.getElementById('math-typed-answer');
-
-      if (targetNameEl) targetNameEl.textContent = targetTitle || 'Unlock Challenge';
-      if (gradeBadgeEl) {
-        gradeBadgeEl.textContent = type === 'region'
-          ? 'Math Challenge: Regional Parcel'
-          : 'Math Challenge: Planetary Machine';
-      }
-      if (problemDisplayEl) {
-        problemDisplayEl.textContent = `${problem.promptText} = ?`;
-      }
-      if (feedbackEl) {
-        feedbackEl.textContent = 'Tap the correct answer or type it below:';
-        feedbackEl.className = 'text-xs font-medium text-slate-300 min-h-[22px] transition-all';
-      }
-      if (typedInputEl) typedInputEl.value = '';
-
-      if (optionsGridEl) {
-        optionsGridEl.innerHTML = '';
-        const options = generateMathOptions(problem.answer);
-        options.forEach(opt => {
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = 'py-3 px-4 rounded-2xl bg-slate-800/90 hover:bg-amber-500/20 active:bg-amber-500/40 border-2 border-amber-500/40 hover:border-amber-400 font-game font-bold text-2xl text-amber-200 hover:text-amber-100 shadow transition transform active:scale-95 cursor-pointer';
-          btn.textContent = opt;
-          btn.addEventListener('click', () => {
-            checkMathAnswer(opt);
-          });
-          optionsGridEl.appendChild(btn);
-        });
-      }
-
-      if (modal) {
-        modal.classList.remove('hidden');
-        setTimeout(() => {
-          if (typedInputEl) typedInputEl.focus();
-        }, 100);
-      }
-    }
-
-    function closeMathChallenge() {
-      const modal = document.getElementById('modal-math');
-      if (modal) modal.classList.add('hidden');
-      currentMathChallenge = null;
-    }
-
-    function checkMathAnswer(userVal) {
-      if (!currentMathChallenge) return;
-      const expected = currentMathChallenge.problem.answer;
-      const numVal = parseInt(userVal, 10);
-      const feedbackEl = document.getElementById('math-feedback-text');
-      const boxContainer = document.getElementById('math-box-container');
-
-      if (numVal === expected) {
-        sfx.mathCorrect();
-        createConfetti(player.x, player.y, 45);
-        if (feedbackEl) {
-          feedbackEl.textContent = '🎉 Brilliant! Correct Answer! Unlocking now... 🌟';
-          feedbackEl.className = 'text-sm font-bold text-emerald-400 min-h-[22px] transition-all animate-bounce';
-        }
-        const callback = currentMathChallenge.onCorrect;
-        currentMathChallenge = null;
-        setTimeout(() => {
-          closeMathChallenge();
-          if (typeof callback === 'function') callback();
-        }, 600);
-      } else {
-        sfx.mathWrong();
-        if (boxContainer) {
-          boxContainer.classList.remove('animate-math-shake');
-          void boxContainer.offsetWidth;
-          boxContainer.classList.add('animate-math-shake');
-        }
-        if (feedbackEl) {
-          feedbackEl.textContent = '🤔 Not quite! Give it another try! You can do it! 💪';
-          feedbackEl.className = 'text-xs font-bold text-rose-400 min-h-[22px] transition-all';
-        }
-        const typedInputEl = document.getElementById('math-typed-answer');
-        if (typedInputEl) {
-          typedInputEl.value = '';
-          typedInputEl.focus();
-        }
-      }
-    }
-
     // --- LAND & EMPIRE LOGIC ---
     function getPlotAt(wx, wy) {
       const plots = getCurrentPlots();
@@ -3015,17 +2734,7 @@
       if (!plot || plot.owned) return false;
 
       if (gameState.money >= plot.price) {
-        if (plot.price === 0) {
-          executeBuyPlot(plot);
-          return true;
-        }
-        openMathChallenge({
-          type: 'region',
-          targetTitle: `Unlock ${plot.name} ($${formatMoney(plot.price)})`,
-          onCorrect: () => {
-            executeBuyPlot(plot);
-          }
-        });
+        executeBuyPlot(plot);
         return true;
       } else {
         sfx.pop();
@@ -3110,13 +2819,7 @@
       if (!found || found.built) return;
 
       if (gameState.money >= found.price) {
-        openMathChallenge({
-          type: 'machine',
-          targetTitle: `Construct ${found.name} (${formatMoney(found.price)})`,
-          onCorrect: () => {
-            executeBuildStructure(found);
-          }
-        });
+        executeBuildStructure(found);
       } else {
         sfx.pop();
         showDialog(`Need ${formatMoney(found.price - gameState.money)} more to build ${found.name}!`, 3000);
@@ -4186,26 +3889,6 @@
     if (tabTravelPlanets) tabTravelPlanets.addEventListener('click', () => switchTravelFilter('planets'));
     if (tabTravelGalaxies) tabTravelGalaxies.addEventListener('click', () => switchTravelFilter('galaxies'));
 
-    // Math Challenge Modal Controls
-    const btnCloseMath = document.getElementById('btn-close-math');
-    if (btnCloseMath) {
-      btnCloseMath.addEventListener('click', () => {
-        sfx.pop();
-        closeMathChallenge();
-      });
-    }
-
-    const mathForm = document.getElementById('math-input-form');
-    if (mathForm) {
-      mathForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const typedInputEl = document.getElementById('math-typed-answer');
-        if (typedInputEl && typedInputEl.value.trim() !== '') {
-          checkMathAnswer(typedInputEl.value.trim());
-        }
-      });
-    }
-
     // Planetary Construction Modal Openers
     const btnOpenBuild = document.getElementById('btn-open-build');
     const btnCloseBuilding = document.getElementById('btn-close-building');
@@ -4238,13 +3921,11 @@
     });
 
     // Close modals on clicking backdrop
-    const modalMathEl = document.getElementById('modal-math');
-    [modalStory, modalDeeds, modalShop, modalHelp, modalVictory, modalTravel, modalBuilding, modalMathEl].forEach(modal => {
+    [modalStory, modalDeeds, modalShop, modalHelp, modalVictory, modalTravel, modalBuilding].forEach(modal => {
       if (!modal) return;
       modal.addEventListener('click', (e) => {
         if (e.target === modal) {
           modal.classList.add('hidden');
-          if (modal === modalMathEl) closeMathChallenge();
         }
       });
     });
